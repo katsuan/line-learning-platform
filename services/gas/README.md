@@ -8,6 +8,7 @@ LearningPlatform MVP のバックエンド実装本体です。
 
 - Web App の `doGet` `doPost`
 - action ベースの API 入口
+- LINE webhook の受信と reply
 - Membership 解決
 - Tenant 境界チェック
 - Session 取得 / 生成
@@ -82,3 +83,18 @@ LearningPlatform MVP のバックエンド実装本体です。
   初期化状態、シート件数、`DEFAULT_TENANT_ID` 解決状態の確認
 - `action=getMe&tenantId=<DEFAULT_TENANT_ID>`
   初期 seed での最小取得確認
+
+## LINE webhook
+
+`doPost` は次の 2 系統を受ける。
+
+- LIFF / GitHub Pages からの `action` ベース API
+- LINE Messaging API からの webhook event
+
+LINE webhook の場合は `events` 配列を検出して自動で webhook 処理へ分岐し、reply API に対して最小の Flex とテキストを返す。
+
+必要な Script Properties:
+
+- `LINE_CHANNEL_ACCESS_TOKEN`
+- `LIFF_ID`
+- `APP_BASE_URL`

@@ -12,7 +12,16 @@ var EntryWeb = (function () {
   }
 
   function handlePost(e) {
-    return executeRequest_("POST", e);
+    try {
+      if (LineWebhookRouter.canHandle(e)) {
+        var webhookResult = LineWebhookRouter.handle(e);
+        return JsonPresenter.ok(webhookResult);
+      }
+
+      return executeRequest_("POST", e);
+    } catch (error) {
+      return JsonPresenter.error(error);
+    }
   }
 
   function executeRequest_(method, e) {

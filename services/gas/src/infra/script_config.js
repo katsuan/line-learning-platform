@@ -38,10 +38,20 @@ var ScriptConfig = (function () {
     };
   }
 
+  function getLineMessagingConfig() {
+    return {
+      channelAccessToken: get_("LINE_CHANNEL_ACCESS_TOKEN"),
+      liffId: get_("LIFF_ID"),
+      appBaseUrl: get_("APP_BASE_URL"),
+      defaultTenantId: get_("DEFAULT_TENANT_ID")
+    };
+  }
+
   return {
     getSpreadsheetId: getSpreadsheetId,
     getPublicConfig: getPublicConfig,
     getRequiredSetupConfig: getRequiredSetupConfig,
+    getLineMessagingConfig: getLineMessagingConfig,
     setProperties: setProperties
   };
 })();

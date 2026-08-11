@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LearningPlatform Learn</title>
+    <style>
+      :root {
+        --bg: #f2eadc;
+        --panel: rgba(255, 251, 244, 0.88);
+        --ink: #1d1b17;
+        --muted: #6d665b;
+        --line: rgba(30, 27, 24, 0.1);
+        --accent: #126347;
+        --accent-strong: #0c4e37;
+        --warm: #d08b35;
+        --shadow: 0 20px 60px rgba(55, 38, 12, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        font-family: Georgia, "Hiragino Mincho ProN", serif;
+        background:
+          radial-gradient(circle at top right, rgba(18, 99, 71, 0.12), transparent 22%),
+          radial-gradient(circle at bottom left, rgba(208, 139, 53, 0.16), transparent 30%),
+          linear-gradient(180deg, #efe6d7 0%, var(--bg) 100%);
+        min-height: 100vh;
+      }
+
+      .shell {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 28px 18px 60px;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+
+      .brand {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .eyebrow {
+        margin: 0;
+        color: var(--accent);
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(30px, 5vw, 58px);
+        line-height: 0.95;
+        font-weight: 600;
+      }
+
+      .top-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .button,
+      button {
+        appearance: none;
+        border: none;
+        border-radius: 999px;
+        padding: 12px 18px;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+      }
+
+      button {
+        background: var(--accent);
+        color: #f6f1e8;
+      }
+
+      button.secondary,
+      .button {
+        background: rgba(255, 251, 244, 0.84);
+        color: var(--ink);
+        border: 1px solid var(--line);
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 320px minmax(0, 1fr);
+        gap: 20px;
+      }
+
+      .panel {
+        background: var(--panel);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        box-shadow: var(--shadow);
+      }
+
+      .sidebar {
+        padding: 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .main {
+        padding: 22px;
+      }
+
+      .section-title {
+        margin: 0 0 8px;
+        font-size: 20px;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .summary-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .summary-card {
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.45);
+      }
+
+      .summary-label {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .summary-value {
+        margin: 8px 0 0;
+        font-size: 28px;
+        line-height: 1;
+      }
+
+      .session-strip {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px 18px;
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        background: linear-gradient(135deg, rgba(18, 99, 71, 0.08), rgba(208, 139, 53, 0.08));
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 999px;
+        padding: 10px 14px;
+        background: rgba(18, 99, 71, 0.1);
+        color: var(--accent);
+        font-weight: 700;
+      }
+
+      .pill-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      .question-shell {
+        margin-top: 18px;
+        display: grid;
+        gap: 16px;
+      }
+
+      .question-card {
+        border: 1px solid var(--line);
+        border-radius: 26px;
+        padding: 24px;
+        background: rgba(255, 255, 255, 0.56);
+      }
+
+      .question-meta {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+
+      .question-type {
+        color: var(--accent);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .question-text {
+        margin: 0;
+        font-size: clamp(25px, 3vw, 38px);
+        line-height: 1.14;
+      }
+
+      .answer-zone {
+        margin-top: 22px;
+        display: grid;
+        gap: 14px;
+      }
+
+      .answer-zone label {
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      .answer-zone textarea,
+      .answer-zone input,
+      .answer-zone select {
+        width: 100%;
+        border: 1px solid rgba(28, 27, 24, 0.14);
+        border-radius: 18px;
+        padding: 16px 18px;
+        font: inherit;
+        background: rgba(255, 253, 248, 0.92);
+        color: var(--ink);
+      }
+
+      .answer-zone textarea {
+        min-height: 120px;
+        resize: vertical;
+      }
+
+      .note {
+        margin: 0;
+        font-size: 14px;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .question-nav {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .mini-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .mini-item {
+        display: grid;
+        gap: 6px;
+        padding: 12px 14px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.42);
+      }
+
+      .mini-item.current {
+        border-color: rgba(18, 99, 71, 0.24);
+        background: rgba(18, 99, 71, 0.08);
+      }
+
+      .mini-item button {
+        background: transparent;
+        color: inherit;
+        text-align: left;
+        padding: 0;
+      }
+
+      .response-box {
+        margin-top: 18px;
+        border-radius: 20px;
+        background: #201d1a;
+        color: #f6f1e8;
+        padding: 16px;
+        overflow: auto;
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .empty-state {
+        padding: 50px 22px;
+        text-align: center;
+        border: 1px dashed rgba(18, 99, 71, 0.2);
+        border-radius: 26px;
+        background: rgba(255, 255, 255, 0.4);
+      }
+
+      .empty-state h2 {
+        margin: 0;
+        font-size: 28px;
+      }
+
+      .empty-state p {
+        max-width: 520px;
+        margin: 14px auto 0;
+        color: var(--muted);
+        line-height: 1.75;
+      }
+
+      @media (max-width: 940px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .shell {
+          padding-inline: 14px;
+        }
+
+        .topbar {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .question-nav,
+        .top-actions {
+          width: 100%;
+        }
+
+        .top-actions > * {
+          flex: 1 1 auto;
+          text-align: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <div class="topbar">
+        <div class="brand">
+          <p class="eyebrow">Daily Session UI</p>
+          <h1>Learning Room</h1>
+        </div>
+        <div class="top-actions">
+          <button id="refreshHomeButton" class="secondary" type="button">Refresh Home</button>
+          <button id="startDailyButton" type="button">Start Today's 5</button>
+          <a class="button" href="./index.html">Back To Check</a>
+        </div>
+      </div>
+
+      <div class="layout">
+        <aside class="panel sidebar">
+          <section>
+            <h2 class="section-title">Learner</h2>
+            <div class="summary-grid">
+              <div class="summary-card">
+                <p class="summary-label">Display Name</p>
+                <p id="displayName" class="summary-value" style="font-size: 22px;">-</p>
+              </div>
+              <div class="summary-card">
+                <p class="summary-label">Tenant</p>
+                <p id="tenantName" class="summary-value" style="font-size: 20px;">-</p>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2 class="section-title">Home Snapshot</h2>
+            <div class="summary-grid">
+              <div class="summary-card">
+                <p class="summary-label">Answered</p>
+                <p id="answeredCount" class="summary-value">0</p>
+              </div>
+              <div class="summary-card">
+                <p class="summary-label">Accuracy</p>
+                <p id="accuracyRate" class="summary-value">0%</p>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2 class="section-title">Question Map</h2>
+            <div id="questionMap" class="mini-list">
+              <div class="mini-item">
+                <span class="muted">Session not loaded yet.</span>
+              </div>
+            </div>
+          </section>
+        </aside>
+
+        <section class="panel main">
+          <div class="session-strip">
+            <div>
+              <div class="pill">
+                <span class="pill-dot"></span>
+                <span id="sessionPillLabel">Waiting for session</span>
+              </div>
+              <p id="sessionMeta" class="note" style="margin-top: 12px;">Home 情報と今日の5問セッションを読み込むと、ここに進行状況が出ます。</p>
+            </div>
+          </div>
+
+          <div id="questionShell" class="question-shell">
+            <div class="empty-state">
+              <h2>Ready To Start</h2>
+              <p>
+                `Start Today's 5` を押すと、GAS で Daily Session を取得または生成し、この画面で問題を順に確認できます。
+              </p>
+            </div>
+          </div>
+
+          <pre id="responsePanel" class="response-box">No request yet.</pre>
+        </section>
+      </div>
+    </main>
+
+    <script src="./config.js"></script>
+    <script>
+      (function () {
+        var config = window.APP_CONFIG || {};
+        var state = {
+          me: null,
+          home: null,
+          session: null,
+          currentQuestionIndex: 0,
+          answers: {}
+        };
+
+        var displayNameEl = document.getElementById("displayName");
+        var tenantNameEl = document.getElementById("tenantName");
+        var answeredCountEl = document.getElementById("answeredCount");
+        var accuracyRateEl = document.getElementById("accuracyRate");
+        var sessionPillLabelEl = document.getElementById("sessionPillLabel");
+        var sessionMetaEl = document.getElementById("sessionMeta");
+        var questionMapEl = document.getElementById("questionMap");
+        var questionShellEl = document.getElementById("questionShell");
+        var responsePanelEl = document.getElementById("responsePanel");
+        var refreshHomeButtonEl = document.getElementById("refreshHomeButton");
+        var startDailyButtonEl = document.getElementById("startDailyButton");
+
+        refreshHomeButtonEl.addEventListener("click", loadHomeData_);
+        startDailyButtonEl.addEventListener("click", resolveDailySession_);
+
+        bootstrap_();
+
+        function bootstrap_() {
+          loadHomeData_();
+        }
+
+        function loadHomeData_() {
+          Promise.all([
+            requestJson_("GET", config.meAction || "getMe"),
+            requestJson_("GET", config.homeAction || "getHome")
+          ])
+            .then(function (results) {
+              state.me = results[0];
+              state.home = results[1];
+              renderSidebar_();
+              renderSessionMeta_();
+              renderResponse_({
+                me: state.me,
+                home: state.home
+              });
+            })
+            .catch(renderError_);
+        }
+
+        function resolveDailySession_() {
+          requestJson_("POST", config.resolveDailySessionAction || "resolveDailySession", {
+            action: config.resolveDailySessionAction || "resolveDailySession",
+            tenantId: config.tenantId
+          })
+            .then(function (payload) {
+              state.session = payload.session || null;
+              state.currentQuestionIndex = 0;
+              state.answers = {};
+              renderSidebar_();
+              renderSessionMeta_();
+              renderQuestionView_();
+              renderResponse_(payload);
+            })
+            .catch(renderError_);
+        }
+
+        function requestJson_(method, action, body) {
+          var url = new URL(config.gasWebAppUrl, window.location.href);
+          url.searchParams.set("action", action);
+          if (config.tenantId) {
+            url.searchParams.set("tenantId", config.tenantId);
+          }
+
+          var options = {
+            method: method,
+            mode: "cors",
+            headers: {
+              "Accept": "application/json"
+            }
+          };
+
+          if (method === "POST") {
+            options.body = JSON.stringify(body || { action: action, tenantId: config.tenantId });
+          }
+
+          return fetch(url.toString(), options).then(function (response) {
+            return response.text().then(function (text) {
+              var payload;
+              try {
+                payload = JSON.parse(text);
+              } catch (error) {
+                payload = { raw: text };
+              }
+
+              if (!response.ok || (payload && payload.error)) {
+                throw payload;
+              }
+
+              return payload;
+            });
+          });
+        }
+
+        function renderSidebar_() {
+          if (state.me) {
+            displayNameEl.textContent = state.me.user.display_name || "-";
+            tenantNameEl.textContent = state.me.tenant.name || "-";
+          }
+
+          if (state.home && state.home.learningSummary) {
+            answeredCountEl.textContent = String(state.home.learningSummary.totalAnsweredCount || 0);
+            accuracyRateEl.textContent = Math.round((state.home.learningSummary.accuracyRate || 0) * 100) + "%";
+          }
+
+          renderQuestionMap_();
+        }
+
+        function renderSessionMeta_() {
+          if (!state.session) {
+            sessionPillLabelEl.textContent = "Waiting for session";
+            sessionMetaEl.textContent = "今日の5問セッションを作成すると、問題数と進行状況が表示されます。";
+            return;
+          }
+
+          var questionCount = state.session.questionCount || 0;
+          sessionPillLabelEl.textContent = "Daily Session " + (state.session.businessDate || "");
+          sessionMetaEl.textContent = questionCount + "問中 " + (state.currentQuestionIndex + 1) + " 問目を表示しています。courseId=" + (state.session.courseId || "-");
+        }
+
+        function renderQuestionMap_() {
+          if (!state.session || !state.session.questions || state.session.questions.length === 0) {
+            questionMapEl.innerHTML = '<div class="mini-item"><span class="muted">Session not loaded yet.</span></div>';
+            return;
+          }
+
+          questionMapEl.innerHTML = "";
+          state.session.questions.forEach(function (question, index) {
+            var item = document.createElement("div");
+            item.className = "mini-item" + (index === state.currentQuestionIndex ? " current" : "");
+
+            var button = document.createElement("button");
+            button.type = "button";
+            button.textContent = (index + 1) + ". " + question.questionText;
+            button.addEventListener("click", function () {
+              state.currentQuestionIndex = index;
+              renderSessionMeta_();
+              renderQuestionMap_();
+              renderQuestionView_();
+            });
+
+            var meta = document.createElement("span");
+            meta.className = "muted";
+            meta.textContent = question.questionType + " / " + question.gradingType;
+
+            item.appendChild(button);
+            item.appendChild(meta);
+            questionMapEl.appendChild(item);
+          });
+        }
+
+        function renderQuestionView_() {
+          if (!state.session || !state.session.questions || state.session.questions.length === 0) {
+            questionShellEl.innerHTML = [
+              '<div class="empty-state">',
+              '<h2>Ready To Start</h2>',
+              '<p>`Start Today\\'s 5` を押すと、Daily Session を取得してここに問題が出ます。</p>',
+              '</div>'
+            ].join("");
+            return;
+          }
+
+          var question = state.session.questions[state.currentQuestionIndex];
+          var answerKey = question.sessionQuestionId;
+          var savedAnswer = state.answers[answerKey] || "";
+
+          questionShellEl.innerHTML = [
+            '<article class="question-card">',
+            '  <div class="question-meta">',
+            '    <span class="question-type">' + escapeHtml_(question.questionType) + '</span>',
+            '    <span class="muted">Question ' + (state.currentQuestionIndex + 1) + ' / ' + state.session.questions.length + '</span>',
+            '  </div>',
+            '  <p class="question-text">' + escapeHtml_(question.questionText) + '</p>',
+            '  <div class="answer-zone">',
+            '    <label for="answerInput">Answer Draft</label>',
+            renderAnswerControl_(question, savedAnswer),
+            '    <p class="note">採点APIは次の段階でつなぎ込みます。今は回答入力と問題遷移の UI まで進めています。</p>',
+            '  </div>',
+            '</article>',
+            '<div class="question-nav">',
+            '  <button class="secondary" id="prevQuestionButton" type="button"' + (state.currentQuestionIndex === 0 ? " disabled" : "") + '>Previous</button>',
+            '  <button id="nextQuestionButton" type="button"' + (state.currentQuestionIndex === state.session.questions.length - 1 ? " disabled" : "") + '>Next</button>',
+            '</div>'
+          ].join("");
+
+          var answerInputEl = document.getElementById("answerInput");
+          if (answerInputEl) {
+            answerInputEl.addEventListener("input", function (event) {
+              state.answers[answerKey] = event.target.value;
+            });
+            answerInputEl.addEventListener("change", function (event) {
+              state.answers[answerKey] = event.target.value;
+            });
+          }
+
+          var prevButtonEl = document.getElementById("prevQuestionButton");
+          var nextButtonEl = document.getElementById("nextQuestionButton");
+
+          if (prevButtonEl) {
+            prevButtonEl.addEventListener("click", function () {
+              state.currentQuestionIndex = Math.max(0, state.currentQuestionIndex - 1);
+              renderSessionMeta_();
+              renderQuestionMap_();
+              renderQuestionView_();
+            });
+          }
+
+          if (nextButtonEl) {
+            nextButtonEl.addEventListener("click", function () {
+              state.currentQuestionIndex = Math.min(state.session.questions.length - 1, state.currentQuestionIndex + 1);
+              renderSessionMeta_();
+              renderQuestionMap_();
+              renderQuestionView_();
+            });
+          }
+        }
+
+        function renderAnswerControl_(question, savedAnswer) {
+          if (question.questionType === "NUMBER") {
+            return '<input id="answerInput" type="number" value="' + escapeAttribute_(savedAnswer) + '" placeholder="数字で入力">';
+          }
+
+          if (question.questionType === "TRUE_FALSE") {
+            return [
+              '<select id="answerInput">',
+              '  <option value="">選択してください</option>',
+              '  <option value="true"' + (savedAnswer === "true" ? " selected" : "") + '>True / 正しい</option>',
+              '  <option value="false"' + (savedAnswer === "false" ? " selected" : "") + '>False / 誤り</option>',
+              '</select>'
+            ].join("");
+          }
+
+          return '<textarea id="answerInput" placeholder="ここに回答を入力">' + escapeHtml_(savedAnswer) + '</textarea>';
+        }
+
+        function renderResponse_(payload) {
+          responsePanelEl.textContent = JSON.stringify(payload, null, 2);
+        }
+
+        function renderError_(error) {
+          responsePanelEl.textContent = JSON.stringify(error, null, 2);
+        }
+
+        function escapeHtml_(value) {
+          return String(value || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+        }
+
+        function escapeAttribute_(value) {
+          return escapeHtml_(value);
+        }
+      })();
+    </script>
+  </body>
+</html>
