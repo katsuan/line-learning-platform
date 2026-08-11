@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LearningPlatform Health Check</title>
+    <style>
+      :root {
+        --bg: #f4efe6;
+        --panel: #fffaf2;
+        --ink: #1c1b18;
+        --muted: #666156;
+        --line: #d9cfbf;
+        --accent: #17624a;
+        --accent-2: #d88a2d;
+        --ok: #17624a;
+        --error: #ab3b2d;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Georgia, "Hiragino Mincho ProN", serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(216, 138, 45, 0.18), transparent 30%),
+          linear-gradient(160deg, #efe6d8 0%, var(--bg) 45%, #e8dfd0 100%);
+        min-height: 100vh;
+      }
+
+      .wrap {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 40px 20px 72px;
+      }
+
+      .hero {
+        background: linear-gradient(135deg, rgba(255, 250, 242, 0.92), rgba(255, 245, 230, 0.8));
+        border: 1px solid rgba(28, 27, 24, 0.08);
+        border-radius: 24px;
+        padding: 32px 24px;
+        box-shadow: 0 14px 40px rgba(50, 40, 20, 0.08);
+      }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        color: var(--accent);
+        font-size: 13px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(34px, 6vw, 58px);
+        line-height: 0.98;
+        font-weight: 600;
+      }
+
+      .lead {
+        margin: 16px 0 0;
+        max-width: 640px;
+        color: var(--muted);
+        font-size: 17px;
+        line-height: 1.7;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 20px;
+        margin-top: 22px;
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 22px 20px;
+      }
+
+      .card h2 {
+        margin: 0 0 14px;
+        font-size: 20px;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(23, 98, 74, 0.08);
+        color: var(--accent);
+        font-weight: 700;
+      }
+
+      .status.waiting,
+      .status.loading {
+        background: rgba(216, 138, 45, 0.12);
+        color: #8a5513;
+      }
+
+      .status.error {
+        background: rgba(171, 59, 45, 0.1);
+        color: var(--error);
+      }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      dl {
+        margin: 18px 0 0;
+        display: grid;
+        grid-template-columns: 132px 1fr;
+        gap: 10px 14px;
+      }
+
+      dt {
+        color: var(--muted);
+      }
+
+      dd {
+        margin: 0;
+        word-break: break-word;
+      }
+
+      pre {
+        margin: 0;
+        padding: 16px;
+        border-radius: 16px;
+        background: #1e1b18;
+        color: #f6f2ea;
+        overflow: auto;
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      button,
+      a.button {
+        appearance: none;
+        border: none;
+        border-radius: 999px;
+        padding: 12px 18px;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+      }
+
+      button {
+        background: var(--accent);
+        color: #f5f1ea;
+      }
+
+      a.button {
+        background: #ece4d6;
+        color: var(--ink);
+      }
+
+      .note {
+        margin-top: 20px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.7;
+      }
+
+      @media (max-width: 760px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        dl {
+          grid-template-columns: 1fr;
+          gap: 6px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <section class="hero">
+        <p class="eyebrow">GitHub Pages -> GAS Web App</p>
+        <h1>LearningPlatform<br>Health Check</h1>
+        <p class="lead">
+          GitHub Pages から公開されたフロントが、GAS Web App の `health` アクションへ到達できるかを確認するための最小ページです。
+        </p>
+
+        <div class="grid">
+          <section class="card">
+            <h2>Connection</h2>
+            <div id="status" class="status waiting">
+              <span class="dot"></span>
+              <span>Waiting</span>
+            </div>
+            <dl>
+              <dt>App</dt>
+              <dd id="appName">-</dd>
+              <dt>Endpoint</dt>
+              <dd id="endpoint">-</dd>
+              <dt>Origin</dt>
+              <dd id="origin">-</dd>
+              <dt>Fetched At</dt>
+              <dd id="fetchedAt">-</dd>
+            </dl>
+            <div class="actions">
+              <button id="checkButton" type="button">Check Health</button>
+              <a id="openEndpoint" class="button" href="#" target="_blank" rel="noreferrer">Open Endpoint</a>
+            </div>
+            <p class="note">
+              GitHub Pages 設定は `main` ブランチの `/docs` を公開先にしてください。
+            </p>
+          </section>
+
+          <section class="card">
+            <h2>Response</h2>
+            <pre id="responsePanel">No request yet.</pre>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script src="./config.js"></script>
+    <script>
+      (function () {
+        var config = window.APP_CONFIG || {};
+        var statusEl = document.getElementById("status");
+        var responsePanelEl = document.getElementById("responsePanel");
+        var endpointEl = document.getElementById("endpoint");
+        var appNameEl = document.getElementById("appName");
+        var originEl = document.getElementById("origin");
+        var fetchedAtEl = document.getElementById("fetchedAt");
+        var checkButtonEl = document.getElementById("checkButton");
+        var openEndpointEl = document.getElementById("openEndpoint");
+
+        var endpointUrl = buildHealthUrl_(config.gasWebAppUrl, config.healthAction || "health");
+        appNameEl.textContent = config.appName || "LearningPlatform";
+        endpointEl.textContent = endpointUrl;
+        originEl.textContent = window.location.origin;
+        openEndpointEl.href = endpointUrl;
+
+        checkButtonEl.addEventListener("click", checkHealth_);
+        checkHealth_();
+
+        function checkHealth_() {
+          setStatus_("loading", "Checking");
+          responsePanelEl.textContent = "Loading...";
+
+          fetch(endpointUrl, {
+            method: "GET",
+            mode: "cors",
+            headers: {
+              "Accept": "application/json"
+            }
+          })
+            .then(function (response) {
+              return response.text().then(function (text) {
+                var payload;
+                try {
+                  payload = JSON.parse(text);
+                } catch (error) {
+                  payload = { raw: text };
+                }
+
+                if (!response.ok) {
+                  throw {
+                    message: "HTTP " + response.status,
+                    payload: payload
+                  };
+                }
+
+                setStatus_("ok", payload.ok ? "OK" : "Responded");
+                fetchedAtEl.textContent = new Date().toLocaleString("ja-JP");
+                responsePanelEl.textContent = JSON.stringify(payload, null, 2);
+              });
+            })
+            .catch(function (error) {
+              setStatus_("error", "Error");
+              fetchedAtEl.textContent = new Date().toLocaleString("ja-JP");
+              responsePanelEl.textContent = JSON.stringify({
+                message: error && error.message ? error.message : "Request failed",
+                payload: error && error.payload ? error.payload : null
+              }, null, 2);
+            });
+        }
+
+        function setStatus_(type, label) {
+          statusEl.className = "status " + type;
+          statusEl.lastElementChild.textContent = label;
+        }
+
+        function buildHealthUrl_(baseUrl, action) {
+          var url = new URL(baseUrl, window.location.href);
+          url.searchParams.set("action", action);
+          return url.toString();
+        }
+      })();
+    </script>
+  </body>
+  </html>
