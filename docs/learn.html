@@ -257,6 +257,40 @@
         line-height: 1.7;
       }
 
+      .result-card {
+        border-radius: 22px;
+        border: 1px solid var(--line);
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.72);
+        display: grid;
+        gap: 10px;
+      }
+
+      .result-card.correct {
+        border-color: rgba(18, 99, 71, 0.22);
+        background: rgba(18, 99, 71, 0.08);
+      }
+
+      .result-card.incorrect {
+        border-color: rgba(208, 139, 53, 0.24);
+        background: rgba(208, 139, 53, 0.12);
+      }
+
+      .result-title {
+        margin: 0;
+        font-size: 22px;
+      }
+
+      .result-meta {
+        display: grid;
+        gap: 6px;
+      }
+
+      .save-status {
+        font-size: 13px;
+        color: var(--muted);
+      }
+
       .question-nav {
         position: sticky;
         bottom: 12px;
@@ -533,7 +567,9 @@
           home: null,
           session: null,
           currentQuestionIndex: 0,
-          answers: {}
+          answers: {},
+          results: {},
+          saveStatus: {}
         };
 
         var displayNameEl = document.getElementById("displayName");
@@ -587,6 +623,8 @@
               state.session = payload.session || null;
               state.currentQuestionIndex = 0;
               state.answers = {};
+              state.results = {};
+              state.saveStatus = {};
               renderSidebar_();
               renderSessionMeta_();
               renderQuestionView_();
@@ -707,6 +745,8 @@
           var question = state.session.questions[state.currentQuestionIndex];
           var answerKey = question.sessionQuestionId;
           var savedAnswer = state.answers[answerKey] || "";
+          var result = state.results[answerKey] || null;
+          var saveStatus = state.saveStatus[answerKey] || "";
 
           questionShellEl.innerHTML = [
             '<article class="question-card">',
@@ -718,7 +758,9 @@
             '  <div class="answer-zone">',
             '    <label for="answerInput">回答入力</label>',
             renderAnswerControl_(question, savedAnswer),
-            '    <p class="note">採点APIは次の段階でつなぎ込みます。今は回答入力と問題遷移の UI まで進めています。</p>',
+            '    <button id="submitAnswerButton" type="button">回答する</button>',
+            renderResultCard_(result, saveStatus),
+            '    <p class="note">採点はこの画面で即時に行い、学習履歴は裏で GAS へ保存します。</p>',
             '  </div>',
             '</article>',
             '<div class="question-nav">',
@@ -739,6 +781,18 @@
 
           var prevButtonEl = document.getElementById("prevQuestionButton");
           var nextButtonEl = document.getElementById("nextQuestionButton");
+          var submitAnswerButtonEl = document.getElementById("submitAnswerButton");
+
+          if (submitAnswerButtonEl) {
+            submitAnswerButtonEl.addEventListener("click", function () {
+              var currentAnswer = state.answers[answerKey] || "";
+              var gradingResult = gradeAnswer_(question, currentAnswer);
+              state.results[answerKey] = gradingResult;
+              state.saveStatus[answerKey] = "保存中...";
+              renderQuestionView_();
+              persistAnswerEvent_(question, currentAnswer, gradingResult);
+            });
+          }
 
           if (prevButtonEl) {
             prevButtonEl.addEventListener("click", function () {
@@ -775,6 +829,118 @@
           }
 
           return '<textarea id="answerInput" placeholder="ここに回答を入力">' + escapeHtml_(savedAnswer) + '</textarea>';
+        }
+
+        function renderResultCard_(result, saveStatus) {
+          if (!result) {
+            return '';
+          }
+
+          var className = result.isCorrect ? 'result-card correct' : 'result-card incorrect';
+          var title = result.isCorrect ? '正解です' : 'もう一度見直そう';
+          var explanation = result.explanation || '解説はまだありません。';
+          var correctText = result.correctAnswerText ? '<span class="muted">正解: ' + escapeHtml_(result.correctAnswerText) + '</span>' : '';
+
+          return [
+            '<div class="' + className + '">',
+            '  <h3 class="result-title">' + title + '</h3>',
+            '  <div class="result-meta">',
+            '    <span>スコア: ' + escapeHtml_(String(result.score)) + '</span>',
+            correctText,
+            '    <span>' + escapeHtml_(explanation) + '</span>',
+            '  </div>',
+            '  <div class="save-status">' + escapeHtml_(saveStatus || "") + '</div>',
+            '</div>'
+          ].join('');
+        }
+
+        function gradeAnswer_(question, rawAnswer) {
+          var gradingConfig = question.gradingConfig || {};
+          var answerPayload = gradingConfig.correctAnswerPayload || {};
+          var normalizedAnswer = normalizeAnswer_(question, rawAnswer);
+          var isCorrect = false;
+
+          switch (question.questionType) {
+            case "TRUE_FALSE":
+              isCorrect = String(normalizedAnswer) === String(answerPayload.exact);
+              break;
+            case "NUMBER":
+              var tolerance = gradingConfig.tolerance === null || gradingConfig.tolerance === undefined ? 0 : Number(gradingConfig.tolerance);
+              isCorrect = Math.abs(Number(normalizedAnswer) - Number(answerPayload.exact)) <= tolerance;
+              break;
+            case "TEXT_EXACT":
+            default:
+              isCorrect = String(normalizedAnswer).trim().toLowerCase() === String(answerPayload.exact || "").trim().toLowerCase();
+              break;
+          }
+
+          return {
+            isCorrect: isCorrect,
+            score: isCorrect ? (gradingConfig.maxScore || 1) : 0,
+            explanation: question.explanation || "",
+            normalizedAnswer: normalizedAnswer,
+            correctAnswerText: toCorrectAnswerText_(question, answerPayload)
+          };
+        }
+
+        function normalizeAnswer_(question, rawAnswer) {
+          if (question.questionType === "NUMBER") {
+            return rawAnswer === "" ? "" : Number(rawAnswer);
+          }
+
+          if (question.questionType === "TRUE_FALSE") {
+            return rawAnswer;
+          }
+
+          return String(rawAnswer || "").trim();
+        }
+
+        function toCorrectAnswerText_(question, answerPayload) {
+          if (!answerPayload || answerPayload.exact === undefined || answerPayload.exact === null) {
+            return "";
+          }
+
+          if (question.questionType === "TRUE_FALSE") {
+            return answerPayload.exact === true ? "正しい" : "誤り";
+          }
+
+          return String(answerPayload.exact);
+        }
+
+        function persistAnswerEvent_(question, currentAnswer, gradingResult) {
+          var answerKey = question.sessionQuestionId;
+          var payload = {
+            action: config.createAnswerEventAction || "createAnswerEvent",
+            tenantId: config.tenantId,
+            learningSessionId: state.session.sessionId,
+            sessionQuestionId: question.sessionQuestionId,
+            questionId: question.questionId,
+            idempotencyKey: buildIdempotencyKey_(question),
+            answerPayload: {
+              value: gradingResult.normalizedAnswer
+            },
+            isCorrect: gradingResult.isCorrect,
+            score: gradingResult.score,
+            elapsedMs: 0,
+            explanationViewed: true
+          };
+
+          requestJson_("POST", config.createAnswerEventAction || "createAnswerEvent", payload)
+            .then(function (response) {
+              state.saveStatus[answerKey] = response.duplicated ? "すでに保存済みです。" : "回答を保存しました。";
+              loadHomeData_();
+              renderQuestionView_();
+              renderResponse_(response);
+            })
+            .catch(function (error) {
+              state.saveStatus[answerKey] = "保存に失敗しました。";
+              renderQuestionView_();
+              renderError_(error);
+            });
+        }
+
+        function buildIdempotencyKey_(question) {
+          return state.session.sessionId + "_" + question.sessionQuestionId + "_" + state.currentQuestionIndex;
         }
 
         function renderResponse_(payload) {

@@ -28,6 +28,8 @@ var RequestRouter = (function () {
         return HomeUsecase.execute(request);
       case "resolveDailySession":
         return ResolveDailySessionUsecase.execute(request);
+      case "createAnswerEvent":
+        return CreateAnswerEventUsecase.execute(request);
       default:
         throw AppError.validation("unknown_action", "unsupported action: " + request.action);
     }

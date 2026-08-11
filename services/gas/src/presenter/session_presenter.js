@@ -12,16 +12,44 @@ var SessionPresenter = (function () {
       courseId: session.course_id || "",
       questions: sessionQuestions.map(function (row) {
         var question = QuestionSheetRepository.findByQuestionId(row.question_id);
+        var gradingConfig = QuestionGradingConfigSheetRepository.findByQuestionId(row.question_id);
         return {
           sessionQuestionId: row.session_question_id,
           questionId: row.question_id,
           displayOrder: toNumber_(row.display_order),
           questionType: question ? question.question_type : "",
           gradingType: question ? question.grading_type : "",
-          questionText: question ? question.question_text : ""
+          questionText: question ? question.question_text : "",
+          explanation: question ? question.explanation : "",
+          gradingConfig: normalizeGradingConfig_(gradingConfig)
         };
       })
     };
+  }
+
+  function normalizeGradingConfig_(gradingConfig) {
+    if (!gradingConfig) {
+      return null;
+    }
+
+    return {
+      answerSchema: parseJson_(gradingConfig.answer_schema),
+      correctAnswerPayload: parseJson_(gradingConfig.correct_answer_payload),
+      tolerance: gradingConfig.tolerance === "" ? null : Number(gradingConfig.tolerance || 0),
+      maxScore: toNumber_(gradingConfig.max_score)
+    };
+  }
+
+  function parseJson_(value) {
+    if (!value) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(value);
+    } catch (error) {
+      return null;
+    }
   }
 
   function toNumber_(value) {

@@ -5,6 +5,7 @@ window.APP_CONFIG = {
   meAction: "getMe",
   homeAction: "getHome",
   resolveDailySessionAction: "resolveDailySession",
+  createAnswerEventAction: "createAnswerEvent",
   tenantId: "tenant_demo_001",
   appName: "LearningPlatform"
 };

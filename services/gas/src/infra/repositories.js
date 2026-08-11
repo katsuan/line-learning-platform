@@ -84,6 +84,18 @@ var QuestionSheetRepository = (function () {
   };
 })();
 
+var QuestionGradingConfigSheetRepository = (function () {
+  function findByQuestionId(questionId) {
+    return SpreadsheetGateway.readObjects(DomainConstants.SHEETS.QUESTION_GRADING_CONFIGS).find(function (row) {
+      return row.question_id === questionId;
+    }) || null;
+  }
+
+  return {
+    findByQuestionId: findByQuestionId
+  };
+})();
+
 var LearningSessionSheetRepository = (function () {
   function listByMembershipId(membershipId) {
     return SpreadsheetGateway.readObjects(DomainConstants.SHEETS.LEARNING_SESSIONS).filter(function (row) {
@@ -136,7 +148,20 @@ var AnswerEventSheetRepository = (function () {
     });
   }
 
+  function append(record) {
+    SpreadsheetGateway.appendObject(DomainConstants.SHEETS.ANSWER_EVENTS, record);
+    return record;
+  }
+
+  function findBySessionAndIdempotencyKey(learningSessionId, idempotencyKey) {
+    return SpreadsheetGateway.readObjects(DomainConstants.SHEETS.ANSWER_EVENTS).find(function (row) {
+      return row.learning_session_id === learningSessionId && row.idempotency_key === idempotencyKey;
+    }) || null;
+  }
+
   return {
-    listByMembershipId: listByMembershipId
+    listByMembershipId: listByMembershipId,
+    append: append,
+    findBySessionAndIdempotencyKey: findBySessionAndIdempotencyKey
   };
 })();
