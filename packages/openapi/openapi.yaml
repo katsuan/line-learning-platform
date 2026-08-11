@@ -1,0 +1,570 @@
+openapi: 3.1.0
+info:
+  title: LearningPlatform API
+  version: 0.1.0
+  summary: MVP API draft for the LINE Learning Platform
+  description: |
+    Initial API contract for the MVP.
+    This contract focuses on LIFF learner flows, tenant-scoped authorization,
+    and the minimum admin learner overview.
+servers:
+  - url: https://api.example.com
+    description: Placeholder production URL
+tags:
+  - name: Auth
+  - name: Home
+  - name: LearningSessions
+  - name: AnswerEvents
+  - name: LearningHistory
+  - name: AdminLearners
+paths:
+  /api/me:
+    get:
+      tags: [Auth]
+      summary: Resolve current user, tenant, membership, and entitlements
+      operationId: getMe
+      responses:
+        "200":
+          description: Current authenticated context
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetMeResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/home:
+    get:
+      tags: [Home]
+      summary: Fetch home screen summary
+      operationId: getHome
+      responses:
+        "200":
+          description: Home summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HomeResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/learning-sessions/daily:resolve:
+    post:
+      tags: [LearningSessions]
+      summary: Resolve or create the daily learning session
+      operationId: resolveDailyLearningSession
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResolveDailyLearningSessionRequest"
+      responses:
+        "200":
+          description: Daily session resolved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LearningSessionResolveResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+  /api/learning-sessions/{sessionId}:
+    get:
+      tags: [LearningSessions]
+      summary: Get the session detail and its questions
+      operationId: getLearningSession
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Session detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LearningSessionDetailResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+  /api/learning-sessions/{sessionId}/resume:
+    post:
+      tags: [LearningSessions]
+      summary: Resume a session and return current progress
+      operationId: resumeLearningSession
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Session resume payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResumeLearningSessionResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+  /api/answer-events:
+    post:
+      tags: [AnswerEvents]
+      summary: Submit an answer, grade it, and persist an answer event
+      operationId: createAnswerEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAnswerEventRequest"
+      responses:
+        "200":
+          description: Answer accepted and graded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateAnswerEventResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+        "409":
+          description: Duplicate idempotency key or invalid session state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/learning-history/summary:
+    get:
+      tags: [LearningHistory]
+      summary: Fetch the learner's aggregate summary
+      operationId: getLearningHistorySummary
+      responses:
+        "200":
+          description: Aggregate learning summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LearningHistorySummaryResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/learning-history/sessions:
+    get:
+      tags: [LearningHistory]
+      summary: List recent learner sessions
+      operationId: listLearningHistorySessions
+      parameters:
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Recent sessions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LearningHistorySessionsResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/admin/learners:
+    get:
+      tags: [AdminLearners]
+      summary: List learners in the current tenant
+      operationId: listAdminLearners
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - in: query
+          name: cursor
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Learner list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminLearnerListResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+  /api/admin/learners/{membershipId}:
+    get:
+      tags: [AdminLearners]
+      summary: Get a tenant learner detail
+      operationId: getAdminLearner
+      parameters:
+        - $ref: "#/components/parameters/MembershipId"
+      responses:
+        "200":
+          description: Learner detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminLearnerDetailResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+components:
+  parameters:
+    SessionId:
+      in: path
+      name: sessionId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    MembershipId:
+      in: path
+      name: membershipId
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    UnauthorizedError:
+      description: Authentication is required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ForbiddenError:
+      description: The caller does not have permission
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFoundError:
+      description: The requested resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+    Tenant:
+      type: object
+      required: [tenantId, tenantKey, name, status]
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        tenantKey:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+    User:
+      type: object
+      required: [userId, displayName]
+      properties:
+        userId:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        photoUrl:
+          type: string
+          nullable: true
+        lineUserId:
+          type: string
+          nullable: true
+    Membership:
+      type: object
+      required: [membershipId, role, status]
+      properties:
+        membershipId:
+          type: string
+          format: uuid
+        role:
+          type: string
+          enum: [TENANT_OWNER, TENANT_ADMIN, INSTRUCTOR, LEARNER]
+        status:
+          type: string
+    FeatureEntitlement:
+      type: object
+      required: [featureKey, enabled]
+      properties:
+        featureKey:
+          type: string
+        enabled:
+          type: boolean
+        limitValue:
+          type: integer
+          nullable: true
+    SessionSummary:
+      type: object
+      required: [sessionId, sessionType, status, questionCount]
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        sessionType:
+          type: string
+          enum: [DAILY, EXTRA, REVIEW, ASSIGNMENT, COURSE, EXAM]
+        status:
+          type: string
+          enum: [CREATED, IN_PROGRESS, COMPLETED, EXPIRED]
+        questionCount:
+          type: integer
+        completedCount:
+          type: integer
+          default: 0
+    SessionQuestion:
+      type: object
+      required: [sessionQuestionId, questionId, displayOrder, questionType, gradingType, questionText]
+      properties:
+        sessionQuestionId:
+          type: string
+          format: uuid
+        questionId:
+          type: string
+          format: uuid
+        displayOrder:
+          type: integer
+        questionType:
+          type: string
+        gradingType:
+          type: string
+        questionText:
+          type: string
+        explanation:
+          type: string
+          nullable: true
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuestionOption"
+        answerSchema:
+          type: object
+          additionalProperties: true
+    QuestionOption:
+      type: object
+      required: [optionKey, label, sortOrder]
+      properties:
+        optionKey:
+          type: string
+        label:
+          type: string
+        sortOrder:
+          type: integer
+    GetMeResponse:
+      type: object
+      required: [user, membership, tenant, entitlements]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        membership:
+          $ref: "#/components/schemas/Membership"
+        tenant:
+          $ref: "#/components/schemas/Tenant"
+        entitlements:
+          type: array
+          items:
+            $ref: "#/components/schemas/FeatureEntitlement"
+    HomeResponse:
+      type: object
+      required: [todaySession, learningSummary]
+      properties:
+        todaySession:
+          $ref: "#/components/schemas/SessionSummary"
+        resumableSession:
+          allOf:
+            - $ref: "#/components/schemas/SessionSummary"
+          nullable: true
+        learningSummary:
+          $ref: "#/components/schemas/LearningSummary"
+    LearningSummary:
+      type: object
+      required: [totalAnsweredCount, accuracyRate]
+      properties:
+        totalAnsweredCount:
+          type: integer
+        accuracyRate:
+          type: number
+          format: float
+        lastLearnedAt:
+          type: string
+          format: date-time
+          nullable: true
+    ResolveDailyLearningSessionRequest:
+      type: object
+      properties:
+        forceRegenerate:
+          type: boolean
+          default: false
+    LearningSessionResolveResponse:
+      type: object
+      required: [session]
+      properties:
+        session:
+          $ref: "#/components/schemas/SessionSummary"
+    LearningSessionDetailResponse:
+      type: object
+      required: [session, questions]
+      properties:
+        session:
+          $ref: "#/components/schemas/SessionSummary"
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/SessionQuestion"
+    ResumeLearningSessionResponse:
+      type: object
+      required: [session, currentQuestionIndex, pendingAnswerEventCount]
+      properties:
+        session:
+          $ref: "#/components/schemas/SessionSummary"
+        currentQuestionIndex:
+          type: integer
+        pendingAnswerEventCount:
+          type: integer
+    CreateAnswerEventRequest:
+      type: object
+      required:
+        - learningSessionId
+        - sessionQuestionId
+        - idempotencyKey
+        - answerPayload
+        - elapsedMs
+      properties:
+        learningSessionId:
+          type: string
+          format: uuid
+        sessionQuestionId:
+          type: string
+          format: uuid
+        idempotencyKey:
+          type: string
+        answerPayload:
+          type: object
+          additionalProperties: true
+        elapsedMs:
+          type: integer
+          minimum: 0
+        hintUsed:
+          type: boolean
+          default: false
+        explanationViewed:
+          type: boolean
+          default: false
+    CreateAnswerEventResponse:
+      type: object
+      required: [answerEventId, result]
+      properties:
+        answerEventId:
+          type: string
+          format: uuid
+        result:
+          $ref: "#/components/schemas/GradingResult"
+    GradingResult:
+      type: object
+      required: [isCorrect, score]
+      properties:
+        isCorrect:
+          type: boolean
+        score:
+          type: integer
+        explanation:
+          type: string
+          nullable: true
+        canProceed:
+          type: boolean
+          default: true
+    LearningHistorySummaryResponse:
+      type: object
+      required: [summary]
+      properties:
+        summary:
+          $ref: "#/components/schemas/LearningSummary"
+    LearningHistorySessionsResponse:
+      type: object
+      required: [sessions]
+      properties:
+        sessions:
+          type: array
+          items:
+            $ref: "#/components/schemas/SessionSummary"
+    AdminLearner:
+      type: object
+      required: [membershipId, userId, displayName, totalAnsweredCount, accuracyRate]
+      properties:
+        membershipId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        totalAnsweredCount:
+          type: integer
+        accuracyRate:
+          type: number
+          format: float
+        lastLearnedAt:
+          type: string
+          format: date-time
+          nullable: true
+    AdminLearnerListResponse:
+      type: object
+      required: [learners]
+      properties:
+        learners:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminLearner"
+        nextCursor:
+          type: string
+          nullable: true
+    AdminLearnerDetailResponse:
+      type: object
+      required: [learner]
+      properties:
+        learner:
+          type: object
+          required: [membershipId, user, summary]
+          properties:
+            membershipId:
+              type: string
+              format: uuid
+            user:
+              $ref: "#/components/schemas/User"
+            summary:
+              $ref: "#/components/schemas/LearningSummary"
