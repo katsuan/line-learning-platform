@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LearningPlatform 管理画面</title>
+    <style>
+      :root {
+        --bg: #efe6d9;
+        --panel: rgba(255, 251, 244, 0.9);
+        --ink: #1d1b17;
+        --muted: #6d665b;
+        --line: rgba(30, 27, 24, 0.1);
+        --accent: #165c47;
+        --accent-soft: rgba(22, 92, 71, 0.1);
+        --shadow: 0 18px 48px rgba(50, 39, 15, 0.12);
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        color: var(--ink);
+        font-family: Georgia, "Hiragino Mincho ProN", serif;
+        background:
+          radial-gradient(circle at top right, rgba(22, 92, 71, 0.12), transparent 25%),
+          linear-gradient(180deg, #f1e9dd 0%, var(--bg) 100%);
+      }
+      .shell {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 18px 14px 64px;
+        display: grid;
+        gap: 14px;
+      }
+      .hero, .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 26px;
+        box-shadow: var(--shadow);
+      }
+      .hero { padding: 20px 18px; }
+      .hero p { margin: 0; color: var(--muted); }
+      .eyebrow {
+        color: var(--accent);
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+      h1 {
+        margin: 10px 0 0;
+        font-size: clamp(24px, 8vw, 42px);
+        line-height: 1;
+      }
+      .hero-actions {
+        display: grid;
+        grid-template-columns: 1.3fr 0.7fr;
+        gap: 10px;
+        margin-top: 16px;
+      }
+      button {
+        appearance: none;
+        border: none;
+        border-radius: 999px;
+        padding: 14px 16px;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .primary { background: var(--accent); color: #f6f1e8; }
+      .secondary { background: rgba(255,251,244,0.9); color: var(--ink); border: 1px solid var(--line); }
+      .grid { display: grid; gap: 14px; }
+      .summary {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .card {
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: rgba(255,255,255,0.44);
+      }
+      .label { margin: 0; color: var(--muted); font-size: 13px; }
+      .value { margin: 8px 0 0; font-size: 24px; }
+      .layout {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+      .panel { padding: 18px; }
+      .section-title { margin: 0 0 10px; font-size: 20px; }
+      .learner-list {
+        display: grid;
+        gap: 10px;
+      }
+      .learner-item {
+        display: grid;
+        gap: 8px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: rgba(255,255,255,0.48);
+      }
+      .learner-item.current {
+        border-color: rgba(22,92,71,0.24);
+        background: var(--accent-soft);
+      }
+      .learner-item button {
+        background: transparent;
+        text-align: left;
+        padding: 0;
+        color: var(--ink);
+      }
+      .muted { color: var(--muted); }
+      .detail-stack {
+        display: grid;
+        gap: 12px;
+      }
+      .session-list {
+        display: grid;
+        gap: 8px;
+      }
+      .session-item {
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: rgba(255,255,255,0.44);
+      }
+      details { display: none; }
+      pre {
+        margin: 0;
+        padding: 16px;
+        border-radius: 18px;
+        background: #1f1d1a;
+        color: #f7f2ea;
+        overflow: auto;
+        max-height: 220px;
+        font-size: 12px;
+      }
+      @media (min-width: 941px) {
+        .layout {
+          grid-template-columns: 360px minmax(0, 1fr);
+        }
+      }
+      @media (max-width: 640px) {
+        .summary { grid-template-columns: 1fr; }
+        .hero-actions { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <p class="eyebrow">Tenant Admin</p>
+        <h1>学習者ダッシュボード</h1>
+        <p style="margin-top: 12px;">学習者一覧と最近の進み具合を確認する、MVPの最小管理画面です。</p>
+        <div class="hero-actions">
+          <button id="loadLearnersButton" class="primary" type="button">学習者一覧を読み込む</button>
+          <button id="refreshSummaryButton" class="secondary" type="button">情報を更新</button>
+        </div>
+      </section>
+
+      <section class="grid">
+        <div class="summary">
+          <div class="card">
+            <p class="label">学習者数</p>
+            <p id="learnerCount" class="value">0</p>
+          </div>
+          <div class="card">
+            <p class="label">回答総数</p>
+            <p id="totalAnswered" class="value">0</p>
+          </div>
+          <div class="card">
+            <p class="label">平均正答率</p>
+            <p id="averageAccuracy" class="value">0%</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="layout">
+        <section class="panel">
+          <h2 class="section-title">学習者一覧</h2>
+          <div id="learnerList" class="learner-list">
+            <div class="learner-item"><span class="muted">まだ読み込まれていません。</span></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2 class="section-title">学習者詳細</h2>
+          <div id="learnerDetail" class="detail-stack">
+            <div class="card"><span class="muted">一覧から学習者を選ぶと、ここに詳細が表示されます。</span></div>
+          </div>
+        </section>
+      </section>
+
+      <details id="debugPanel">
+        <summary>開発ログ</summary>
+        <pre id="responsePanel">まだリクエストは実行されていません。</pre>
+      </details>
+    </main>
+
+    <script src="./config.js"></script>
+    <script>
+      (function () {
+        var config = window.APP_CONFIG || {};
+        var state = {
+          learners: [],
+          selectedMembershipId: "",
+          selectedLearner: null
+        };
+
+        var learnerCountEl = document.getElementById("learnerCount");
+        var totalAnsweredEl = document.getElementById("totalAnswered");
+        var averageAccuracyEl = document.getElementById("averageAccuracy");
+        var learnerListEl = document.getElementById("learnerList");
+        var learnerDetailEl = document.getElementById("learnerDetail");
+        var responsePanelEl = document.getElementById("responsePanel");
+        var debugPanelEl = document.getElementById("debugPanel");
+        var debugMode = new URLSearchParams(window.location.search).get("debug") === "1";
+
+        if (debugMode) {
+          debugPanelEl.style.display = "block";
+        }
+
+        document.getElementById("loadLearnersButton").addEventListener("click", loadLearners_);
+        document.getElementById("refreshSummaryButton").addEventListener("click", loadLearners_);
+
+        loadLearners_();
+
+        function loadLearners_() {
+          requestJson_("GET", config.adminLearnersAction || "listAdminLearners")
+            .then(function (payload) {
+              state.learners = payload.learners || [];
+              if (!state.selectedMembershipId && state.learners[0]) {
+                state.selectedMembershipId = state.learners[0].membershipId;
+              }
+              renderSummary_();
+              renderLearnerList_();
+              if (state.selectedMembershipId) {
+                loadLearnerDetail_(state.selectedMembershipId);
+              } else {
+                renderLearnerDetail_();
+              }
+              renderResponse_(payload);
+            })
+            .catch(renderError_);
+        }
+
+        function loadLearnerDetail_(membershipId) {
+          requestJson_("GET", config.adminLearnerDetailAction || "getAdminLearnerDetail", {
+            membershipId: membershipId
+          })
+            .then(function (payload) {
+              state.selectedLearner = payload.learner || null;
+              renderLearnerList_();
+              renderLearnerDetail_();
+              renderResponse_(payload);
+            })
+            .catch(renderError_);
+        }
+
+        function requestJson_(method, action, extraParams) {
+          var url = new URL(config.gasWebAppUrl, window.location.href);
+          url.searchParams.set("action", action);
+          if (config.tenantId) {
+            url.searchParams.set("tenantId", config.tenantId);
+          }
+          if (extraParams) {
+            Object.keys(extraParams).forEach(function (key) {
+              url.searchParams.set(key, extraParams[key]);
+            });
+          }
+
+          return fetch(url.toString(), {
+            method: method,
+            mode: "cors",
+            headers: { "Accept": "application/json" }
+          }).then(function (response) {
+            return response.text().then(function (text) {
+              var payload;
+              try {
+                payload = JSON.parse(text);
+              } catch (error) {
+                payload = { raw: text };
+              }
+
+              if (!response.ok || payload.error) {
+                throw payload;
+              }
+
+              return payload;
+            });
+          });
+        }
+
+        function renderSummary_() {
+          learnerCountEl.textContent = String(state.learners.length);
+          totalAnsweredEl.textContent = String(state.learners.reduce(function (sum, learner) {
+            return sum + Number(learner.totalAnsweredCount || 0);
+          }, 0));
+
+          var average = state.learners.length === 0 ? 0 : state.learners.reduce(function (sum, learner) {
+            return sum + Number(learner.accuracyRate || 0);
+          }, 0) / state.learners.length;
+          averageAccuracyEl.textContent = Math.round(average * 100) + "%";
+        }
+
+        function renderLearnerList_() {
+          if (state.learners.length === 0) {
+            learnerListEl.innerHTML = '<div class="learner-item"><span class="muted">まだ学習者データがありません。</span></div>';
+            return;
+          }
+
+          learnerListEl.innerHTML = "";
+          state.learners.forEach(function (learner) {
+            var item = document.createElement("div");
+            item.className = "learner-item" + (learner.membershipId === state.selectedMembershipId ? " current" : "");
+
+            var button = document.createElement("button");
+            button.type = "button";
+            button.textContent = learner.displayName;
+            button.addEventListener("click", function () {
+              state.selectedMembershipId = learner.membershipId;
+              loadLearnerDetail_(learner.membershipId);
+            });
+
+            var meta = document.createElement("span");
+            meta.className = "muted";
+            meta.textContent = "回答 " + learner.totalAnsweredCount + " / 正答率 " + Math.round((learner.accuracyRate || 0) * 100) + "%";
+
+            item.appendChild(button);
+            item.appendChild(meta);
+            learnerListEl.appendChild(item);
+          });
+        }
+
+        function renderLearnerDetail_() {
+          if (!state.selectedLearner) {
+            learnerDetailEl.innerHTML = '<div class="card"><span class="muted">一覧から学習者を選ぶと、ここに詳細が表示されます。</span></div>';
+            return;
+          }
+
+          var learner = state.selectedLearner;
+          var summary = learner.summary || {};
+          var recentSessions = learner.recentSessions || [];
+
+          learnerDetailEl.innerHTML = [
+            '<div class="summary">',
+            '  <div class="card"><p class="label">学習者</p><p class="value" style="font-size: 22px;">' + escapeHtml_(learner.user.display_name || "-") + '</p></div>',
+            '  <div class="card"><p class="label">回答数</p><p class="value">' + escapeHtml_(String(summary.totalAnsweredCount || 0)) + '</p></div>',
+            '  <div class="card"><p class="label">正答率</p><p class="value">' + Math.round((summary.accuracyRate || 0) * 100) + '%</p></div>',
+            '</div>',
+            '<div class="card">',
+            '  <p class="label">直近学習日時</p>',
+            '  <p class="value" style="font-size: 20px;">' + escapeHtml_(summary.lastLearnedAt || "まだ記録がありません") + '</p>',
+            '</div>',
+            '<div>',
+            '  <h3 class="section-title" style="font-size: 18px;">最近のセッション</h3>',
+            renderRecentSessions_(recentSessions),
+            '</div>'
+          ].join("");
+        }
+
+        function renderRecentSessions_(recentSessions) {
+          if (!recentSessions.length) {
+            return '<div class="card"><span class="muted">まだセッション履歴がありません。</span></div>';
+          }
+
+          return [
+            '<div class="session-list">',
+            recentSessions.map(function (session) {
+              return '<div class="session-item"><strong>' +
+                escapeHtml_(session.businessDate || session.createdAt || "") +
+                '</strong><br><span class="muted">' +
+                escapeHtml_(session.sessionType) + ' / ' + escapeHtml_(session.status) + ' / ' +
+                escapeHtml_(String(session.questionCount)) + '問</span></div>';
+            }).join(""),
+            '</div>'
+          ].join("");
+        }
+
+        function renderResponse_(payload) {
+          responsePanelEl.textContent = JSON.stringify(payload, null, 2);
+        }
+
+        function renderError_(error) {
+          responsePanelEl.textContent = JSON.stringify(error, null, 2);
+        }
+
+        function escapeHtml_(value) {
+          return String(value || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+        }
+      })();
+    </script>
+  </body>
+</html>

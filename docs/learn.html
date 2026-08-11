@@ -67,7 +67,7 @@
 
       .top-actions {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1.45fr 0.85fr;
         gap: 10px;
       }
 
@@ -94,6 +94,13 @@
         background: rgba(255, 251, 244, 0.84);
         color: var(--ink);
         border: 1px solid var(--line);
+      }
+
+      .helper-text {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.6;
       }
 
       button:disabled {
@@ -530,10 +537,10 @@
           <h1>学習ルーム</h1>
         </div>
         <div class="top-actions">
-          <button id="refreshHomeButton" class="secondary" type="button">状態を更新</button>
           <button id="startDailyButton" type="button">今日の5問を始める</button>
-          <a class="button" href="./index.html">確認ページへ戻る</a>
+          <button id="refreshHomeButton" class="secondary" type="button">状態を更新</button>
         </div>
+        <p class="helper-text">最初は「今日の5問を始める」を押して学習を開始します。状態を更新は補助操作です。</p>
       </div>
 
       <div class="layout">
@@ -608,7 +615,7 @@
             <div class="empty-state">
               <h2>はじめる準備ができています</h2>
               <p>
-                `今日の5問を始める` を押すと、GAS で Daily Session を取得または生成し、この画面で問題を順に確認できます。
+                まずは「今日の5問を始める」を押して、今日の学習を開始しましょう。
               </p>
             </div>
           </div>

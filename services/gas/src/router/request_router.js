@@ -30,6 +30,10 @@ var RequestRouter = (function () {
         return ResolveDailySessionUsecase.execute(request);
       case "createAnswerEvent":
         return CreateAnswerEventUsecase.execute(request);
+      case "listAdminLearners":
+        return AdminLearnerListUsecase.execute(request);
+      case "getAdminLearnerDetail":
+        return AdminLearnerDetailUsecase.execute(request);
       default:
         throw AppError.validation("unknown_action", "unsupported action: " + request.action);
     }
