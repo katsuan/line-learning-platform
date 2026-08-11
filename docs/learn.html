@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>LearningPlatform Learn</title>
+    <title>LearningPlatform 学習画面</title>
     <style>
       :root {
         --bg: #f2eadc;
@@ -35,15 +35,13 @@
       .shell {
         max-width: 1180px;
         margin: 0 auto;
-        padding: 28px 18px 60px;
+        padding: 16px 14px 96px;
       }
 
       .topbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 16px;
-        margin-bottom: 18px;
+        display: grid;
+        gap: 14px;
+        margin-bottom: 14px;
       }
 
       .brand {
@@ -55,22 +53,22 @@
       .eyebrow {
         margin: 0;
         color: var(--accent);
-        font-size: 13px;
+        font-size: 11px;
         text-transform: uppercase;
         letter-spacing: 0.14em;
       }
 
       h1 {
         margin: 0;
-        font-size: clamp(30px, 5vw, 58px);
-        line-height: 0.95;
+        font-size: clamp(22px, 8vw, 44px);
+        line-height: 1;
         font-weight: 600;
       }
 
       .top-actions {
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
       }
 
       .button,
@@ -78,11 +76,12 @@
         appearance: none;
         border: none;
         border-radius: 999px;
-        padding: 12px 18px;
+        padding: 13px 16px;
         font: inherit;
         font-weight: 700;
         cursor: pointer;
         text-decoration: none;
+        text-align: center;
       }
 
       button {
@@ -104,8 +103,8 @@
 
       .layout {
         display: grid;
-        grid-template-columns: 320px minmax(0, 1fr);
-        gap: 20px;
+        grid-template-columns: 1fr;
+        gap: 14px;
       }
 
       .panel {
@@ -117,14 +116,14 @@
       }
 
       .sidebar {
-        padding: 22px;
+        padding: 18px;
         display: flex;
         flex-direction: column;
-        gap: 18px;
+        gap: 14px;
       }
 
       .main {
-        padding: 22px;
+        padding: 18px;
       }
 
       .section-title {
@@ -138,13 +137,14 @@
 
       .summary-grid {
         display: grid;
-        gap: 12px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
       }
 
       .summary-card {
         border: 1px solid var(--line);
         border-radius: 20px;
-        padding: 16px;
+        padding: 14px;
         background: rgba(255, 255, 255, 0.45);
       }
 
@@ -156,16 +156,14 @@
 
       .summary-value {
         margin: 8px 0 0;
-        font-size: 28px;
+        font-size: 24px;
         line-height: 1;
       }
 
       .session-strip {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 16px 18px;
+        display: grid;
+        gap: 10px;
+        padding: 14px 16px;
         border: 1px solid var(--line);
         border-radius: 22px;
         background: linear-gradient(135deg, rgba(18, 99, 71, 0.08), rgba(208, 139, 53, 0.08));
@@ -190,7 +188,7 @@
       }
 
       .question-shell {
-        margin-top: 18px;
+        margin-top: 14px;
         display: grid;
         gap: 16px;
       }
@@ -198,7 +196,7 @@
       .question-card {
         border: 1px solid var(--line);
         border-radius: 26px;
-        padding: 24px;
+        padding: 18px;
         background: rgba(255, 255, 255, 0.56);
       }
 
@@ -220,8 +218,8 @@
 
       .question-text {
         margin: 0;
-        font-size: clamp(25px, 3vw, 38px);
-        line-height: 1.14;
+        font-size: clamp(24px, 7vw, 38px);
+        line-height: 1.2;
       }
 
       .answer-zone {
@@ -260,10 +258,16 @@
       }
 
       .question-nav {
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        flex-wrap: wrap;
+        position: sticky;
+        bottom: 12px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        padding: 10px;
+        border-radius: 22px;
+        background: rgba(255, 251, 244, 0.92);
+        backdrop-filter: blur(8px);
+        border: 1px solid var(--line);
       }
 
       .mini-list {
@@ -301,6 +305,35 @@
         overflow: auto;
         font-size: 13px;
         line-height: 1.55;
+        max-height: 220px;
+      }
+
+      .details-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .compact-meta {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .compact-chip {
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.4);
+      }
+
+      .compact-chip strong {
+        display: block;
+        font-size: 16px;
+        margin-top: 4px;
       }
 
       .empty-state {
@@ -323,30 +356,74 @@
         line-height: 1.75;
       }
 
-      @media (max-width: 940px) {
-        .layout {
+      @media (max-width: 640px) {
+        .topbar {
+          gap: 12px;
+        }
+
+        .top-actions {
           grid-template-columns: 1fr;
+        }
+
+        .summary-grid,
+        .compact-meta {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .section-title {
+          font-size: 18px;
+        }
+
+        .sidebar {
+          order: 2;
+        }
+
+        .main {
+          order: 1;
+        }
+
+        .response-box {
+          font-size: 12px;
+        }
+
+        .question-card {
+          padding: 16px;
+        }
+
+        .mini-item button {
+          font-size: 14px;
+          line-height: 1.5;
         }
       }
 
-      @media (max-width: 640px) {
+      @media (min-width: 941px) {
         .shell {
-          padding-inline: 14px;
+          padding: 28px 18px 72px;
         }
 
         .topbar {
-          align-items: flex-start;
-          flex-direction: column;
+          grid-template-columns: minmax(0, 1fr) auto;
+          align-items: center;
+          margin-bottom: 18px;
         }
 
-        .question-nav,
+        .layout {
+          grid-template-columns: 300px minmax(0, 1fr);
+          gap: 20px;
+        }
+
         .top-actions {
-          width: 100%;
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: flex-end;
         }
 
-        .top-actions > * {
-          flex: 1 1 auto;
-          text-align: center;
+        .question-nav {
+          position: static;
+          padding: 0;
+          background: transparent;
+          border: none;
+          backdrop-filter: none;
         }
       }
     </style>
@@ -355,51 +432,51 @@
     <main class="shell">
       <div class="topbar">
         <div class="brand">
-          <p class="eyebrow">Daily Session UI</p>
-          <h1>Learning Room</h1>
+          <p class="eyebrow">今日の5問</p>
+          <h1>学習ルーム</h1>
         </div>
         <div class="top-actions">
-          <button id="refreshHomeButton" class="secondary" type="button">Refresh Home</button>
-          <button id="startDailyButton" type="button">Start Today's 5</button>
-          <a class="button" href="./index.html">Back To Check</a>
+          <button id="refreshHomeButton" class="secondary" type="button">状態を更新</button>
+          <button id="startDailyButton" type="button">今日の5問を始める</button>
+          <a class="button" href="./index.html">確認ページへ戻る</a>
         </div>
       </div>
 
       <div class="layout">
         <aside class="panel sidebar">
           <section>
-            <h2 class="section-title">Learner</h2>
+            <h2 class="section-title">学習者</h2>
             <div class="summary-grid">
               <div class="summary-card">
-                <p class="summary-label">Display Name</p>
+                <p class="summary-label">表示名</p>
                 <p id="displayName" class="summary-value" style="font-size: 22px;">-</p>
               </div>
               <div class="summary-card">
-                <p class="summary-label">Tenant</p>
+                <p class="summary-label">利用テナント</p>
                 <p id="tenantName" class="summary-value" style="font-size: 20px;">-</p>
               </div>
             </div>
           </section>
 
           <section>
-            <h2 class="section-title">Home Snapshot</h2>
-            <div class="summary-grid">
+            <h2 class="section-title">学習サマリ</h2>
+            <div class="compact-meta">
               <div class="summary-card">
-                <p class="summary-label">Answered</p>
+                <p class="summary-label">回答済み</p>
                 <p id="answeredCount" class="summary-value">0</p>
               </div>
               <div class="summary-card">
-                <p class="summary-label">Accuracy</p>
+                <p class="summary-label">正答率</p>
                 <p id="accuracyRate" class="summary-value">0%</p>
               </div>
             </div>
           </section>
 
           <section>
-            <h2 class="section-title">Question Map</h2>
+            <h2 class="section-title">問題一覧</h2>
             <div id="questionMap" class="mini-list">
               <div class="mini-item">
-                <span class="muted">Session not loaded yet.</span>
+                <span class="muted">まだセッションが読み込まれていません。</span>
               </div>
             </div>
           </section>
@@ -410,22 +487,39 @@
             <div>
               <div class="pill">
                 <span class="pill-dot"></span>
-                <span id="sessionPillLabel">Waiting for session</span>
+                <span id="sessionPillLabel">セッション待機中</span>
               </div>
               <p id="sessionMeta" class="note" style="margin-top: 12px;">Home 情報と今日の5問セッションを読み込むと、ここに進行状況が出ます。</p>
+            </div>
+            <div class="compact-meta">
+              <div class="compact-chip">
+                <span class="muted">学習者</span>
+                <strong id="displayNameInline">-</strong>
+              </div>
+              <div class="compact-chip">
+                <span class="muted">テナント</span>
+                <strong id="tenantNameInline">-</strong>
+              </div>
+              <div class="compact-chip">
+                <span class="muted">進行</span>
+                <strong id="progressInline">0 / 0</strong>
+              </div>
             </div>
           </div>
 
           <div id="questionShell" class="question-shell">
             <div class="empty-state">
-              <h2>Ready To Start</h2>
+              <h2>はじめる準備ができています</h2>
               <p>
-                `Start Today's 5` を押すと、GAS で Daily Session を取得または生成し、この画面で問題を順に確認できます。
+                `今日の5問を始める` を押すと、GAS で Daily Session を取得または生成し、この画面で問題を順に確認できます。
               </p>
             </div>
           </div>
 
-          <pre id="responsePanel" class="response-box">No request yet.</pre>
+          <details style="margin-top: 18px;">
+            <summary class="details-toggle">開発ログを見る</summary>
+            <pre id="responsePanel" class="response-box">まだリクエストは実行されていません。</pre>
+          </details>
         </section>
       </div>
     </main>
@@ -444,6 +538,9 @@
 
         var displayNameEl = document.getElementById("displayName");
         var tenantNameEl = document.getElementById("tenantName");
+        var displayNameInlineEl = document.getElementById("displayNameInline");
+        var tenantNameInlineEl = document.getElementById("tenantNameInline");
+        var progressInlineEl = document.getElementById("progressInline");
         var answeredCountEl = document.getElementById("answeredCount");
         var accuracyRateEl = document.getElementById("accuracyRate");
         var sessionPillLabelEl = document.getElementById("sessionPillLabel");
@@ -539,6 +636,8 @@
           if (state.me) {
             displayNameEl.textContent = state.me.user.display_name || "-";
             tenantNameEl.textContent = state.me.tenant.name || "-";
+            displayNameInlineEl.textContent = state.me.user.display_name || "-";
+            tenantNameInlineEl.textContent = state.me.tenant.name || "-";
           }
 
           if (state.home && state.home.learningSummary) {
@@ -551,19 +650,21 @@
 
         function renderSessionMeta_() {
           if (!state.session) {
-            sessionPillLabelEl.textContent = "Waiting for session";
+            sessionPillLabelEl.textContent = "セッション待機中";
             sessionMetaEl.textContent = "今日の5問セッションを作成すると、問題数と進行状況が表示されます。";
+            progressInlineEl.textContent = "0 / 0";
             return;
           }
 
           var questionCount = state.session.questionCount || 0;
-          sessionPillLabelEl.textContent = "Daily Session " + (state.session.businessDate || "");
-          sessionMetaEl.textContent = questionCount + "問中 " + (state.currentQuestionIndex + 1) + " 問目を表示しています。courseId=" + (state.session.courseId || "-");
+          sessionPillLabelEl.textContent = "今日の5問 " + (state.session.businessDate || "");
+          sessionMetaEl.textContent = questionCount + "問中 " + (state.currentQuestionIndex + 1) + "問目を表示しています。教材ID: " + (state.session.courseId || "-");
+          progressInlineEl.textContent = (state.currentQuestionIndex + 1) + " / " + questionCount;
         }
 
         function renderQuestionMap_() {
           if (!state.session || !state.session.questions || state.session.questions.length === 0) {
-            questionMapEl.innerHTML = '<div class="mini-item"><span class="muted">Session not loaded yet.</span></div>';
+            questionMapEl.innerHTML = '<div class="mini-item"><span class="muted">まだセッションが読み込まれていません。</span></div>';
             return;
           }
 
@@ -596,8 +697,8 @@
           if (!state.session || !state.session.questions || state.session.questions.length === 0) {
             questionShellEl.innerHTML = [
               '<div class="empty-state">',
-              '<h2>Ready To Start</h2>',
-              '<p>`Start Today\\'s 5` を押すと、Daily Session を取得してここに問題が出ます。</p>',
+              '<h2>はじめる準備ができています</h2>',
+              '<p>`今日の5問を始める` を押すと、Daily Session を取得してここに問題が出ます。</p>',
               '</div>'
             ].join("");
             return;
@@ -611,18 +712,18 @@
             '<article class="question-card">',
             '  <div class="question-meta">',
             '    <span class="question-type">' + escapeHtml_(question.questionType) + '</span>',
-            '    <span class="muted">Question ' + (state.currentQuestionIndex + 1) + ' / ' + state.session.questions.length + '</span>',
+            '    <span class="muted">' + (state.currentQuestionIndex + 1) + ' / ' + state.session.questions.length + ' 問</span>',
             '  </div>',
             '  <p class="question-text">' + escapeHtml_(question.questionText) + '</p>',
             '  <div class="answer-zone">',
-            '    <label for="answerInput">Answer Draft</label>',
+            '    <label for="answerInput">回答入力</label>',
             renderAnswerControl_(question, savedAnswer),
             '    <p class="note">採点APIは次の段階でつなぎ込みます。今は回答入力と問題遷移の UI まで進めています。</p>',
             '  </div>',
             '</article>',
             '<div class="question-nav">',
-            '  <button class="secondary" id="prevQuestionButton" type="button"' + (state.currentQuestionIndex === 0 ? " disabled" : "") + '>Previous</button>',
-            '  <button id="nextQuestionButton" type="button"' + (state.currentQuestionIndex === state.session.questions.length - 1 ? " disabled" : "") + '>Next</button>',
+            '  <button class="secondary" id="prevQuestionButton" type="button"' + (state.currentQuestionIndex === 0 ? " disabled" : "") + '>前の問題</button>',
+            '  <button id="nextQuestionButton" type="button"' + (state.currentQuestionIndex === state.session.questions.length - 1 ? " disabled" : "") + '>次の問題</button>',
             '</div>'
           ].join("");
 
@@ -667,8 +768,8 @@
             return [
               '<select id="answerInput">',
               '  <option value="">選択してください</option>',
-              '  <option value="true"' + (savedAnswer === "true" ? " selected" : "") + '>True / 正しい</option>',
-              '  <option value="false"' + (savedAnswer === "false" ? " selected" : "") + '>False / 誤り</option>',
+              '  <option value="true"' + (savedAnswer === "true" ? " selected" : "") + '>正しい</option>',
+              '  <option value="false"' + (savedAnswer === "false" ? " selected" : "") + '>誤り</option>',
               '</select>'
             ].join("");
           }
