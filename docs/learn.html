@@ -141,6 +141,10 @@
         gap: 10px;
       }
 
+      .summary-grid.single {
+        grid-template-columns: 1fr;
+      }
+
       .summary-card {
         border: 1px solid var(--line);
         border-radius: 20px;
@@ -257,6 +261,30 @@
         line-height: 1.7;
       }
 
+      .progress-bar {
+        position: relative;
+        width: 100%;
+        height: 10px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: rgba(18, 99, 71, 0.1);
+      }
+
+      .progress-fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 0%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--accent), #1f8b67);
+        transition: width 180ms ease;
+      }
+
+      .primary-cta {
+        width: 100%;
+        padding: 16px 18px;
+        font-size: 17px;
+      }
+
       .result-card {
         border-radius: 22px;
         border: 1px solid var(--line);
@@ -284,6 +312,13 @@
       .result-meta {
         display: grid;
         gap: 6px;
+      }
+
+      .result-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-top: 8px;
       }
 
       .save-status {
@@ -370,6 +405,27 @@
         margin-top: 4px;
       }
 
+      .completion-card {
+        display: grid;
+        gap: 16px;
+        padding: 24px 20px;
+        border-radius: 28px;
+        border: 1px solid rgba(18, 99, 71, 0.16);
+        background: linear-gradient(145deg, rgba(18, 99, 71, 0.08), rgba(255, 255, 255, 0.72));
+      }
+
+      .completion-card h2 {
+        margin: 0;
+        font-size: clamp(28px, 8vw, 42px);
+        line-height: 1.05;
+      }
+
+      .completion-stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
       .empty-state {
         padding: 50px 22px;
         text-align: center;
@@ -427,6 +483,10 @@
         .mini-item button {
           font-size: 14px;
           line-height: 1.5;
+        }
+
+        .completion-stats {
+          grid-template-columns: 1fr;
         }
       }
 
@@ -524,6 +584,9 @@
                 <span id="sessionPillLabel">セッション待機中</span>
               </div>
               <p id="sessionMeta" class="note" style="margin-top: 12px;">Home 情報と今日の5問セッションを読み込むと、ここに進行状況が出ます。</p>
+              <div class="progress-bar" style="margin-top: 14px;">
+                <div id="progressFill" class="progress-fill"></div>
+              </div>
             </div>
             <div class="compact-meta">
               <div class="compact-chip">
@@ -550,7 +613,7 @@
             </div>
           </div>
 
-          <details style="margin-top: 18px;">
+          <details id="debugPanel" style="margin-top: 18px; display: none;">
             <summary class="details-toggle">開発ログを見る</summary>
             <pre id="responsePanel" class="response-box">まだリクエストは実行されていません。</pre>
           </details>
@@ -577,6 +640,7 @@
         var displayNameInlineEl = document.getElementById("displayNameInline");
         var tenantNameInlineEl = document.getElementById("tenantNameInline");
         var progressInlineEl = document.getElementById("progressInline");
+        var progressFillEl = document.getElementById("progressFill");
         var answeredCountEl = document.getElementById("answeredCount");
         var accuracyRateEl = document.getElementById("accuracyRate");
         var sessionPillLabelEl = document.getElementById("sessionPillLabel");
@@ -584,8 +648,14 @@
         var questionMapEl = document.getElementById("questionMap");
         var questionShellEl = document.getElementById("questionShell");
         var responsePanelEl = document.getElementById("responsePanel");
+        var debugPanelEl = document.getElementById("debugPanel");
         var refreshHomeButtonEl = document.getElementById("refreshHomeButton");
         var startDailyButtonEl = document.getElementById("startDailyButton");
+        var debugMode = new URLSearchParams(window.location.search).get("debug") === "1";
+
+        if (debugMode) {
+          debugPanelEl.style.display = "";
+        }
 
         refreshHomeButtonEl.addEventListener("click", loadHomeData_);
         startDailyButtonEl.addEventListener("click", resolveDailySession_);
@@ -691,18 +761,24 @@
             sessionPillLabelEl.textContent = "セッション待機中";
             sessionMetaEl.textContent = "今日の5問セッションを作成すると、問題数と進行状況が表示されます。";
             progressInlineEl.textContent = "0 / 0";
+            progressFillEl.style.width = "0%";
             return;
           }
 
           var questionCount = state.session.questionCount || 0;
+          var answered = getAnsweredCount_();
+          var displayIndex = Math.min(state.currentQuestionIndex + 1, questionCount);
           sessionPillLabelEl.textContent = "今日の5問 " + (state.session.businessDate || "");
-          sessionMetaEl.textContent = questionCount + "問中 " + (state.currentQuestionIndex + 1) + "問目を表示しています。教材ID: " + (state.session.courseId || "-");
-          progressInlineEl.textContent = (state.currentQuestionIndex + 1) + " / " + questionCount;
+          sessionMetaEl.textContent = answered >= questionCount
+            ? "5問おつかれさまでした。結果を確認して、次の学習へ進みましょう。"
+            : questionCount + "問中 " + displayIndex + "問目を表示しています。";
+          progressInlineEl.textContent = answered + " / " + questionCount;
+          progressFillEl.style.width = questionCount === 0 ? "0%" : ((answered / questionCount) * 100) + "%";
         }
 
         function renderQuestionMap_() {
           if (!state.session || !state.session.questions || state.session.questions.length === 0) {
-            questionMapEl.innerHTML = '<div class="mini-item"><span class="muted">まだセッションが読み込まれていません。</span></div>';
+            questionMapEl.innerHTML = '<div class="mini-item"><span class="muted">今日の5問を始めると、ここに進み具合が出ます。</span></div>';
             return;
           }
 
@@ -710,10 +786,13 @@
           state.session.questions.forEach(function (question, index) {
             var item = document.createElement("div");
             item.className = "mini-item" + (index === state.currentQuestionIndex ? " current" : "");
+            if (state.results[question.sessionQuestionId]) {
+              item.className += state.results[question.sessionQuestionId].isCorrect ? " answered-correct" : " answered-incorrect";
+            }
 
             var button = document.createElement("button");
             button.type = "button";
-            button.textContent = (index + 1) + ". " + question.questionText;
+            button.textContent = "第" + (index + 1) + "問";
             button.addEventListener("click", function () {
               state.currentQuestionIndex = index;
               renderSessionMeta_();
@@ -723,7 +802,9 @@
 
             var meta = document.createElement("span");
             meta.className = "muted";
-            meta.textContent = question.questionType + " / " + question.gradingType;
+            meta.textContent = state.results[question.sessionQuestionId]
+              ? (state.results[question.sessionQuestionId].isCorrect ? "正解済み" : "見直し中")
+              : "未回答";
 
             item.appendChild(button);
             item.appendChild(meta);
@@ -742,6 +823,11 @@
             return;
           }
 
+          if (isSessionCompleted_()) {
+            renderCompletionView_();
+            return;
+          }
+
           var question = state.session.questions[state.currentQuestionIndex];
           var answerKey = question.sessionQuestionId;
           var savedAnswer = state.answers[answerKey] || "";
@@ -751,22 +837,18 @@
           questionShellEl.innerHTML = [
             '<article class="question-card">',
             '  <div class="question-meta">',
-            '    <span class="question-type">' + escapeHtml_(question.questionType) + '</span>',
+            '    <span class="question-type">' + escapeHtml_(toQuestionTypeLabel_(question.questionType)) + '</span>',
             '    <span class="muted">' + (state.currentQuestionIndex + 1) + ' / ' + state.session.questions.length + ' 問</span>',
             '  </div>',
             '  <p class="question-text">' + escapeHtml_(question.questionText) + '</p>',
             '  <div class="answer-zone">',
             '    <label for="answerInput">回答入力</label>',
             renderAnswerControl_(question, savedAnswer),
-            '    <button id="submitAnswerButton" type="button">回答する</button>',
+            '    <button id="submitAnswerButton" class="primary-cta" type="button"' + (result ? " disabled" : "") + '>回答する</button>',
             renderResultCard_(result, saveStatus),
-            '    <p class="note">採点はこの画面で即時に行い、学習履歴は裏で GAS へ保存します。</p>',
             '  </div>',
             '</article>',
-            '<div class="question-nav">',
-            '  <button class="secondary" id="prevQuestionButton" type="button"' + (state.currentQuestionIndex === 0 ? " disabled" : "") + '>前の問題</button>',
-            '  <button id="nextQuestionButton" type="button"' + (state.currentQuestionIndex === state.session.questions.length - 1 ? " disabled" : "") + '>次の問題</button>',
-            '</div>'
+            renderQuestionNav_(result)
           ].join("");
 
           var answerInputEl = document.getElementById("answerInput");
@@ -786,9 +868,16 @@
           if (submitAnswerButtonEl) {
             submitAnswerButtonEl.addEventListener("click", function () {
               var currentAnswer = state.answers[answerKey] || "";
+              if (currentAnswer === "") {
+                state.saveStatus[answerKey] = "回答を入力してください。";
+                renderQuestionView_();
+                return;
+              }
               var gradingResult = gradeAnswer_(question, currentAnswer);
               state.results[answerKey] = gradingResult;
               state.saveStatus[answerKey] = "保存中...";
+              renderSessionMeta_();
+              renderQuestionMap_();
               renderQuestionView_();
               persistAnswerEvent_(question, currentAnswer, gradingResult);
             });
@@ -805,7 +894,14 @@
 
           if (nextButtonEl) {
             nextButtonEl.addEventListener("click", function () {
-              state.currentQuestionIndex = Math.min(state.session.questions.length - 1, state.currentQuestionIndex + 1);
+              moveToNextQuestion_();
+            });
+          }
+
+          var finishButtonEl = document.getElementById("finishSessionButton");
+          if (finishButtonEl) {
+            finishButtonEl.addEventListener("click", function () {
+              state.currentQuestionIndex = state.session.questions.length;
               renderSessionMeta_();
               renderQuestionMap_();
               renderQuestionView_();
@@ -850,8 +946,63 @@
             '    <span>' + escapeHtml_(explanation) + '</span>',
             '  </div>',
             '  <div class="save-status">' + escapeHtml_(saveStatus || "") + '</div>',
+            '  <div class="result-actions">',
+            isLastQuestion_()
+              ? '    <button id="finishSessionButton" type="button">結果を確認する</button>'
+              : '    <button id="nextQuestionButton" type="button">次の問題へ</button>',
+            '  </div>',
             '</div>'
           ].join('');
+        }
+
+        function renderQuestionNav_(result) {
+          if (result) {
+            return '';
+          }
+
+          return [
+            '<div class="question-nav">',
+            '  <button class="secondary" id="prevQuestionButton" type="button"' + (state.currentQuestionIndex === 0 ? " disabled" : "") + '>前の問題</button>',
+            '  <button id="nextQuestionButton" type="button"' + (state.currentQuestionIndex === state.session.questions.length - 1 ? " disabled" : "") + '>次の問題</button>',
+            '</div>'
+          ].join('');
+        }
+
+        function renderCompletionView_() {
+          var total = state.session.questions.length;
+          var correctCount = Object.keys(state.results).filter(function (key) {
+            return state.results[key] && state.results[key].isCorrect;
+          }).length;
+          var incorrectCount = total - correctCount;
+          var accuracy = total === 0 ? 0 : Math.round((correctCount / total) * 100);
+
+          questionShellEl.innerHTML = [
+            '<section class="completion-card">',
+            '  <h2>5問完了です</h2>',
+            '  <p class="note">ここまでの結果を確認して、もう一度見直したい問題があれば問題一覧から戻れます。</p>',
+            '  <div class="completion-stats">',
+            '    <div class="summary-card"><p class="summary-label">正解数</p><p class="summary-value">' + correctCount + '</p></div>',
+            '    <div class="summary-card"><p class="summary-label">見直し</p><p class="summary-value">' + incorrectCount + '</p></div>',
+            '    <div class="summary-card"><p class="summary-label">正答率</p><p class="summary-value">' + accuracy + '%</p></div>',
+            '    <div class="summary-card"><p class="summary-label">次の行動</p><p class="summary-value" style="font-size: 18px;">履歴を見る</p></div>',
+            '  </div>',
+            '  <div class="top-actions" style="grid-template-columns: 1fr 1fr;">',
+            '    <button class="secondary" id="reviewFirstQuestionButton" type="button">最初から見直す</button>',
+            '    <button id="restartDailyButton" type="button">もう一度ホームを見る</button>',
+            '  </div>',
+            '</section>'
+          ].join('');
+
+          document.getElementById("reviewFirstQuestionButton").addEventListener("click", function () {
+            state.currentQuestionIndex = 0;
+            renderSessionMeta_();
+            renderQuestionMap_();
+            renderQuestionView_();
+          });
+
+          document.getElementById("restartDailyButton").addEventListener("click", function () {
+            loadHomeData_();
+          });
         }
 
         function gradeAnswer_(question, rawAnswer) {
@@ -929,6 +1080,8 @@
             .then(function (response) {
               state.saveStatus[answerKey] = response.duplicated ? "すでに保存済みです。" : "回答を保存しました。";
               loadHomeData_();
+              renderSessionMeta_();
+              renderQuestionMap_();
               renderQuestionView_();
               renderResponse_(response);
             })
@@ -941,6 +1094,38 @@
 
         function buildIdempotencyKey_(question) {
           return state.session.sessionId + "_" + question.sessionQuestionId + "_" + state.currentQuestionIndex;
+        }
+
+        function moveToNextQuestion_() {
+          state.currentQuestionIndex = Math.min(state.session.questions.length - 1, state.currentQuestionIndex + 1);
+          renderSessionMeta_();
+          renderQuestionMap_();
+          renderQuestionView_();
+        }
+
+        function getAnsweredCount_() {
+          return Object.keys(state.results).length;
+        }
+
+        function isLastQuestion_() {
+          return state.currentQuestionIndex === state.session.questions.length - 1;
+        }
+
+        function isSessionCompleted_() {
+          return state.session && getAnsweredCount_() >= state.session.questions.length && state.currentQuestionIndex >= state.session.questions.length;
+        }
+
+        function toQuestionTypeLabel_(questionType) {
+          switch (questionType) {
+            case "TEXT_EXACT":
+              return "記述";
+            case "TRUE_FALSE":
+              return "正誤";
+            case "NUMBER":
+              return "数値";
+            default:
+              return questionType || "";
+          }
         }
 
         function renderResponse_(payload) {
