@@ -29,8 +29,15 @@ var MembershipSheetRepository = (function () {
     }) || null;
   }
 
+  function findByMembershipId(membershipId) {
+    return SpreadsheetGateway.readObjects(DomainConstants.SHEETS.MEMBERSHIPS).find(function (row) {
+      return row.membership_id === membershipId;
+    }) || null;
+  }
+
   return {
-    findFirstActiveByTenantId: findFirstActiveByTenantId
+    findFirstActiveByTenantId: findFirstActiveByTenantId,
+    findByMembershipId: findByMembershipId
   };
 })();
 
@@ -43,5 +50,93 @@ var FeatureEntitlementSheetRepository = (function () {
 
   return {
     listByTenantId: listByTenantId
+  };
+})();
+
+var CourseSheetRepository = (function () {
+  function listActiveByTenantId(tenantId) {
+    return SpreadsheetGateway.readObjects(DomainConstants.SHEETS.COURSES).filter(function (row) {
+      return row.tenant_id === tenantId && row.status === "ACTIVE";
+    });
+  }
+
+  return {
+    listActiveByTenantId: listActiveByTenantId
+  };
+})();
+
+var QuestionSheetRepository = (function () {
+  function listActiveByTenantId(tenantId) {
+    return SpreadsheetGateway.readObjects(DomainConstants.SHEETS.QUESTIONS).filter(function (row) {
+      return row.tenant_id === tenantId && row.status === "ACTIVE";
+    });
+  }
+
+  function findByQuestionId(questionId) {
+    return SpreadsheetGateway.readObjects(DomainConstants.SHEETS.QUESTIONS).find(function (row) {
+      return row.question_id === questionId;
+    }) || null;
+  }
+
+  return {
+    listActiveByTenantId: listActiveByTenantId,
+    findByQuestionId: findByQuestionId
+  };
+})();
+
+var LearningSessionSheetRepository = (function () {
+  function listByMembershipId(membershipId) {
+    return SpreadsheetGateway.readObjects(DomainConstants.SHEETS.LEARNING_SESSIONS).filter(function (row) {
+      return row.membership_id === membershipId;
+    });
+  }
+
+  function findDailyByMembershipAndBusinessDate(membershipId, businessDate) {
+    return listByMembershipId(membershipId).find(function (row) {
+      return row.session_type === DomainConstants.SESSION_TYPE.DAILY && row.business_date === businessDate;
+    }) || null;
+  }
+
+  function append(record) {
+    SpreadsheetGateway.appendObject(DomainConstants.SHEETS.LEARNING_SESSIONS, record);
+    return record;
+  }
+
+  return {
+    listByMembershipId: listByMembershipId,
+    findDailyByMembershipAndBusinessDate: findDailyByMembershipAndBusinessDate,
+    append: append
+  };
+})();
+
+var SessionQuestionSheetRepository = (function () {
+  function listByLearningSessionId(learningSessionId) {
+    return SpreadsheetGateway.readObjects(DomainConstants.SHEETS.SESSION_QUESTIONS).filter(function (row) {
+      return row.learning_session_id === learningSessionId;
+    });
+  }
+
+  function appendMany(records) {
+    records.forEach(function (record) {
+      SpreadsheetGateway.appendObject(DomainConstants.SHEETS.SESSION_QUESTIONS, record);
+    });
+    return records;
+  }
+
+  return {
+    listByLearningSessionId: listByLearningSessionId,
+    appendMany: appendMany
+  };
+})();
+
+var AnswerEventSheetRepository = (function () {
+  function listByMembershipId(membershipId) {
+    return SpreadsheetGateway.readObjects(DomainConstants.SHEETS.ANSWER_EVENTS).filter(function (row) {
+      return row.membership_id === membershipId;
+    });
+  }
+
+  return {
+    listByMembershipId: listByMembershipId
   };
 })();

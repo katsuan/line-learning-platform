@@ -20,8 +20,14 @@ var RequestRouter = (function () {
     switch (request.action) {
       case "health":
         return HealthUsecase.execute();
+      case "getSetupStatus":
+        return SetupStatusUsecase.execute(request);
       case "getMe":
         return MeUsecase.execute(request);
+      case "getHome":
+        return HomeUsecase.execute(request);
+      case "resolveDailySession":
+        return ResolveDailySessionUsecase.execute(request);
       default:
         throw AppError.validation("unknown_action", "unsupported action: " + request.action);
     }

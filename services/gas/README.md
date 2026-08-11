@@ -52,3 +52,33 @@ LearningPlatform MVP のバックエンド実装本体です。
 
 `SPREADSHEET_ID` や `DEFAULT_TENANT_ID` などの設定値は、push 後に Script Properties へ設定する。
 雛形は `script-properties.example.json` を参照する。
+
+## 初回セットアップ
+
+初回は次の順で進めると、`health` と `getMe` までの動作を確認しやすい。
+
+1. `Script Properties` に `script-properties.example.json` 相当の値を設定する
+2. `setupLearningPlatformSheets()` を実行してシートを作る
+3. `seedLearningPlatformMvp()` を実行して最小 seed を投入する
+4. まとめて実行したい場合は `initializeLearningPlatformMvp()` を実行する
+5. `action=health` と `action=getMe&tenantId=<DEFAULT_TENANT_ID>` を確認する
+
+補助関数:
+
+- `setupLearningPlatformScriptProperties()`
+  開発用の初期プロパティをまとめて入れる
+- `setupLearningPlatformSheets()`
+  MVPで使う主要シートを作る
+- `seedLearningPlatformMvp()`
+  `tenants` `users` `memberships` `feature_entitlements` に最小 seed を投入する
+- `initializeLearningPlatformMvp()`
+  シート作成と seed 投入をまとめて行う
+
+確認用 action:
+
+- `action=health`
+  GAS Web App の疎通確認
+- `action=getSetupStatus`
+  初期化状態、シート件数、`DEFAULT_TENANT_ID` 解決状態の確認
+- `action=getMe&tenantId=<DEFAULT_TENANT_ID>`
+  初期 seed での最小取得確認

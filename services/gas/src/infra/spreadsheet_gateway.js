@@ -33,6 +33,27 @@ var SpreadsheetGateway = (function () {
     sheet.appendRow(row);
   }
 
+  function replaceAllObjects(sheetName, records) {
+    var sheet = getSheet(sheetName);
+    var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+
+    if (sheet.getLastRow() > 1) {
+      sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).clearContent();
+    }
+
+    if (!records || records.length === 0) {
+      return;
+    }
+
+    var rows = records.map(function (record) {
+      return headers.map(function (header) {
+        return record[header] !== undefined ? record[header] : "";
+      });
+    });
+
+    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+  }
+
   function hasAnyValue_(row) {
     return row.some(function (value) {
       return value !== "";
@@ -48,6 +69,7 @@ var SpreadsheetGateway = (function () {
 
   return {
     readObjects: readObjects,
-    appendObject: appendObject
+    appendObject: appendObject,
+    replaceAllObjects: replaceAllObjects
   };
 })();

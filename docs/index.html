@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>LearningPlatform Health Check</title>
+    <title>LearningPlatform MVP Check</title>
     <style>
       :root {
         --bg: #f4efe6;
@@ -195,9 +195,9 @@
     <main class="wrap">
       <section class="hero">
         <p class="eyebrow">GitHub Pages -> GAS Web App</p>
-        <h1>LearningPlatform<br>Health Check</h1>
+        <h1>LearningPlatform<br>MVP Check</h1>
         <p class="lead">
-          GitHub Pages から公開されたフロントが、GAS Web App の `health` アクションへ到達できるかを確認するための最小ページです。
+          GitHub Pages から公開されたフロントが、GAS Web App の `health`、`getMe`、`getHome`、`resolveDailySession` へ到達できるかを確認するための最小ページです。
         </p>
 
         <div class="grid">
@@ -210,6 +210,8 @@
             <dl>
               <dt>App</dt>
               <dd id="appName">-</dd>
+              <dt>Tenant</dt>
+              <dd id="tenantId">-</dd>
               <dt>Endpoint</dt>
               <dd id="endpoint">-</dd>
               <dt>Origin</dt>
@@ -218,11 +220,15 @@
               <dd id="fetchedAt">-</dd>
             </dl>
             <div class="actions">
-              <button id="checkButton" type="button">Check Health</button>
+              <button id="healthButton" type="button">Health</button>
+              <button id="setupButton" type="button">Setup Status</button>
+              <button id="meButton" type="button">Get Me</button>
+              <button id="homeButton" type="button">Get Home</button>
+              <button id="dailyButton" type="button">Resolve Daily</button>
               <a id="openEndpoint" class="button" href="#" target="_blank" rel="noreferrer">Open Endpoint</a>
             </div>
             <p class="note">
-              GitHub Pages 設定は `main` ブランチの `/docs` を公開先にしてください。
+              GitHub Pages 設定は `main` ブランチの `/docs` を公開先にしてください。初回は `Setup Status` と `Get Me` が通ることを確認し、その後 `Resolve Daily` を押します。
             </p>
           </section>
 
@@ -242,30 +248,54 @@
         var responsePanelEl = document.getElementById("responsePanel");
         var endpointEl = document.getElementById("endpoint");
         var appNameEl = document.getElementById("appName");
+        var tenantIdEl = document.getElementById("tenantId");
         var originEl = document.getElementById("origin");
         var fetchedAtEl = document.getElementById("fetchedAt");
-        var checkButtonEl = document.getElementById("checkButton");
+        var healthButtonEl = document.getElementById("healthButton");
+        var setupButtonEl = document.getElementById("setupButton");
+        var meButtonEl = document.getElementById("meButton");
+        var homeButtonEl = document.getElementById("homeButton");
+        var dailyButtonEl = document.getElementById("dailyButton");
         var openEndpointEl = document.getElementById("openEndpoint");
 
         var endpointUrl = buildHealthUrl_(config.gasWebAppUrl, config.healthAction || "health");
         appNameEl.textContent = config.appName || "LearningPlatform";
+        tenantIdEl.textContent = config.tenantId || "-";
         endpointEl.textContent = endpointUrl;
         originEl.textContent = window.location.origin;
         openEndpointEl.href = endpointUrl;
 
-        checkButtonEl.addEventListener("click", checkHealth_);
-        checkHealth_();
+        healthButtonEl.addEventListener("click", function () {
+          runAction_("health");
+        });
+        setupButtonEl.addEventListener("click", function () {
+          runAction_("setup");
+        });
+        meButtonEl.addEventListener("click", function () {
+          runAction_("me");
+        });
+        homeButtonEl.addEventListener("click", function () {
+          runAction_("home");
+        });
+        dailyButtonEl.addEventListener("click", function () {
+          runAction_("daily");
+        });
+        runAction_("health");
 
-        function checkHealth_() {
+        function runAction_(actionKey) {
+          var request = buildRequest_(actionKey);
           setStatus_("loading", "Checking");
           responsePanelEl.textContent = "Loading...";
+          endpointEl.textContent = request.url;
+          openEndpointEl.href = request.url;
 
-          fetch(endpointUrl, {
-            method: "GET",
+          fetch(request.url, {
+            method: request.method,
             mode: "cors",
             headers: {
               "Accept": "application/json"
-            }
+            },
+            body: request.body
           })
             .then(function (response) {
               return response.text().then(function (text) {
@@ -303,10 +333,54 @@
           statusEl.lastElementChild.textContent = label;
         }
 
-        function buildHealthUrl_(baseUrl, action) {
+        function buildHealthUrl_(baseUrl, action, tenantId) {
           var url = new URL(baseUrl, window.location.href);
           url.searchParams.set("action", action);
+          if (tenantId) {
+            url.searchParams.set("tenantId", tenantId);
+          }
           return url.toString();
+        }
+
+        function buildRequest_(actionKey) {
+          var tenantId = config.tenantId || "";
+
+          switch (actionKey) {
+            case "setup":
+              return {
+                method: "GET",
+                url: buildHealthUrl_(config.gasWebAppUrl, config.setupStatusAction || "getSetupStatus", tenantId),
+                body: null
+              };
+            case "me":
+              return {
+                method: "GET",
+                url: buildHealthUrl_(config.gasWebAppUrl, config.meAction || "getMe", tenantId),
+                body: null
+              };
+            case "home":
+              return {
+                method: "GET",
+                url: buildHealthUrl_(config.gasWebAppUrl, config.homeAction || "getHome", tenantId),
+                body: null
+              };
+            case "daily":
+              return {
+                method: "POST",
+                url: buildHealthUrl_(config.gasWebAppUrl, config.resolveDailySessionAction || "resolveDailySession", tenantId),
+                body: JSON.stringify({
+                  action: config.resolveDailySessionAction || "resolveDailySession",
+                  tenantId: tenantId
+                })
+              };
+            case "health":
+            default:
+              return {
+                method: "GET",
+                url: buildHealthUrl_(config.gasWebAppUrl, config.healthAction || "health", ""),
+                body: null
+              };
+          }
         }
       })();
     </script>

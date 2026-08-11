@@ -4,12 +4,118 @@ function setupLearningPlatformSheets() {
     { name: "tenants", headers: ["tenant_id", "tenant_key", "name", "status", "timezone", "locale", "plan_code", "created_at", "updated_at"] },
     { name: "users", headers: ["user_id", "line_user_id", "display_name", "photo_url", "status", "created_at", "updated_at"] },
     { name: "memberships", headers: ["membership_id", "tenant_id", "user_id", "role", "status", "joined_at", "last_accessed_at", "created_at"] },
-    { name: "feature_entitlements", headers: ["feature_entitlement_id", "tenant_id", "feature_key", "enabled", "limit_value", "period_type", "effective_from", "effective_to", "created_at", "updated_at"] }
+    { name: "feature_entitlements", headers: ["feature_entitlement_id", "tenant_id", "feature_key", "enabled", "limit_value", "period_type", "effective_from", "effective_to", "created_at", "updated_at"] },
+    { name: "line_connections", headers: ["line_connection_id", "tenant_id", "channel_id", "channel_secret_ref", "channel_access_token_ref", "liff_id", "status", "created_at", "updated_at"] },
+    { name: "courses", headers: ["course_id", "tenant_id", "source_type", "title", "description", "status", "created_at", "updated_at"] },
+    { name: "categories", headers: ["category_id", "tenant_id", "course_id", "name", "sort_order"] },
+    { name: "units", headers: ["unit_id", "tenant_id", "course_id", "category_id", "name", "sort_order"] },
+    { name: "questions", headers: ["question_id", "tenant_id", "course_id", "category_id", "unit_id", "question_type", "grading_type", "question_text", "explanation", "difficulty", "status", "required_feature_key", "created_at", "updated_at"] },
+    { name: "question_options", headers: ["question_option_id", "tenant_id", "question_id", "option_key", "label", "sort_order"] },
+    { name: "question_grading_configs", headers: ["question_grading_config_id", "tenant_id", "question_id", "answer_schema", "correct_answer_payload", "tolerance", "max_score", "rubric_payload", "created_at", "updated_at"] },
+    { name: "assignments", headers: ["assignment_id", "tenant_id", "course_id", "target_type", "target_id", "question_count", "start_at", "due_at", "created_by_membership_id", "status", "created_at", "updated_at"] },
+    { name: "learning_sessions", headers: ["learning_session_id", "tenant_id", "user_id", "membership_id", "course_id", "assignment_id", "session_type", "status", "question_count", "started_at", "completed_at", "expires_at", "business_date", "created_at"] },
+    { name: "session_questions", headers: ["session_question_id", "tenant_id", "learning_session_id", "question_id", "display_order", "question_snapshot_payload", "created_at"] },
+    { name: "answer_events", headers: ["answer_event_id", "tenant_id", "learning_session_id", "session_question_id", "question_id", "user_id", "membership_id", "attempt_no", "idempotency_key", "answer_payload", "is_correct", "score", "elapsed_ms", "hint_used", "explanation_viewed", "answered_at", "synced_at"] }
   ];
 
   definitions.forEach(function (definition) {
     ensureSheet_(spreadsheet, definition.name, definition.headers);
   });
+}
+
+function seedLearningPlatformMvp() {
+  var config = ScriptConfig.getRequiredSetupConfig();
+  var now = new Date().toISOString();
+  var tenantId = requireValue_(config.defaultTenantId, "DEFAULT_TENANT_ID");
+  var userId = requireValue_(config.defaultUserId, "DEFAULT_USER_ID");
+  var membershipId = requireValue_(config.defaultMembershipId, "DEFAULT_MEMBERSHIP_ID");
+
+  SpreadsheetGateway.replaceAllObjects("tenants", [{
+    tenant_id: tenantId,
+    tenant_key: config.defaultTenantKey,
+    name: config.defaultTenantName,
+    status: "ACTIVE",
+    timezone: "Asia/Tokyo",
+    locale: "ja-JP",
+    plan_code: "FREE",
+    created_at: now,
+    updated_at: now
+  }]);
+
+  SpreadsheetGateway.replaceAllObjects("users", [{
+    user_id: userId,
+    line_user_id: config.defaultLineUserId,
+    display_name: config.defaultUserName,
+    photo_url: "",
+    status: "ACTIVE",
+    created_at: now,
+    updated_at: now
+  }]);
+
+  SpreadsheetGateway.replaceAllObjects("memberships", [{
+    membership_id: membershipId,
+    tenant_id: tenantId,
+    user_id: userId,
+    role: config.defaultMembershipRole,
+    status: "ACTIVE",
+    joined_at: now,
+    last_accessed_at: now,
+    created_at: now
+  }]);
+
+  SpreadsheetGateway.replaceAllObjects("feature_entitlements", [
+    createEntitlement_(tenantId, "dailyQuestions", true, 5, now),
+    createEntitlement_(tenantId, "historyDays", true, 30, now),
+    createEntitlement_(tenantId, "assignments", false, "", now)
+  ]);
+
+  seedCourseAndQuestionData_(tenantId, now);
+  SpreadsheetGateway.replaceAllObjects("learning_sessions", []);
+  SpreadsheetGateway.replaceAllObjects("session_questions", []);
+  SpreadsheetGateway.replaceAllObjects("answer_events", []);
+
+  return {
+    ok: true,
+    seeded: true,
+    tenantId: tenantId,
+    userId: userId,
+    membershipId: membershipId
+  };
+}
+
+function initializeLearningPlatformMvp() {
+  setupLearningPlatformSheets();
+  var result = seedLearningPlatformMvp();
+
+  return {
+    ok: true,
+    message: "Spreadsheet schema and MVP seed data were initialized.",
+    result: result
+  };
+}
+
+function setupLearningPlatformScriptProperties() {
+  var defaults = {
+    APP_BASE_URL: "https://example.github.io/LearningPlatform/",
+    GITHUB_PAGES_URL: "https://example.github.io/LearningPlatform/",
+    DEFAULT_TENANT_ID: "tenant_demo_001",
+    DEFAULT_TENANT_KEY: "demo-tenant",
+    DEFAULT_TENANT_NAME: "LearningPlatform Demo Tenant",
+    DEFAULT_USER_ID: "user_demo_001",
+    DEFAULT_USER_NAME: "Demo Learner",
+    DEFAULT_LINE_USER_ID: "",
+    DEFAULT_MEMBERSHIP_ID: "membership_demo_001",
+    DEFAULT_MEMBERSHIP_ROLE: "LEARNER",
+    ALLOWED_ORIGIN: "https://example.github.io"
+  };
+
+  ScriptConfig.setProperties(defaults);
+
+  return {
+    ok: true,
+    message: "Default script properties were set. Replace placeholder values before production use.",
+    defaults: defaults
+  };
 }
 
 function ensureSheet_(spreadsheet, name, headers) {
@@ -22,4 +128,113 @@ function ensureSheet_(spreadsheet, name, headers) {
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
     sheet.setFrozenRows(1);
   }
+}
+
+function requireValue_(value, keyName) {
+  if (!value) {
+    throw AppError.validation("missing_setup_value", keyName + " is required for seeding");
+  }
+
+  return value;
+}
+
+function createEntitlement_(tenantId, featureKey, enabled, limitValue, now) {
+  return {
+    feature_entitlement_id: tenantId + "_" + featureKey,
+    tenant_id: tenantId,
+    feature_key: featureKey,
+    enabled: enabled ? "true" : "false",
+    limit_value: limitValue,
+    period_type: "",
+    effective_from: now,
+    effective_to: "",
+    created_at: now,
+    updated_at: now
+  };
+}
+
+function seedCourseAndQuestionData_(tenantId, now) {
+  var courseId = "course_demo_001";
+  var categoryId = "category_demo_001";
+  var unitId = "unit_demo_001";
+
+  SpreadsheetGateway.replaceAllObjects("courses", [{
+    course_id: courseId,
+    tenant_id: tenantId,
+    source_type: "TENANT",
+    title: "Demo Course",
+    description: "MVP demo course for daily sessions",
+    status: "ACTIVE",
+    created_at: now,
+    updated_at: now
+  }]);
+
+  SpreadsheetGateway.replaceAllObjects("categories", [{
+    category_id: categoryId,
+    tenant_id: tenantId,
+    course_id: courseId,
+    name: "Getting Started",
+    sort_order: 1
+  }]);
+
+  SpreadsheetGateway.replaceAllObjects("units", [{
+    unit_id: unitId,
+    tenant_id: tenantId,
+    course_id: courseId,
+    category_id: categoryId,
+    name: "Daily Practice",
+    sort_order: 1
+  }]);
+
+  SpreadsheetGateway.replaceAllObjects("questions", [
+    createQuestion_(tenantId, courseId, categoryId, unitId, "question_demo_001", "TEXT_EXACT", "AUTO", "日本の首都は？", "東京です。", now),
+    createQuestion_(tenantId, courseId, categoryId, unitId, "question_demo_002", "TRUE_FALSE", "AUTO", "地球は太陽の周りを回る。", "正しい説明です。", now),
+    createQuestion_(tenantId, courseId, categoryId, unitId, "question_demo_003", "NUMBER", "AUTO", "2 + 3 は？", "5です。", now),
+    createQuestion_(tenantId, courseId, categoryId, unitId, "question_demo_004", "TEXT_EXACT", "AUTO", "富士山がある国は？", "日本です。", now),
+    createQuestion_(tenantId, courseId, categoryId, unitId, "question_demo_005", "TEXT_EXACT", "AUTO", "LearningPlatform の公開フロントは？", "GitHub Pagesです。", now)
+  ]);
+
+  SpreadsheetGateway.replaceAllObjects("question_grading_configs", [
+    createGradingConfig_("question_demo_001", tenantId, { type: "string" }, { exact: "東京" }, "", now),
+    createGradingConfig_("question_demo_002", tenantId, { type: "boolean" }, { exact: true }, "", now),
+    createGradingConfig_("question_demo_003", tenantId, { type: "number" }, { exact: 5 }, "0", now),
+    createGradingConfig_("question_demo_004", tenantId, { type: "string" }, { exact: "日本" }, "", now),
+    createGradingConfig_("question_demo_005", tenantId, { type: "string" }, { exact: "GitHub Pages" }, "", now)
+  ]);
+
+  SpreadsheetGateway.replaceAllObjects("question_options", []);
+}
+
+function createQuestion_(tenantId, courseId, categoryId, unitId, questionId, questionType, gradingType, questionText, explanation, now) {
+  return {
+    question_id: questionId,
+    tenant_id: tenantId,
+    course_id: courseId,
+    category_id: categoryId,
+    unit_id: unitId,
+    question_type: questionType,
+    grading_type: gradingType,
+    question_text: questionText,
+    explanation: explanation,
+    difficulty: 1,
+    status: "ACTIVE",
+    required_feature_key: "",
+    created_at: now,
+    updated_at: now
+  };
+}
+
+function createGradingConfig_(questionId, tenantId, answerSchema, correctAnswerPayload, tolerance, now) {
+  return {
+    question_grading_config_id: "grading_" + questionId,
+    tenant_id: tenantId,
+    question_id: questionId,
+    answer_schema: JSON.stringify(answerSchema),
+    correct_answer_payload: JSON.stringify(correctAnswerPayload),
+    tolerance: tolerance,
+    max_score: 1,
+    rubric_payload: "",
+    created_at: now,
+    updated_at: now
+  };
 }
