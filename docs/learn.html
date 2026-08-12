@@ -862,25 +862,23 @@
         }
 
         .session-strip {
-          position: sticky;
-          top: 8px;
-          z-index: 3;
+          position: static;
           padding: 12px;
         }
 
         .question-map-inline {
           display: block;
-          margin-top: 12px;
+          margin-top: 10px;
         }
 
         .question-map-inline .section-title {
           margin-bottom: 6px;
-          font-size: 15px;
+          font-size: 14px;
         }
 
         .question-map-inline .mini-list {
           grid-auto-flow: column;
-          grid-auto-columns: minmax(112px, 1fr);
+          grid-auto-columns: minmax(96px, 108px);
           overflow-x: auto;
           overscroll-behavior-x: contain;
           padding-bottom: 4px;
@@ -888,8 +886,31 @@
         }
 
         .question-map-inline .mini-item {
-          min-width: 112px;
+          min-width: 96px;
+          padding: 10px 12px;
+          gap: 4px;
           scroll-snap-align: start;
+        }
+
+        .question-map-inline .mini-item-top {
+          align-items: flex-start;
+        }
+
+        .question-map-inline .mini-item button {
+          font-size: 13px;
+          line-height: 1.35;
+        }
+
+        .question-map-inline .muted {
+          font-size: 12px;
+          line-height: 1.3;
+        }
+
+        .question-map-inline .mini-status {
+          min-width: 28px;
+          height: 24px;
+          padding: 0 8px;
+          font-size: 12px;
         }
 
         .response-box {
