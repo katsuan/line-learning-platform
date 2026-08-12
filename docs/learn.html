@@ -44,23 +44,9 @@
         margin-bottom: 12px;
       }
 
-      .brand {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-      }
-
-      .eyebrow {
-        margin: 0;
-        color: var(--accent);
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.14em;
-      }
-
       h1 {
         margin: 0;
-        font-size: clamp(24px, 8vw, 36px);
+        font-size: clamp(24px, 8vw, 32px);
         line-height: 1.15;
         font-weight: 700;
       }
@@ -99,23 +85,15 @@
       .helper-text {
         margin: 0;
         color: var(--muted);
-        font-size: 14px;
+        font-size: 13px;
         line-height: 1.5;
       }
 
       .flow-card {
-        padding: 14px 16px;
-        border-radius: 20px;
+        padding: 12px 14px;
+        border-radius: 18px;
         border: 1px solid var(--line);
         background: rgba(255, 255, 255, 0.68);
-        display: grid;
-        gap: 8px;
-      }
-
-      .flow-title {
-        margin: 0;
-        font-size: 15px;
-        font-weight: 700;
       }
 
       .flow-text {
@@ -126,10 +104,9 @@
       }
 
       .sound-settings {
-        display: flex;
+        display: grid;
         flex-wrap: wrap;
         gap: 10px 14px;
-        align-items: center;
         padding: 12px 14px;
         border-radius: 18px;
         background: rgba(255, 255, 255, 0.54);
@@ -318,6 +295,20 @@
         border: 1px solid var(--line);
         border-radius: 18px;
         background: linear-gradient(135deg, rgba(18, 99, 71, 0.08), rgba(208, 139, 53, 0.08));
+      }
+
+      .session-progress-line {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .progress-inline {
+        color: var(--muted);
+        font-size: 13px;
+        white-space: nowrap;
       }
 
       .pill {
@@ -657,19 +648,6 @@
         gap: 8px;
       }
 
-      .compact-chip {
-        padding: 10px 12px;
-        border: 1px solid var(--line);
-        border-radius: 16px;
-        background: rgba(255, 255, 255, 0.4);
-      }
-
-      .compact-chip strong {
-        display: block;
-        font-size: 16px;
-        margin-top: 4px;
-      }
-
       .completion-card {
         display: grid;
         gap: 16px;
@@ -777,12 +755,6 @@
           gap: 16px;
         }
 
-        .top-actions {
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: flex-end;
-        }
-
         .question-nav {
           position: static;
           padding: 0;
@@ -805,30 +777,14 @@
   <body>
     <main class="shell">
       <div class="topbar">
-        <div class="brand">
-          <p class="eyebrow">今日の5問</p>
-          <h1>学習ルーム</h1>
-        </div>
+        <h1>今日の5問</h1>
         <div class="top-actions">
           <button id="startDailyButton" type="button">今日の5問を始める</button>
           <button id="refreshHomeButton" class="secondary" type="button">状態を更新</button>
         </div>
         <div class="flow-card">
-          <p class="flow-title">この画面でやること</p>
           <p id="flowText" class="flow-text">1問ずつ答えて、結果を見ながら5問終えるだけです。迷ったら上の緑のボタンを押してください。</p>
         </div>
-        <div class="sound-settings">
-          <label class="sound-toggle" for="soundEnabledToggle">
-            <input id="soundEnabledToggle" type="checkbox" checked>
-            <span>正解音を鳴らす</span>
-          </label>
-          <label class="volume-wrap" for="soundVolumeRange">
-            <span>音量</span>
-            <input id="soundVolumeRange" type="range" min="0" max="100" step="5" value="55">
-            <strong id="soundVolumeLabel">55%</strong>
-          </label>
-        </div>
-        <p class="helper-text">学習は 1. 答える → 2. 解説を見る → 3. 次へ進む、のくり返しです。</p>
       </div>
 
       <div class="layout">
@@ -859,6 +815,7 @@
                 <p id="accuracyRate" class="summary-value">0%</p>
               </div>
             </div>
+            <p class="helper-text" style="margin-top: 10px;">答える → 結果を見る → 次へ進む、の流れで進みます。</p>
           </section>
 
           <section>
@@ -869,6 +826,21 @@
                 <p id="lineLoginStatus" class="summary-value" style="font-size: 20px;">未確認</p>
                 <p id="lineProfileText" class="note" style="margin-top: 10px;">LINEアプリから開くと、LINEアカウントと連動します。</p>
               </div>
+            </div>
+          </section>
+
+          <section>
+            <h2 class="section-title">音の設定</h2>
+            <div class="sound-settings">
+              <label class="sound-toggle" for="soundEnabledToggle">
+                <input id="soundEnabledToggle" type="checkbox" checked>
+                <span>正解音を鳴らす</span>
+              </label>
+              <label class="volume-wrap" for="soundVolumeRange">
+                <span>音量</span>
+                <input id="soundVolumeRange" type="range" min="0" max="100" step="5" value="55">
+                <strong id="soundVolumeLabel">55%</strong>
+              </label>
             </div>
           </section>
 
@@ -890,22 +862,11 @@
                 <span id="sessionPillLabel">セッション待機中</span>
               </div>
               <p id="sessionMeta" class="note" style="margin-top: 12px;">Home 情報と今日の5問セッションを読み込むと、ここに進行状況が出ます。</p>
-              <div class="progress-bar" style="margin-top: 14px;">
+              <div class="session-progress-line">
+                <span id="progressInline" class="progress-inline">0 / 0</span>
+              </div>
+              <div class="progress-bar">
                 <div id="progressFill" class="progress-fill"></div>
-              </div>
-            </div>
-            <div class="compact-meta">
-              <div class="compact-chip">
-                <span class="muted">学習者</span>
-                <strong id="displayNameInline">-</strong>
-              </div>
-              <div class="compact-chip">
-                <span class="muted">テナント</span>
-                <strong id="tenantNameInline">-</strong>
-              </div>
-              <div class="compact-chip">
-                <span class="muted">進行</span>
-                <strong id="progressInline">0 / 0</strong>
               </div>
             </div>
           </div>
@@ -981,8 +942,6 @@
 
         var displayNameEl = document.getElementById("displayName");
         var tenantNameEl = document.getElementById("tenantName");
-        var displayNameInlineEl = document.getElementById("displayNameInline");
-        var tenantNameInlineEl = document.getElementById("tenantNameInline");
         var progressInlineEl = document.getElementById("progressInline");
         var progressFillEl = document.getElementById("progressFill");
         var answeredCountEl = document.getElementById("answeredCount");
@@ -1014,7 +973,6 @@
         bootstrap_();
 
         function bootstrap_() {
-          initializeLiff_();
           state.isBootstrapping = true;
           renderTopActions_();
           renderStartupLoading_();
@@ -1304,8 +1262,6 @@
           if (state.me) {
             displayNameEl.textContent = state.me.user.display_name || "-";
             tenantNameEl.textContent = state.me.tenant.name || "-";
-            displayNameInlineEl.textContent = state.me.user.display_name || "-";
-            tenantNameInlineEl.textContent = state.me.tenant.name || "-";
           }
 
           if (state.home && state.home.learningSummary) {
