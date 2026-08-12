@@ -15,6 +15,7 @@ var DomainConstants = {
     LEARNING_SESSIONS: "learning_sessions",
     SESSION_QUESTIONS: "session_questions",
     ANSWER_EVENTS: "answer_events",
+    SHARE_RECEIPTS: "share_receipts",
     DEBUG_LOGS: "debug_logs"
   },
   MEMBERSHIP_STATUS: {

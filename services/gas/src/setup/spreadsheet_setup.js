@@ -16,6 +16,7 @@ function setupLearningPlatformSheets() {
     { name: "learning_sessions", headers: ["learning_session_id", "tenant_id", "user_id", "membership_id", "course_id", "assignment_id", "session_type", "status", "question_count", "started_at", "completed_at", "expires_at", "business_date", "created_at"] },
     { name: "session_questions", headers: ["session_question_id", "tenant_id", "learning_session_id", "question_id", "display_order", "question_snapshot_payload", "created_at"] },
     { name: "answer_events", headers: ["answer_event_id", "tenant_id", "learning_session_id", "session_question_id", "question_id", "user_id", "membership_id", "attempt_no", "idempotency_key", "answer_payload", "is_correct", "score", "elapsed_ms", "hint_used", "explanation_viewed", "answered_at", "synced_at"] },
+    { name: "share_receipts", headers: ["share_receipt_id", "tenant_id", "learning_session_id", "membership_id", "user_id", "line_user_id", "learner_name", "receipt_code", "total_questions", "correct_count", "accuracy_rate", "share_channel", "created_at", "shared_at"] },
     { name: "debug_logs", headers: ["log_id", "request_id", "level", "request_method", "action", "route_type", "status", "error_code", "error_message", "duration_ms", "event_count", "user_id", "membership_id", "line_user_id", "request_summary", "response_summary", "created_at"] }
   ];
 
@@ -76,6 +77,7 @@ function seedLearningPlatformMvp() {
   SpreadsheetGateway.replaceAllObjects("learning_sessions", []);
   SpreadsheetGateway.replaceAllObjects("session_questions", []);
   SpreadsheetGateway.replaceAllObjects("answer_events", []);
+  SpreadsheetGateway.replaceAllObjects("share_receipts", []);
 
   return {
     ok: true,

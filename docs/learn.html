@@ -1811,6 +1811,7 @@
           var correctCount = getCorrectCount_();
           var incorrectCount = total - correctCount;
           var accuracy = total === 0 ? 0 : Math.round((correctCount / total) * 100);
+          var nextRecommendation = resolveCompletionRecommendation_(incorrectCount, accuracy);
 
           questionShellEl.innerHTML = [
             '<section class="completion-card">',
@@ -1820,7 +1821,7 @@
             '    <div class="summary-card"><p class="summary-label">正解数</p><p class="summary-value">' + correctCount + '</p></div>',
             '    <div class="summary-card"><p class="summary-label">見直し</p><p class="summary-value">' + incorrectCount + '</p></div>',
             '    <div class="summary-card"><p class="summary-label">正答率</p><p class="summary-value">' + accuracy + '%</p></div>',
-            '    <div class="summary-card"><p class="summary-label">次のおすすめ</p><p class="summary-value" style="font-size: 18px;">見直し</p></div>',
+            '    <div class="summary-card"><p class="summary-label">次のおすすめ</p><p class="summary-value" style="font-size: 18px;">' + escapeHtml_(nextRecommendation) + '</p></div>',
             '  </div>',
             renderShareSection_(correctCount, total, accuracy),
             '  <div class="completion-actions">',
@@ -1860,6 +1861,18 @@
           document.getElementById("restartDailyButton").addEventListener("click", function () {
             loadHomeData_();
           });
+        }
+
+        function resolveCompletionRecommendation_(incorrectCount, accuracy) {
+          if (incorrectCount > 0) {
+            return "見直し";
+          }
+
+          if (accuracy >= 100) {
+            return "次の学習へ";
+          }
+
+          return "振り返り";
         }
 
         function renderShareSection_(correctCount, total, accuracy) {
@@ -2096,45 +2109,145 @@
         }
 
         function buildShareMessages_() {
-          var learnerName = state.liff.profile && state.liff.profile.displayName
-            ? state.liff.profile.displayName
-            : (state.me && state.me.user ? state.me.user.display_name : "学習者");
-          var receiptCode = getOrCreateShareReceiptCode_();
-
+          var receipt = getShareReceiptForSession_();
           return [{
-            type: "text",
-            text: [
-              learnerName + " が5問体験を完了しました。",
-              "提出コード " + receiptCode,
-              "詳細は学習画面で確認できます。"
-            ].join("\n")
+            type: "flex",
+            altText: "5問体験の提出コード",
+            contents: buildShareResultBubble_(receipt)
           }];
         }
 
-        function getOrCreateShareReceiptCode_() {
-          var sessionId = state.session && state.session.sessionId ? state.session.sessionId : "default";
-          if (state.shareReceiptCodes[sessionId]) {
-            return state.shareReceiptCodes[sessionId];
+        function getShareReceiptForSession_() {
+          var sessionId = state.session && state.session.sessionId ? state.session.sessionId : "";
+          return sessionId && state.shareReceiptCodes[sessionId]
+            ? state.shareReceiptCodes[sessionId]
+            : null;
+        }
+
+        function buildShareResultBubble_(receipt) {
+          var learnerName = receipt && receipt.learnerName
+            ? receipt.learnerName
+            : (state.liff.profile && state.liff.profile.displayName
+              ? state.liff.profile.displayName
+              : (state.me && state.me.user ? state.me.user.display_name : "学習者"));
+          var receiptCode = receipt && receipt.receiptCode ? receipt.receiptCode : "発行準備中";
+          var appUrl = buildShareLaunchUrl_();
+
+          return {
+            type: "bubble",
+            hero: {
+              type: "box",
+              layout: "vertical",
+              paddingAll: "20px",
+              backgroundColor: "#17624A",
+              contents: [
+                {
+                  type: "text",
+                  text: "5問体験 完了",
+                  color: "#F8F4ED",
+                  weight: "bold",
+                  size: "xl"
+                },
+                {
+                  type: "text",
+                  text: learnerName,
+                  color: "#DDEFE7",
+                  size: "sm",
+                  margin: "md",
+                  wrap: true
+                }
+              ]
+            },
+            body: {
+              type: "box",
+              layout: "vertical",
+              spacing: "md",
+              contents: [
+                {
+                  type: "text",
+                  text: "管理者へ提出するコードです。学習画面から共有された内容として確認できます。",
+                  size: "sm",
+                  wrap: true,
+                  color: "#3E3A34"
+                },
+                {
+                  type: "box",
+                  layout: "vertical",
+                  backgroundColor: "#F6EFE4",
+                  cornerRadius: "12px",
+                  paddingAll: "14px",
+                  contents: [
+                    {
+                      type: "text",
+                      text: "提出コード",
+                      size: "xs",
+                      color: "#7A7165"
+                    },
+                    {
+                      type: "text",
+                      text: receiptCode,
+                      size: "xl",
+                      weight: "bold",
+                      color: "#1C1B18",
+                      margin: "sm"
+                    }
+                  ]
+                }
+              ]
+            },
+            footer: {
+              type: "box",
+              layout: "vertical",
+              spacing: "sm",
+              contents: [
+                {
+                  type: "button",
+                  style: "primary",
+                  color: "#17624A",
+                  action: {
+                    type: "uri",
+                    label: "学習画面を開く",
+                    uri: appUrl
+                  }
+                }
+              ]
+            }
+          };
+        }
+
+        function buildShareLaunchUrl_() {
+          var url = new URL("./learn.html", window.location.href);
+          url.searchParams.set("entry", "shared-result");
+          return url.toString();
+        }
+
+        function ensureShareReceipt_(shareChannel) {
+          var existing = getShareReceiptForSession_();
+          if (existing && existing.receiptCode) {
+            return Promise.resolve(existing);
           }
 
-          var alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-          var randomPart = "";
-          var index;
-
-          if (window.crypto && window.crypto.getRandomValues) {
-            var values = new Uint32Array(6);
-            window.crypto.getRandomValues(values);
-            for (index = 0; index < values.length; index += 1) {
-              randomPart += alphabet.charAt(values[index] % alphabet.length);
-            }
-          } else {
-            for (index = 0; index < 6; index += 1) {
-              randomPart += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
-            }
+          if (!state.session || !state.session.sessionId) {
+            return Promise.reject(new Error("session_not_ready"));
           }
 
-          state.shareReceiptCodes[sessionId] = "LPR-" + randomPart;
-          return state.shareReceiptCodes[sessionId];
+          return requestJson_("POST", config.createShareReceiptAction || "createShareReceipt", {
+            action: config.createShareReceiptAction || "createShareReceipt",
+            tenantId: config.tenantId,
+            learningSessionId: state.session.sessionId,
+            totalQuestions: state.session.questions.length,
+            correctCount: getCorrectCount_(),
+            accuracyRate: state.session.questions.length === 0 ? 0 : Math.round((getCorrectCount_() / state.session.questions.length) * 100),
+            shareChannel: shareChannel || ""
+          }).then(function (response) {
+            var receipt = response && response.receipt ? response.receipt : null;
+            if (!receipt || !receipt.receiptCode) {
+              throw new Error("share_receipt_not_created");
+            }
+
+            state.shareReceiptCodes[state.session.sessionId] = receipt;
+            return receipt;
+          });
         }
 
         function shareToCurrentChat_() {
@@ -2145,7 +2258,10 @@
           state.isSharing = true;
           renderQuestionView_();
 
-          window.liff.sendMessages(buildShareMessages_())
+          ensureShareReceipt_("current_chat")
+            .then(function () {
+              return window.liff.sendMessages(buildShareMessages_());
+            })
             .then(function () {
               state.isSharing = false;
               renderQuestionView_();
@@ -2169,7 +2285,10 @@
           state.isSharing = true;
           renderQuestionView_();
 
-          window.liff.shareTargetPicker(buildShareMessages_())
+          ensureShareReceipt_("share_target_picker")
+            .then(function () {
+              return window.liff.shareTargetPicker(buildShareMessages_());
+            })
             .then(function (result) {
               state.isSharing = false;
               renderQuestionView_();

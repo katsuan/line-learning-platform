@@ -7,6 +7,8 @@ window.APP_CONFIG = {
   homeAction: "getHome",
   resolveDailySessionAction: "resolveDailySession",
   createAnswerEventAction: "createAnswerEvent",
+  createShareReceiptAction: "createShareReceipt",
+  shareReceiptDetailAction: "getShareReceiptDetail",
   adminLearnersAction: "listAdminLearners",
   adminLearnerDetailAction: "getAdminLearnerDetail",
   liffId: "2011071914-4lKlbUGo",

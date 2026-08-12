@@ -32,6 +32,10 @@ var RequestRouter = (function () {
         return ResolveDailySessionUsecase.execute(request);
       case "createAnswerEvent":
         return CreateAnswerEventUsecase.execute(request);
+      case "createShareReceipt":
+        return CreateShareReceiptUsecase.execute(request);
+      case "getShareReceiptDetail":
+        return GetShareReceiptDetailUsecase.execute(request);
       case "listAdminLearners":
         return AdminLearnerListUsecase.execute(request);
       case "getAdminLearnerDetail":

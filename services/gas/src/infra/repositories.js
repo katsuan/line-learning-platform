@@ -131,6 +131,12 @@ var LearningSessionSheetRepository = (function () {
     });
   }
 
+  function findByLearningSessionId(learningSessionId) {
+    return SpreadsheetGateway.readObjects(DomainConstants.SHEETS.LEARNING_SESSIONS).find(function (row) {
+      return row.learning_session_id === learningSessionId;
+    }) || null;
+  }
+
   function findDailyByMembershipAndBusinessDate(membershipId, businessDate) {
     return listByMembershipId(membershipId).find(function (row) {
       return row.session_type === DomainConstants.SESSION_TYPE.DAILY && row.business_date === businessDate;
@@ -144,6 +150,7 @@ var LearningSessionSheetRepository = (function () {
 
   return {
     listByMembershipId: listByMembershipId,
+    findByLearningSessionId: findByLearningSessionId,
     findDailyByMembershipAndBusinessDate: findDailyByMembershipAndBusinessDate,
     append: append
   };
@@ -189,5 +196,30 @@ var AnswerEventSheetRepository = (function () {
     listByMembershipId: listByMembershipId,
     append: append,
     findBySessionAndIdempotencyKey: findBySessionAndIdempotencyKey
+  };
+})();
+
+var ShareReceiptSheetRepository = (function () {
+  function findByReceiptCode(receiptCode) {
+    return SpreadsheetGateway.readObjects(DomainConstants.SHEETS.SHARE_RECEIPTS).find(function (row) {
+      return row.receipt_code === receiptCode;
+    }) || null;
+  }
+
+  function findByLearningSessionId(learningSessionId) {
+    return SpreadsheetGateway.readObjects(DomainConstants.SHEETS.SHARE_RECEIPTS).find(function (row) {
+      return row.learning_session_id === learningSessionId;
+    }) || null;
+  }
+
+  function append(record) {
+    SpreadsheetGateway.appendObject(DomainConstants.SHEETS.SHARE_RECEIPTS, record);
+    return record;
+  }
+
+  return {
+    findByReceiptCode: findByReceiptCode,
+    findByLearningSessionId: findByLearningSessionId,
+    append: append
   };
 })();
