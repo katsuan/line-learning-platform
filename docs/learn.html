@@ -103,6 +103,49 @@
         line-height: 1.6;
       }
 
+      .loading-card {
+        padding: 34px 22px;
+        border-radius: 24px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.6);
+        display: grid;
+        justify-items: center;
+        gap: 14px;
+        text-align: center;
+      }
+
+      .loading-spinner {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        border: 4px solid rgba(18, 99, 71, 0.14);
+        border-top-color: var(--accent);
+        animation: spin 0.9s linear infinite;
+      }
+
+      .loading-title {
+        margin: 0;
+        font-size: 22px;
+      }
+
+      .button-loading {
+        position: relative;
+        pointer-events: none;
+      }
+
+      .button-loading::after {
+        content: "";
+        width: 14px;
+        height: 14px;
+        margin-left: 10px;
+        display: inline-block;
+        border-radius: 50%;
+        border: 2px solid rgba(246, 241, 232, 0.4);
+        border-top-color: rgba(246, 241, 232, 1);
+        animation: spin 0.8s linear infinite;
+        vertical-align: -2px;
+      }
+
       .guide-card {
         padding: 16px 18px;
         border-radius: 22px;
@@ -188,6 +231,10 @@
 
       .summary-grid.single {
         grid-template-columns: 1fr;
+      }
+
+      .summary-card.compact {
+        padding: 12px 14px;
       }
 
       .summary-card {
@@ -389,6 +436,19 @@
         color: var(--muted);
       }
 
+      .share-actions {
+        display: grid;
+        gap: 10px;
+        margin-top: 4px;
+      }
+
+      .share-note {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.7;
+      }
+
       .question-nav {
         position: sticky;
         bottom: 12px;
@@ -588,6 +648,15 @@
           backdrop-filter: none;
         }
       }
+
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
     </style>
   </head>
   <body>
@@ -630,6 +699,17 @@
               <div class="summary-card">
                 <p class="summary-label">正答率</p>
                 <p id="accuracyRate" class="summary-value">0%</p>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2 class="section-title">LINE連携</h2>
+            <div class="summary-grid single">
+              <div class="summary-card compact">
+                <p class="summary-label">ログイン状態</p>
+                <p id="lineLoginStatus" class="summary-value" style="font-size: 20px;">未確認</p>
+                <p id="lineProfileText" class="note" style="margin-top: 10px;">LIFFを開くとLINEアカウントと連動します。</p>
               </div>
             </div>
           </section>
@@ -706,6 +786,7 @@
       </div>
     </main>
 
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="./config.js"></script>
     <script>
       (function () {
@@ -714,6 +795,19 @@
           me: null,
           home: null,
           session: null,
+          isResolvingSession: false,
+          isSharing: false,
+          liff: {
+            ready: false,
+            loggedIn: false,
+            inClient: false,
+            profile: null,
+            contextType: "",
+            canSendMessages: false,
+            canShareTargetPicker: false,
+            statusText: "未確認",
+            profileText: "LIFFを開くとLINEアカウントと連動します。"
+          },
           currentQuestionIndex: 0,
           answers: {},
           results: {},
@@ -728,6 +822,8 @@
         var progressFillEl = document.getElementById("progressFill");
         var answeredCountEl = document.getElementById("answeredCount");
         var accuracyRateEl = document.getElementById("accuracyRate");
+        var lineLoginStatusEl = document.getElementById("lineLoginStatus");
+        var lineProfileTextEl = document.getElementById("lineProfileText");
         var sessionPillLabelEl = document.getElementById("sessionPillLabel");
         var sessionMetaEl = document.getElementById("sessionMeta");
         var questionMapEl = document.getElementById("questionMap");
@@ -748,7 +844,90 @@
         bootstrap_();
 
         function bootstrap_() {
+          initializeLiff_();
           loadHomeData_();
+        }
+
+        function initializeLiff_() {
+          if (!config.liffId || !window.liff) {
+            state.liff.statusText = "未設定";
+            state.liff.profileText = "LIFF ID を設定すると、LINEログイン連携と共有機能を使えます。";
+            renderLiffStatus_();
+            return;
+          }
+
+          window.liff.init({ liffId: config.liffId })
+            .then(function () {
+              state.liff.ready = true;
+              state.liff.inClient = window.liff.isInClient();
+              state.liff.loggedIn = window.liff.isLoggedIn();
+
+              if (!state.liff.loggedIn && !state.liff.inClient) {
+                window.liff.login({ redirectUri: window.location.href });
+                return;
+              }
+
+              return Promise.all([
+                loadLiffProfile_(),
+                loadLiffCapabilities_()
+              ]);
+            })
+            .then(function () {
+              renderLiffStatus_();
+            })
+            .catch(function (error) {
+              state.liff.statusText = "利用不可";
+              state.liff.profileText = "LINE連携の初期化に失敗しました。";
+              renderLiffStatus_();
+              renderError_({
+                liff: error && error.message ? error.message : String(error)
+              });
+            });
+        }
+
+        function loadLiffProfile_() {
+          if (!state.liff.loggedIn) {
+            state.liff.statusText = "未ログイン";
+            state.liff.profileText = "外部ブラウザではLINEログイン後に結果共有が使えます。";
+            return Promise.resolve();
+          }
+
+          return window.liff.getProfile()
+            .then(function (profile) {
+              state.liff.profile = profile;
+              state.liff.statusText = "連携済み";
+              state.liff.profileText = (profile.displayName || "LINEユーザー") + " と連携しています。";
+            })
+            .catch(function () {
+              state.liff.statusText = "連携済み";
+              state.liff.profileText = "LINEアカウントと連携しています。";
+            });
+        }
+
+        function loadLiffCapabilities_() {
+          if (!state.liff.ready) {
+            return Promise.resolve();
+          }
+
+          var context = window.liff.getContext ? window.liff.getContext() : null;
+          state.liff.contextType = context && context.type ? context.type : "";
+          state.liff.canShareTargetPicker = window.liff.isApiAvailable
+            ? window.liff.isApiAvailable("shareTargetPicker")
+            : false;
+
+          if (!window.liff.permission || !window.liff.permission.query) {
+            state.liff.canSendMessages = state.liff.inClient;
+            return Promise.resolve();
+          }
+
+          return window.liff.permission.query("chat_message.write")
+            .then(function (permission) {
+              var granted = permission && permission.state === "granted";
+              state.liff.canSendMessages = granted && state.liff.inClient && /utou|group|room/.test(String(state.liff.contextType || ""));
+            })
+            .catch(function () {
+              state.liff.canSendMessages = state.liff.inClient && /utou|group|room/.test(String(state.liff.contextType || ""));
+            });
         }
 
         function loadHomeData_() {
@@ -770,6 +949,14 @@
         }
 
         function resolveDailySession_() {
+          if (state.isResolvingSession) {
+            return;
+          }
+
+          state.isResolvingSession = true;
+          renderTopActions_();
+          renderSessionLoading_();
+
           requestJson_("POST", config.resolveDailySessionAction || "resolveDailySession", {
             action: config.resolveDailySessionAction || "resolveDailySession",
             tenantId: config.tenantId
@@ -780,12 +967,19 @@
               state.answers = {};
               state.results = {};
               state.saveStatus = {};
+              state.isResolvingSession = false;
+              renderTopActions_();
               renderSidebar_();
               renderSessionMeta_();
               renderQuestionView_();
               renderResponse_(payload);
             })
-            .catch(renderError_);
+            .catch(function (error) {
+              state.isResolvingSession = false;
+              renderTopActions_();
+              renderQuestionView_();
+              renderError_(error);
+            });
         }
 
         function requestJson_(method, action, body) {
@@ -838,7 +1032,20 @@
             accuracyRateEl.textContent = Math.round((state.home.learningSummary.accuracyRate || 0) * 100) + "%";
           }
 
+          renderLiffStatus_();
           renderQuestionMap_();
+        }
+
+        function renderLiffStatus_() {
+          lineLoginStatusEl.textContent = state.liff.statusText || "未確認";
+          lineProfileTextEl.textContent = state.liff.profileText || "LIFFを開くとLINEアカウントと連動します。";
+        }
+
+        function renderTopActions_() {
+          startDailyButtonEl.disabled = state.isResolvingSession;
+          refreshHomeButtonEl.disabled = state.isResolvingSession;
+          startDailyButtonEl.textContent = state.isResolvingSession ? "5問を準備しています" : "今日の5問を始める";
+          startDailyButtonEl.classList.toggle("button-loading", state.isResolvingSession);
         }
 
         function renderSessionMeta_() {
@@ -898,6 +1105,11 @@
         }
 
         function renderQuestionView_() {
+          if (state.isResolvingSession) {
+            renderSessionLoading_();
+            return;
+          }
+
           if (!state.session || !state.session.questions || state.session.questions.length === 0) {
             questionShellEl.innerHTML = [
               '<div class="empty-state">',
@@ -996,6 +1208,20 @@
           }
         }
 
+        function renderSessionLoading_() {
+          questionShellEl.innerHTML = [
+            '<section class="loading-card">',
+            '  <div class="loading-spinner" aria-hidden="true"></div>',
+            '  <h2 class="loading-title">今日の5問を準備しています</h2>',
+            '  <p class="note">問題を選んでいます。数秒お待ちください。</p>',
+            '</section>'
+          ].join("");
+          sessionPillLabelEl.textContent = "準備中";
+          sessionMetaEl.textContent = "今日の5問を読み込んでいます。";
+          progressInlineEl.textContent = "-";
+          progressFillEl.style.width = "12%";
+        }
+
         function renderAnswerControl_(question, savedAnswer) {
           if (question.questionType === "NUMBER") {
             return '<input id="answerInput" type="number" value="' + escapeAttribute_(savedAnswer) + '" placeholder="数字で入力">';
@@ -1079,6 +1305,7 @@
             '    <div class="summary-card"><p class="summary-label">正答率</p><p class="summary-value">' + accuracy + '%</p></div>',
             '    <div class="summary-card"><p class="summary-label">次のおすすめ</p><p class="summary-value" style="font-size: 18px;">見直し</p></div>',
             '  </div>',
+            renderShareSection_(correctCount, total, accuracy),
             '  <div class="completion-actions">',
             (incorrectCount > 0)
               ? '    <button class="secondary" id="reviewIncorrectButton" type="button">見直したい問題を見る</button>'
@@ -1103,9 +1330,56 @@
             });
           }
 
+          var shareCurrentChatButtonEl = document.getElementById("shareCurrentChatButton");
+          if (shareCurrentChatButtonEl) {
+            shareCurrentChatButtonEl.addEventListener("click", shareToCurrentChat_);
+          }
+
+          var shareTargetPickerButtonEl = document.getElementById("shareTargetPickerButton");
+          if (shareTargetPickerButtonEl) {
+            shareTargetPickerButtonEl.addEventListener("click", shareViaTargetPicker_);
+          }
+
           document.getElementById("restartDailyButton").addEventListener("click", function () {
             loadHomeData_();
           });
+        }
+
+        function renderShareSection_(correctCount, total, accuracy) {
+          var canShareCurrentChat = state.liff.ready && state.liff.loggedIn && state.liff.canSendMessages;
+          var canShareToOtherChats = canUsePremiumShare_();
+
+          return [
+            '<div class="result-card">',
+            '  <h3 class="result-title">LINEで報告</h3>',
+            '  <p class="share-note">LIFFで開いている場合は、結果を今のトークに報告できます。上位プランでは別のトークにも共有できます。</p>',
+            '  <div class="share-actions">',
+            canShareCurrentChat
+              ? '    <button id="shareCurrentChatButton" type="button"' + (state.isSharing ? ' disabled' : '') + '>このトークに結果を報告する</button>'
+              : '    <button type="button" disabled>このトークへの報告はLIFF起動時のみ利用できます</button>',
+            canShareToOtherChats
+              ? '    <button id="shareTargetPickerButton" class="secondary" type="button"' + (state.isSharing ? ' disabled' : '') + '>別のトークへ共有する</button>'
+              : '    <button class="secondary" type="button" disabled>別トーク共有は有料プランで利用できます</button>',
+            '  </div>',
+            '  <p class="save-status" id="shareStatusText">' + escapeHtml_(buildShareStatusText_(canShareCurrentChat, canShareToOtherChats, correctCount, total, accuracy)) + '</p>',
+            '</div>'
+          ].join('');
+        }
+
+        function buildShareStatusText_(canShareCurrentChat, canShareToOtherChats, correctCount, total, accuracy) {
+          if (state.isSharing) {
+            return "LINEへ送信しています。";
+          }
+
+          if (canShareCurrentChat) {
+            return total + "問中 " + correctCount + "問正解 (" + accuracy + "%) の結果をLINEへ共有できます。";
+          }
+
+          if (canShareToOtherChats) {
+            return "別のトークへの共有は使えますが、今のトークへの直接報告はLIFF起動時のみ利用できます。";
+          }
+
+          return "LINE共有を使うには LIFF と shareTargetPicker の設定を有効にしてください。";
         }
 
         function gradeAnswer_(question, rawAnswer) {
@@ -1234,6 +1508,96 @@
             behavior: "smooth",
             block: "start"
           });
+        }
+
+        function canUsePremiumShare_() {
+          return !!(state.liff.ready && state.liff.loggedIn && state.liff.canShareTargetPicker && hasEntitlement_(config.premiumShareEntitlementKey || "shareTargetPicker"));
+        }
+
+        function hasEntitlement_(featureKey) {
+          if (!state.me || !state.me.entitlements || !featureKey) {
+            return false;
+          }
+
+          return state.me.entitlements.some(function (entry) {
+            return entry.feature_key === featureKey && (entry.enabled === true || entry.enabled === "true");
+          });
+        }
+
+        function buildShareMessages_() {
+          var total = state.session && state.session.questions ? state.session.questions.length : 0;
+          var correctCount = Object.keys(state.results).filter(function (key) {
+            return state.results[key] && state.results[key].isCorrect;
+          }).length;
+          var accuracy = total === 0 ? 0 : Math.round((correctCount / total) * 100);
+          var learnerName = state.liff.profile && state.liff.profile.displayName
+            ? state.liff.profile.displayName
+            : (state.me && state.me.user ? state.me.user.display_name : "学習者");
+
+          return [{
+            type: "text",
+            text: [
+              learnerName + " の5問体験結果",
+              "正解 " + correctCount + " / " + total + "問",
+              "正答率 " + accuracy + "%",
+              "LearningPlatform で今日の学習を続けました。"
+            ].join("\n")
+          }];
+        }
+
+        function shareToCurrentChat_() {
+          if (!state.liff.ready || !state.liff.canSendMessages) {
+            return;
+          }
+
+          state.isSharing = true;
+          renderQuestionView_();
+
+          window.liff.sendMessages(buildShareMessages_())
+            .then(function () {
+              state.isSharing = false;
+              renderQuestionView_();
+              updateShareStatusText_("このトークに結果を報告しました。");
+            })
+            .catch(function (error) {
+              state.isSharing = false;
+              renderQuestionView_();
+              updateShareStatusText_("このトークへの報告に失敗しました。");
+              renderError_({
+                shareCurrentChat: error && error.message ? error.message : String(error)
+              });
+            });
+        }
+
+        function shareViaTargetPicker_() {
+          if (!canUsePremiumShare_()) {
+            return;
+          }
+
+          state.isSharing = true;
+          renderQuestionView_();
+
+          window.liff.shareTargetPicker(buildShareMessages_())
+            .then(function (result) {
+              state.isSharing = false;
+              renderQuestionView_();
+              updateShareStatusText_(result ? "別のトークへ共有しました。" : "共有先の選択をキャンセルしました。");
+            })
+            .catch(function (error) {
+              state.isSharing = false;
+              renderQuestionView_();
+              updateShareStatusText_("別のトークへの共有に失敗しました。");
+              renderError_({
+                shareTargetPicker: error && error.message ? error.message : String(error)
+              });
+            });
+        }
+
+        function updateShareStatusText_(text) {
+          var shareStatusTextEl = document.getElementById("shareStatusText");
+          if (shareStatusTextEl) {
+            shareStatusTextEl.textContent = text;
+          }
         }
 
         function getAnsweredCount_() {

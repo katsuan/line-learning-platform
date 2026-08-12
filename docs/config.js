@@ -8,6 +8,9 @@ window.APP_CONFIG = {
   createAnswerEventAction: "createAnswerEvent",
   adminLearnersAction: "listAdminLearners",
   adminLearnerDetailAction: "getAdminLearnerDetail",
+  liffId: "",
+  premiumShareEntitlementKey: "shareTargetPicker",
+  lineShareEntitlementKey: "lineResultShare",
   tenantId: "tenant_demo_001",
   appName: "LearningPlatform"
 };
