@@ -13,5 +13,6 @@ window.APP_CONFIG = {
   premiumShareEntitlementKey: "shareTargetPicker",
   lineShareEntitlementKey: "lineResultShare",
   tenantId: "tenant_demo_001",
-  appName: "LearningPlatform"
+  appName: "LearningPlatform",
+  appVersion: "local"
 };

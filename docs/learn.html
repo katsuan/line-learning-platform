@@ -44,11 +44,33 @@
         margin-bottom: 12px;
       }
 
+      .topbar-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
       h1 {
         margin: 0;
         font-size: clamp(24px, 8vw, 32px);
         line-height: 1.15;
         font-weight: 700;
+      }
+
+      .version-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
       }
 
       .top-actions {
@@ -777,7 +799,10 @@
   <body>
     <main class="shell">
       <div class="topbar">
-        <h1>今日の5問</h1>
+        <div class="topbar-head">
+          <h1>今日の5問</h1>
+          <span id="versionPill" class="version-pill">ver -</span>
+        </div>
         <div class="top-actions">
           <button id="startDailyButton" type="button">今日の5問を始める</button>
           <button id="refreshHomeButton" class="secondary" type="button">状態を更新</button>
@@ -961,12 +986,16 @@
         var debugPanelEl = document.getElementById("debugPanel");
         var refreshHomeButtonEl = document.getElementById("refreshHomeButton");
         var startDailyButtonEl = document.getElementById("startDailyButton");
+        var versionPillEl = document.getElementById("versionPill");
         var debugMode = new URLSearchParams(window.location.search).get("debug") === "1";
         var activeSessionId = "";
 
         if (debugMode) {
           debugPanelEl.style.display = "";
         }
+
+        renderVersionPill_(config.appVersion);
+        loadVersionInfo_();
 
         initializeAudioSettings_();
         refreshHomeButtonEl.addEventListener("click", loadHomeData_);
@@ -1040,6 +1069,34 @@
                 liff: error && error.message ? error.message : String(error)
               });
             })
+        }
+
+        function loadVersionInfo_() {
+          fetch("./version.json", {
+            cache: "no-store"
+          })
+            .then(function (response) {
+              if (!response.ok) {
+                throw new Error("version_fetch_failed");
+              }
+
+              return response.json();
+            })
+            .then(function (payload) {
+              renderVersionPill_(payload && (payload.version || payload.commit) ? (payload.version || payload.commit) : config.appVersion);
+            })
+            .catch(function () {
+              renderVersionPill_(config.appVersion);
+            });
+        }
+
+        function renderVersionPill_(version) {
+          if (!versionPillEl) {
+            return;
+          }
+
+          var versionText = version ? "ver " + version : "ver dev";
+          versionPillEl.textContent = versionText;
         }
 
         function initializeAudioSettings_() {
