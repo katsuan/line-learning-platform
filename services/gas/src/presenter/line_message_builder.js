@@ -117,12 +117,13 @@ var LineMessageBuilder = (function () {
     };
   }
 
-  function buildLiffUrl_(config) {
+  function buildLiffUrl_(config, params) {
     if (config.liffId) {
-      return "https://liff.line.me/" + config.liffId;
+      var baseUrl = "https://liff.line.me/" + config.liffId;
+      return appendParams_(baseUrl, params);
     }
 
-    return buildAppUrl_(config.appBaseUrl, "learn.html");
+    return appendParams_(buildAppUrl_(config.appBaseUrl, "learn.html"), params);
   }
 
   function buildAppUrl_(baseUrl, path) {
@@ -132,6 +133,20 @@ var LineMessageBuilder = (function () {
     }
 
     return base.replace(/\/+$/, "") + "/" + path.replace(/^\/+/, "");
+  }
+
+  function appendParams_(url, params) {
+    var entries = Object.keys(params || {}).filter(function (key) {
+      return params[key] !== undefined && params[key] !== null && params[key] !== "";
+    }).map(function (key) {
+      return encodeURIComponent(key) + "=" + encodeURIComponent(String(params[key]));
+    });
+
+    if (!entries.length) {
+      return url;
+    }
+
+    return url + (url.indexOf("?") === -1 ? "?" : "&") + entries.join("&");
   }
 
   function extractUserText_(event) {
@@ -151,9 +166,9 @@ var LineMessageBuilder = (function () {
         title: "はじめての方へ",
         subtitle: "まずは流れを確認",
         body: "まずは使い方を確認してから、個人で5問体験を始められます。導入相談の窓口もこちらから案内します。",
-        buttonLabel: "使い方を見る",
-        url: buildAppUrl_(config.appBaseUrl, "index.html#help"),
-        followUpText: "使い方、5問体験、導入相談の順に確認できます。"
+        buttonLabel: "学習画面を開く",
+        url: buildLiffUrl_(config, { entry: "help" }),
+        followUpText: "LINEアプリ内の学習画面から、使い方を確認できます。"
       };
     }
 
@@ -163,9 +178,9 @@ var LineMessageBuilder = (function () {
         title: "導入相談",
         subtitle: "個人利用の先へ進みたい方へ",
         body: "まずは個人で5問体験を試し、その後に有料プランや組織導入の相談へ進めます。",
-        buttonLabel: "導入相談を見る",
-        url: buildAppUrl_(config.appBaseUrl, "index.html#plans"),
-        followUpText: "有料プランや導入相談の入口を開けます。"
+        buttonLabel: "学習画面を開く",
+        url: buildLiffUrl_(config, { entry: "plans" }),
+        followUpText: "LINEアプリ内の学習画面から、導入相談の入口を開けます。"
       };
     }
 
@@ -175,9 +190,9 @@ var LineMessageBuilder = (function () {
         title: "管理メニュー",
         subtitle: "学習者の進み具合を確認",
         body: "管理画面から学習者一覧や最近の進捗を確認できます。",
-        buttonLabel: "管理画面を開く",
-        url: buildAppUrl_(config.appBaseUrl, "admin.html"),
-        followUpText: "管理画面を開けます。学習者の進み具合を確認したいときに使ってください。"
+        buttonLabel: "学習画面を開く",
+        url: buildLiffUrl_(config, { entry: "admin" }),
+        followUpText: "LINEアプリ内の学習画面から、学習者の進み具合を確認できます。"
       };
     }
 
@@ -188,8 +203,8 @@ var LineMessageBuilder = (function () {
         subtitle: "前回までの学習を確認",
         body: "学習履歴や正答率を確認できます。続きから学習したいときもここから開けます。",
         buttonLabel: "学習を開く",
-        url: buildLiffUrl_(config),
-        followUpText: "学習履歴や続きの学習を開けます。"
+        url: buildLiffUrl_(config, { entry: "history" }),
+        followUpText: "LINEアプリ内の学習画面から、学習履歴や続きの学習を開けます。"
       };
     }
 
@@ -199,8 +214,8 @@ var LineMessageBuilder = (function () {
       subtitle: "まずは個人で試す",
       body: "学習画面を開いて、まずは5問体験を始められます。今日の学習や履歴の確認もここから進められます。",
       buttonLabel: "5問体験を始める",
-      url: buildLiffUrl_(config),
-      followUpText: "個人で5問体験を始められます。"
+      url: buildLiffUrl_(config, { entry: "start" }),
+      followUpText: "LINEアプリ内で、個人の5問体験を始められます。"
     };
   }
 

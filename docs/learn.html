@@ -867,7 +867,7 @@
               <div class="summary-card compact">
                 <p class="summary-label">ログイン状態</p>
                 <p id="lineLoginStatus" class="summary-value" style="font-size: 20px;">未確認</p>
-                <p id="lineProfileText" class="note" style="margin-top: 10px;">LIFFを開くとLINEアカウントと連動します。</p>
+                <p id="lineProfileText" class="note" style="margin-top: 10px;">LINEアプリから開くと、LINEアカウントと連動します。</p>
               </div>
             </div>
           </section>
@@ -967,7 +967,7 @@
             canSendMessages: false,
             canShareTargetPicker: false,
             statusText: "未確認",
-            profileText: "LIFFを開くとLINEアカウントと連動します。"
+            profileText: "LINEアプリから開くと、LINEアカウントと連動します。"
           },
           currentQuestionIndex: 0,
           answers: {},
@@ -1060,7 +1060,7 @@
         function initializeLiff_() {
           if (!config.liffId || !window.liff) {
             state.liff.statusText = "未設定";
-            state.liff.profileText = "LIFF ID を設定すると、LINEログイン連携と共有機能を使えます。";
+            state.liff.profileText = "LINE連携の設定を行うと、共有機能を使えます。";
             renderLiffStatus_();
             return Promise.resolve();
           }
@@ -1094,7 +1094,7 @@
             })
             .catch(function (error) {
               state.liff.statusText = "利用不可";
-              state.liff.profileText = "LINE連携の初期化に失敗しました。";
+              state.liff.profileText = "LINE連携の読み込みに失敗しました。";
               renderLiffStatus_();
               renderError_({
                 liff: error && error.message ? error.message : String(error)
@@ -1159,7 +1159,7 @@
         function loadLiffProfile_() {
           if (!state.liff.loggedIn) {
             state.liff.statusText = "未ログイン";
-            state.liff.profileText = "外部ブラウザではLINEログイン後に結果共有が使えます。";
+            state.liff.profileText = "ブラウザで開いているため、共有はLINEログイン後に使えます。";
             return Promise.resolve();
           }
 
@@ -1329,7 +1329,7 @@
 
         function renderLiffStatus_() {
           lineLoginStatusEl.textContent = state.liff.statusText || "未確認";
-          lineProfileTextEl.textContent = state.liff.profileText || "LIFFを開くとLINEアカウントと連動します。";
+          lineProfileTextEl.textContent = state.liff.profileText || "LINEアプリから開くと、LINEアカウントと連動します。";
         }
 
         function renderTopActions_() {
@@ -1750,11 +1750,11 @@
           return [
             '<div class="result-card">',
             '  <h3 class="result-title">LINEで報告</h3>',
-            '  <p class="share-note">LIFFで開いている場合は、結果を今のトークに報告できます。上位プランでは別のトークにも共有できます。</p>',
+            '  <p class="share-note">LINEアプリからこの画面を開いている場合は、結果を今のトークに報告できます。上位プランでは別のトークにも共有できます。</p>',
             '  <div class="share-actions">',
             canShareCurrentChat
               ? '    <button id="shareCurrentChatButton" type="button"' + (state.isSharing ? ' disabled' : '') + '>このトークに結果を報告する</button>'
-              : '    <button type="button" disabled>このトークへの報告はLIFF起動時のみ利用できます</button>',
+              : '    <button type="button" disabled>このトークへの報告はLINEアプリから開いたときに使えます</button>',
             canShareToOtherChats
               ? '    <button id="shareTargetPickerButton" class="secondary" type="button"' + (state.isSharing ? ' disabled' : '') + '>別のトークへ共有する</button>'
               : '    <button class="secondary" type="button" disabled>別トーク共有は有料プランで利用できます</button>',
@@ -1774,10 +1774,10 @@
           }
 
           if (canShareToOtherChats) {
-            return "別のトークへの共有は使えますが、今のトークへの直接報告はLIFF起動時のみ利用できます。";
+            return "別のトークへの共有は使えますが、今のトークへの直接報告はLINEアプリから開いたときのみ利用できます。";
           }
 
-          return "LINE共有を使うには LIFF と shareTargetPicker の設定を有効にしてください。";
+          return "LINE共有を使うには、LINE連携と共有設定を有効にしてください。";
         }
 
         function gradeAnswer_(question, rawAnswer) {
