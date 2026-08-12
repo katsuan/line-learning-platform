@@ -1021,19 +1021,15 @@
 
           initializeLiff_()
             .then(function () {
-              return Promise.all([
-                requestJson_("POST", config.meAction || "getMe"),
-                requestJson_("POST", config.homeAction || "getHome"),
-                requestJson_("POST", config.resolveDailySessionAction || "resolveDailySession", {
-                  action: config.resolveDailySessionAction || "resolveDailySession",
-                  tenantId: config.tenantId
-                })
-              ]);
+              return requestJson_("POST", config.bootstrapAction || "bootstrapLearning", {
+                action: config.bootstrapAction || "bootstrapLearning",
+                tenantId: config.tenantId
+              });
             })
-            .then(function (results) {
-              state.me = results[0];
-              state.home = results[1];
-              state.session = results[2].session || null;
+            .then(function (payload) {
+              state.me = payload.me || null;
+              state.home = payload.home || null;
+              state.session = payload.session || null;
               state.currentQuestionIndex = 0;
               state.answers = {};
               state.results = {};
@@ -1043,11 +1039,7 @@
               renderSidebar_();
               renderSessionMeta_();
               renderQuestionView_();
-              renderResponse_({
-                me: state.me,
-                home: state.home,
-                session: state.session
-              });
+              renderResponse_(payload);
             })
             .catch(function (error) {
               state.isBootstrapping = false;
@@ -1203,19 +1195,17 @@
         }
 
         function loadHomeData_() {
-          Promise.all([
-            requestJson_("POST", config.meAction || "getMe"),
-            requestJson_("POST", config.homeAction || "getHome")
-          ])
-            .then(function (results) {
-              state.me = results[0];
-              state.home = results[1];
+          requestJson_("POST", config.bootstrapAction || "bootstrapLearning", {
+            action: config.bootstrapAction || "bootstrapLearning",
+            tenantId: config.tenantId
+          })
+            .then(function (payload) {
+              state.me = payload.me || null;
+              state.home = payload.home || null;
+              state.session = payload.session || state.session;
               renderSidebar_();
               renderSessionMeta_();
-              renderResponse_({
-                me: state.me,
-                home: state.home
-              });
+              renderResponse_(payload);
             })
             .catch(renderError_);
         }

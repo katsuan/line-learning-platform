@@ -26,6 +26,8 @@ var RequestRouter = (function () {
         return MeUsecase.execute(request);
       case "getHome":
         return HomeUsecase.execute(request);
+      case "bootstrapLearning":
+        return BootstrapLearningUsecase.execute(request);
       case "resolveDailySession":
         return ResolveDailySessionUsecase.execute(request);
       case "createAnswerEvent":
