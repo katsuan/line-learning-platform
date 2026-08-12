@@ -593,6 +593,27 @@
         line-height: 1.7;
       }
 
+      .share-loading {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: rgba(18, 99, 71, 0.08);
+        border: 1px solid rgba(18, 99, 71, 0.14);
+        color: var(--accent);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .share-loading .loading-spinner {
+        width: 18px;
+        height: 18px;
+        border-width: 3px;
+        flex: 0 0 auto;
+      }
+
       .question-nav {
         position: sticky;
         bottom: 12px;
@@ -1897,12 +1918,15 @@
             '<div class="result-card">',
             '  <h3 class="result-title">LINEで報告</h3>',
             '  <p class="share-note">LINEアプリからこの画面を開いている場合は、結果を今のトークに報告できます。上位プランでは別のトークにも共有できます。</p>',
+            state.isSharing
+              ? '  <div class="share-loading"><span class="loading-spinner" aria-hidden="true"></span><span>LINEへ送信しています。画面はこのままでお待ちください。</span></div>'
+              : '',
             '  <div class="share-actions">',
             canShareCurrentChat
-              ? '    <button id="shareCurrentChatButton" type="button"' + (state.isSharing ? ' disabled' : '') + '>このトークに結果を報告する</button>'
+              ? '    <button id="shareCurrentChatButton" type="button"' + (state.isSharing ? ' disabled' : '') + '>' + (state.isSharing ? '送信中です' : 'このトークに結果を報告する') + '</button>'
               : '    <button type="button" disabled>このトークへの報告はLINEアプリから開いたときに使えます</button>',
             canShareToOtherChats
-              ? '    <button id="shareTargetPickerButton" class="secondary" type="button"' + (state.isSharing ? ' disabled' : '') + '>別のトークへ共有する</button>'
+              ? '    <button id="shareTargetPickerButton" class="secondary" type="button"' + (state.isSharing ? ' disabled' : '') + '>' + (state.isSharing ? '送信中です' : '別のトークへ共有する') + '</button>'
               : '    <button class="secondary" type="button" disabled>別トーク共有は有料プランで利用できます</button>',
             '  </div>',
             '  <p class="save-status" id="shareStatusText">' + escapeHtml_(buildShareStatusText_(canShareCurrentChat, canShareToOtherChats, correctCount, total, accuracy)) + '</p>',
@@ -2167,6 +2191,10 @@
               ? state.liff.profile.displayName
               : (state.me && state.me.user ? state.me.user.display_name : "学習者"));
           var receiptCode = receipt && receipt.receiptCode ? receipt.receiptCode : "発行準備中";
+          var totalQuestions = receipt && receipt.totalQuestions ? Number(receipt.totalQuestions) : (state.session && state.session.questions ? state.session.questions.length : 0);
+          var accuracyRate = receipt && receipt.accuracyRate !== undefined && receipt.accuracyRate !== null
+            ? Number(receipt.accuracyRate)
+            : (totalQuestions === 0 ? 0 : Math.round((getCorrectCount_() / totalQuestions) * 100));
           var appUrl = buildShareLaunchUrl_();
 
           return {
@@ -2201,10 +2229,65 @@
               contents: [
                 {
                   type: "text",
-                  text: "管理者へ提出するコードです。学習画面から共有された内容として確認できます。",
+                  text: "結果の概要を共有しています。詳細確認は提出コードをもとに管理者が行います。",
                   size: "sm",
                   wrap: true,
                   color: "#3E3A34"
+                },
+                {
+                  type: "box",
+                  layout: "horizontal",
+                  spacing: "sm",
+                  contents: [
+                    {
+                      type: "box",
+                      layout: "vertical",
+                      flex: 1,
+                      cornerRadius: "12px",
+                      paddingAll: "12px",
+                      backgroundColor: "#F6EFE4",
+                      contents: [
+                        {
+                          type: "text",
+                          text: "演習数",
+                          size: "xs",
+                          color: "#7A7165"
+                        },
+                        {
+                          type: "text",
+                          text: String(totalQuestions) + "問",
+                          size: "lg",
+                          weight: "bold",
+                          color: "#1C1B18",
+                          margin: "sm"
+                        }
+                      ]
+                    },
+                    {
+                      type: "box",
+                      layout: "vertical",
+                      flex: 1,
+                      cornerRadius: "12px",
+                      paddingAll: "12px",
+                      backgroundColor: "#F6EFE4",
+                      contents: [
+                        {
+                          type: "text",
+                          text: "正答率",
+                          size: "xs",
+                          color: "#7A7165"
+                        },
+                        {
+                          type: "text",
+                          text: String(accuracyRate) + "%",
+                          size: "lg",
+                          weight: "bold",
+                          color: "#1C1B18",
+                          margin: "sm"
+                        }
+                      ]
+                    }
+                  ]
                 },
                 {
                   type: "box",
@@ -2236,6 +2319,15 @@
               layout: "vertical",
               spacing: "sm",
               contents: [
+                {
+                  type: "button",
+                  style: "secondary",
+                  action: {
+                    type: "clipboard",
+                    label: "提出コードをコピー",
+                    clipboardText: receiptCode
+                  }
+                },
                 {
                   type: "button",
                   style: "primary",
