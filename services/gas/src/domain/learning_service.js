@@ -3,13 +3,25 @@ var LearningService = (function () {
     var todaySessionRecord = findDailySessionRecord_(me.membership.membership_id, businessDate);
     var todaySessionSummary = todaySessionRecord ? SessionPresenter.toSummary(todaySessionRecord) : null;
     var learningSummary = buildLearningSummary_(me.membership.membership_id);
+    var todayAnswerEvents = todaySessionRecord
+      ? listAnswerEventsByLearningSessionId_(todaySessionRecord.learning_session_id)
+      : [];
 
     return {
       todaySession: todaySessionSummary,
       resumableSession: todaySessionSummary && todaySessionSummary.status !== DomainConstants.SESSION_STATUS.COMPLETED
         ? todaySessionSummary
         : null,
-      learningSummary: learningSummary
+      learningSummary: learningSummary,
+      todayAnswerEvents: todayAnswerEvents.map(function (row) {
+        return {
+          sessionQuestionId: row.session_question_id,
+          questionId: row.question_id,
+          isCorrect: row.is_correct === true || row.is_correct === "true",
+          score: Number(row.score || 0),
+          answeredAt: row.answered_at || ""
+        };
+      })
     };
   }
 
@@ -91,6 +103,12 @@ var LearningService = (function () {
       membershipId,
       businessDate
     );
+  }
+
+  function listAnswerEventsByLearningSessionId_(learningSessionId) {
+    return SpreadsheetGateway.readObjects(DomainConstants.SHEETS.ANSWER_EVENTS).filter(function (row) {
+      return row.learning_session_id === learningSessionId;
+    });
   }
 
   return {

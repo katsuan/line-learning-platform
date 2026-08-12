@@ -1195,6 +1195,7 @@
           state.me = payload.me || null;
           state.home = payload.home || null;
           applySessionPayload_(payload, options);
+          hydrateResultsFromHomePayload_(state.home);
         }
 
         function applySessionPayload_(payload, options) {
@@ -1245,6 +1246,37 @@
           renderTopActions_();
           renderSessionMeta_();
           renderQuestionView_();
+        }
+
+        function hydrateResultsFromHomePayload_(homePayload) {
+          if (!homePayload || !homePayload.todayAnswerEvents || !state.session || !state.session.questions) {
+            return;
+          }
+
+          var questionMap = buildSessionQuestionMap_();
+          homePayload.todayAnswerEvents.forEach(function (entry) {
+            var question = questionMap[entry.sessionQuestionId];
+            if (!question) {
+              return;
+            }
+
+            state.results[entry.sessionQuestionId] = {
+              isCorrect: entry.isCorrect === true,
+              score: Number(entry.score || 0),
+              explanation: question.explanation || "",
+              normalizedAnswer: "",
+              correctAnswerText: toCorrectAnswerText_(question, (question.gradingConfig && question.gradingConfig.correctAnswerPayload) || {})
+            };
+            state.saveStatus[entry.sessionQuestionId] = "回答を保存しました。";
+            state.submittingAnswers[entry.sessionQuestionId] = false;
+          });
+        }
+
+        function buildSessionQuestionMap_() {
+          return (state.session.questions || []).reduce(function (accumulator, question) {
+            accumulator[question.sessionQuestionId] = question;
+            return accumulator;
+          }, {});
         }
 
         function requestJson_(method, action, body) {
@@ -1850,6 +1882,7 @@
             .then(function (response) {
               state.submittingAnswers[answerKey] = false;
               state.saveStatus[answerKey] = response.duplicated ? "この回答はすでに保存されています。" : "回答を保存しました。";
+              state.answers[answerKey] = currentAnswer;
               loadHomeData_();
               renderLearningState_();
               renderResponse_(response);
@@ -1918,9 +1951,12 @@
 
           try {
             var context = new window.AudioContext();
+            if (typeof context.resume === "function") {
+              context.resume();
+            }
             var now = context.currentTime;
             var gainNode = context.createGain();
-            gainNode.gain.value = 0.0001;
+            gainNode.gain.value = 1;
             gainNode.connect(context.destination);
 
             if (isCorrect) {
