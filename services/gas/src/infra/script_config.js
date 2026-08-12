@@ -43,8 +43,13 @@ var ScriptConfig = (function () {
       channelAccessToken: get_("LINE_CHANNEL_ACCESS_TOKEN"),
       liffId: get_("LIFF_ID"),
       appBaseUrl: get_("APP_BASE_URL"),
-      defaultTenantId: get_("DEFAULT_TENANT_ID")
+      defaultTenantId: get_("DEFAULT_TENANT_ID"),
+      systemAdminLineUserId: getSystemAdminLineUserId_()
     };
+  }
+
+  function getSystemAdminLineUserId_() {
+    return get_("SYSTEM_ADMIN_LINE_USER_ID") || get_("SYSTEM_ADMIN_LINE") || "";
   }
 
   return {

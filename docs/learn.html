@@ -103,6 +103,44 @@
         line-height: 1.6;
       }
 
+      .guide-card {
+        padding: 16px 18px;
+        border-radius: 22px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.58);
+        display: grid;
+        gap: 10px;
+      }
+
+      .guide-title {
+        margin: 0;
+        font-size: 18px;
+      }
+
+      .guide-steps {
+        display: grid;
+        gap: 8px;
+      }
+
+      .guide-step {
+        display: grid;
+        grid-template-columns: 28px 1fr;
+        gap: 10px;
+        align-items: start;
+      }
+
+      .guide-step strong {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: rgba(18, 99, 71, 0.12);
+        color: var(--accent);
+        font-size: 14px;
+      }
+
       button:disabled {
         opacity: 0.5;
         cursor: not-allowed;
@@ -209,6 +247,10 @@
         border-radius: 26px;
         padding: 18px;
         background: rgba(255, 255, 255, 0.56);
+      }
+
+      .question-card.revealed {
+        box-shadow: 0 18px 38px rgba(18, 99, 71, 0.08);
       }
 
       .question-meta {
@@ -328,6 +370,20 @@
         margin-top: 8px;
       }
 
+      .result-flow {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.7;
+      }
+
+      .result-callout {
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.56);
+        border: 1px solid rgba(28, 27, 24, 0.08);
+      }
+
       .save-status {
         font-size: 13px;
         color: var(--muted);
@@ -430,6 +486,11 @@
       .completion-stats {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .completion-actions {
+        display: grid;
         gap: 10px;
       }
 
@@ -540,7 +601,7 @@
           <button id="startDailyButton" type="button">今日の5問を始める</button>
           <button id="refreshHomeButton" class="secondary" type="button">状態を更新</button>
         </div>
-        <p class="helper-text">最初は「今日の5問を始める」を押して学習を開始します。状態を更新は補助操作です。</p>
+        <p class="helper-text">最初は「今日の5問を始める」から始めます。答えるたびに、すぐ結果と解説を確認できます。</p>
       </div>
 
       <div class="layout">
@@ -618,6 +679,23 @@
                 まずは「今日の5問を始める」を押して、今日の学習を開始しましょう。
               </p>
             </div>
+            <section class="guide-card">
+              <h2 class="guide-title">進め方</h2>
+              <div class="guide-steps">
+                <div class="guide-step">
+                  <strong>1</strong>
+                  <span class="note">最初に今日の5問を始めると、今日ぶんの問題が並びます。</span>
+                </div>
+                <div class="guide-step">
+                  <strong>2</strong>
+                  <span class="note">回答すると、その場で正誤と解説を確認できます。</span>
+                </div>
+                <div class="guide-step">
+                  <strong>3</strong>
+                  <span class="note">5問終わると、結果の振り返りと見直し導線が表示されます。</span>
+                </div>
+              </div>
+            </section>
           </div>
 
           <details id="debugPanel" style="margin-top: 18px; display: none;">
@@ -766,7 +844,7 @@
         function renderSessionMeta_() {
           if (!state.session) {
             sessionPillLabelEl.textContent = "セッション待機中";
-            sessionMetaEl.textContent = "今日の5問セッションを作成すると、問題数と進行状況が表示されます。";
+            sessionMetaEl.textContent = "今日の5問を始めると、問題数と進み具合がここに表示されます。";
             progressInlineEl.textContent = "0 / 0";
             progressFillEl.style.width = "0%";
             return;
@@ -777,8 +855,8 @@
           var displayIndex = Math.min(state.currentQuestionIndex + 1, questionCount);
           sessionPillLabelEl.textContent = "今日の5問 " + (state.session.businessDate || "");
           sessionMetaEl.textContent = answered >= questionCount
-            ? "5問おつかれさまでした。結果を確認して、次の学習へ進みましょう。"
-            : questionCount + "問中 " + displayIndex + "問目を表示しています。";
+            ? "5問おつかれさまでした。結果を確認して、見直したい問題へ戻れます。"
+            : questionCount + "問中 " + displayIndex + "問目です。回答すると、すぐに結果と解説が出ます。";
           progressInlineEl.textContent = answered + " / " + questionCount;
           progressFillEl.style.width = questionCount === 0 ? "0%" : ((answered / questionCount) * 100) + "%";
         }
@@ -810,7 +888,7 @@
             var meta = document.createElement("span");
             meta.className = "muted";
             meta.textContent = state.results[question.sessionQuestionId]
-              ? (state.results[question.sessionQuestionId].isCorrect ? "正解済み" : "見直し中")
+              ? (state.results[question.sessionQuestionId].isCorrect ? "回答済み" : "見直したい")
               : "未回答";
 
             item.appendChild(button);
@@ -824,7 +902,7 @@
             questionShellEl.innerHTML = [
               '<div class="empty-state">',
               '<h2>はじめる準備ができています</h2>',
-              '<p>`今日の5問を始める` を押すと、Daily Session を取得してここに問題が出ます。</p>',
+              '<p>「今日の5問を始める」を押すと、ここに今日の問題が表示されます。</p>',
               '</div>'
             ].join("");
             return;
@@ -842,7 +920,7 @@
           var saveStatus = state.saveStatus[answerKey] || "";
 
           questionShellEl.innerHTML = [
-            '<article class="question-card">',
+            '<article class="question-card' + (result ? ' revealed' : '') + '">',
             '  <div class="question-meta">',
             '    <span class="question-type">' + escapeHtml_(toQuestionTypeLabel_(question.questionType)) + '</span>',
             '    <span class="muted">' + (state.currentQuestionIndex + 1) + ' / ' + state.session.questions.length + ' 問</span>',
@@ -860,6 +938,7 @@
 
           var answerInputEl = document.getElementById("answerInput");
           if (answerInputEl) {
+            answerInputEl.focus();
             answerInputEl.addEventListener("input", function (event) {
               state.answers[answerKey] = event.target.value;
             });
@@ -887,6 +966,7 @@
               renderQuestionMap_();
               renderQuestionView_();
               persistAnswerEvent_(question, currentAnswer, gradingResult);
+              scrollToQuestionCard_();
             });
           }
 
@@ -943,20 +1023,26 @@
           var title = result.isCorrect ? '正解です' : 'もう一度見直そう';
           var explanation = result.explanation || '解説はまだありません。';
           var correctText = result.correctAnswerText ? '<span class="muted">正解: ' + escapeHtml_(result.correctAnswerText) + '</span>' : '';
+          var flowText = result.isCorrect
+            ? '解説を確認できたら、そのまま次の問題へ進みましょう。'
+            : '解説と正解を確認してから、次の問題へ進みましょう。';
 
           return [
             '<div class="' + className + '">',
             '  <h3 class="result-title">' + title + '</h3>',
+            '  <p class="result-flow">' + flowText + '</p>',
             '  <div class="result-meta">',
             '    <span>スコア: ' + escapeHtml_(String(result.score)) + '</span>',
             correctText,
             '    <span>' + escapeHtml_(explanation) + '</span>',
             '  </div>',
-            '  <div class="save-status">' + escapeHtml_(saveStatus || "") + '</div>',
+            '  <div class="result-callout">',
+            '    <div class="save-status">' + escapeHtml_(saveStatus || "回答内容を保存しています。") + '</div>',
+            '  </div>',
             '  <div class="result-actions">',
             isLastQuestion_()
-              ? '    <button id="finishSessionButton" type="button">結果を確認する</button>'
-              : '    <button id="nextQuestionButton" type="button">次の問題へ</button>',
+              ? '    <button id="finishSessionButton" type="button">5問の結果を見る</button>'
+              : '    <button id="nextQuestionButton" type="button">次の問題へ進む</button>',
             '  </div>',
             '</div>'
           ].join('');
@@ -986,26 +1072,36 @@
           questionShellEl.innerHTML = [
             '<section class="completion-card">',
             '  <h2>5問完了です</h2>',
-            '  <p class="note">ここまでの結果を確認して、もう一度見直したい問題があれば問題一覧から戻れます。</p>',
+            '  <p class="note">ここまでの結果を確認して、気になる問題を見直すか、次の学習の準備へ進みましょう。</p>',
             '  <div class="completion-stats">',
             '    <div class="summary-card"><p class="summary-label">正解数</p><p class="summary-value">' + correctCount + '</p></div>',
             '    <div class="summary-card"><p class="summary-label">見直し</p><p class="summary-value">' + incorrectCount + '</p></div>',
             '    <div class="summary-card"><p class="summary-label">正答率</p><p class="summary-value">' + accuracy + '%</p></div>',
-            '    <div class="summary-card"><p class="summary-label">次の行動</p><p class="summary-value" style="font-size: 18px;">履歴を見る</p></div>',
+            '    <div class="summary-card"><p class="summary-label">次のおすすめ</p><p class="summary-value" style="font-size: 18px;">見直し</p></div>',
             '  </div>',
-            '  <div class="top-actions" style="grid-template-columns: 1fr 1fr;">',
-            '    <button class="secondary" id="reviewFirstQuestionButton" type="button">最初から見直す</button>',
-            '    <button id="restartDailyButton" type="button">もう一度ホームを見る</button>',
+            '  <div class="completion-actions">',
+            (incorrectCount > 0)
+              ? '    <button class="secondary" id="reviewIncorrectButton" type="button">見直したい問題を見る</button>'
+              : '    <button class="secondary" id="reviewFirstQuestionButton" type="button">最初から振り返る</button>',
+            '    <button id="restartDailyButton" type="button">今日の状態を更新する</button>',
             '  </div>',
             '</section>'
           ].join('');
 
-          document.getElementById("reviewFirstQuestionButton").addEventListener("click", function () {
-            state.currentQuestionIndex = 0;
-            renderSessionMeta_();
-            renderQuestionMap_();
-            renderQuestionView_();
-          });
+          var reviewFirstQuestionButtonEl = document.getElementById("reviewFirstQuestionButton");
+          if (reviewFirstQuestionButtonEl) {
+            reviewFirstQuestionButtonEl.addEventListener("click", function () {
+              moveToQuestion_(0);
+            });
+          }
+
+          var reviewIncorrectButtonEl = document.getElementById("reviewIncorrectButton");
+          if (reviewIncorrectButtonEl) {
+            reviewIncorrectButtonEl.addEventListener("click", function () {
+              var targetIndex = getFirstIncorrectQuestionIndex_();
+              moveToQuestion_(targetIndex === -1 ? 0 : targetIndex);
+            });
+          }
 
           document.getElementById("restartDailyButton").addEventListener("click", function () {
             loadHomeData_();
@@ -1085,7 +1181,7 @@
 
           requestJson_("POST", config.createAnswerEventAction || "createAnswerEvent", payload)
             .then(function (response) {
-              state.saveStatus[answerKey] = response.duplicated ? "すでに保存済みです。" : "回答を保存しました。";
+              state.saveStatus[answerKey] = response.duplicated ? "この回答はすでに保存されています。" : "回答を保存しました。";
               loadHomeData_();
               renderSessionMeta_();
               renderQuestionMap_();
@@ -1093,7 +1189,7 @@
               renderResponse_(response);
             })
             .catch(function (error) {
-              state.saveStatus[answerKey] = "保存に失敗しました。";
+              state.saveStatus[answerKey] = "保存に失敗しました。通信状態を確認してください。";
               renderQuestionView_();
               renderError_(error);
             });
@@ -1108,6 +1204,36 @@
           renderSessionMeta_();
           renderQuestionMap_();
           renderQuestionView_();
+        }
+
+        function moveToQuestion_(index) {
+          state.currentQuestionIndex = Math.max(0, Math.min(index, state.session.questions.length - 1));
+          renderSessionMeta_();
+          renderQuestionMap_();
+          renderQuestionView_();
+        }
+
+        function getFirstIncorrectQuestionIndex_() {
+          if (!state.session || !state.session.questions) {
+            return -1;
+          }
+
+          return state.session.questions.findIndex(function (question) {
+            var result = state.results[question.sessionQuestionId];
+            return result && !result.isCorrect;
+          });
+        }
+
+        function scrollToQuestionCard_() {
+          var card = questionShellEl.querySelector(".question-card, .completion-card");
+          if (!card) {
+            return;
+          }
+
+          card.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+          });
         }
 
         function getAnsweredCount_() {

@@ -19,7 +19,7 @@ var LineMessageBuilder = (function () {
 
   function buildFollowMessages() {
     var config = ScriptConfig.getLineMessagingConfig();
-    var startMode = resolveMode_(config, "");
+    var startMode = resolveMode_(config, "ヘルプ");
 
     return [
       {
@@ -29,7 +29,7 @@ var LineMessageBuilder = (function () {
       },
       {
         type: "text",
-        text: "友だち追加ありがとうございます。学習を始めるボタンから LIFF を開いてください。"
+        text: "友だち追加ありがとうございます。まずは使い方を確認して、5問体験から始められます。"
       }
     ];
   }
@@ -145,6 +145,30 @@ var LineMessageBuilder = (function () {
   function resolveMode_(config, userText) {
     var normalized = String(userText || "").trim();
 
+    if (/ヘルプ|使い方|はじめかた|初め方|案内/.test(normalized)) {
+      return {
+        altText: "使い方を見る",
+        title: "はじめての方へ",
+        subtitle: "まずは流れを確認",
+        body: "まずは使い方を確認してから、個人で5問体験を始められます。導入相談の窓口もこちらから案内します。",
+        buttonLabel: "使い方を見る",
+        url: buildAppUrl_(config.appBaseUrl, "index.html#help"),
+        followUpText: "使い方、5問体験、導入相談の順に確認できます。"
+      };
+    }
+
+    if (/導入|有料|料金|契約|相談|法人|申し込み|申込/.test(normalized)) {
+      return {
+        altText: "導入相談を見る",
+        title: "導入相談",
+        subtitle: "個人利用の先へ進みたい方へ",
+        body: "まずは個人で5問体験を試し、その後に有料プランや組織導入の相談へ進めます。",
+        buttonLabel: "導入相談を見る",
+        url: buildAppUrl_(config.appBaseUrl, "index.html#plans"),
+        followUpText: "有料プランや導入相談の入口を開けます。"
+      };
+    }
+
     if (/管理|一覧|学習者/.test(normalized)) {
       return {
         altText: "管理画面を開く",
@@ -171,12 +195,12 @@ var LineMessageBuilder = (function () {
 
     return {
       altText: "LearningPlatform を開く",
-      title: "LearningPlatform",
-      subtitle: "LINE から学習を始める",
-      body: "LIFF を開いて、今日の5問や学習履歴を確認できます。",
-      buttonLabel: "学習を開く",
+      title: "5問体験",
+      subtitle: "まずは個人で試す",
+      body: "学習画面を開いて、まずは5問体験を始められます。今日の学習や履歴の確認もここから進められます。",
+      buttonLabel: "5問体験を始める",
       url: buildLiffUrl_(config),
-      followUpText: "LIFF を開いて学習を続けられます。"
+      followUpText: "個人で5問体験を始められます。"
     };
   }
 

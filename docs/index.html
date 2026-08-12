@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>LearningPlatform MVP Check</title>
+    <title>LearningPlatform はじめ方</title>
     <style>
       :root {
         --bg: #f4efe6;
@@ -73,6 +73,53 @@
         grid-template-columns: 1.2fr 0.8fr;
         gap: 20px;
         margin-top: 22px;
+      }
+
+      .journey {
+        display: grid;
+        gap: 14px;
+        margin-top: 24px;
+      }
+
+      .journey-card {
+        display: grid;
+        grid-template-columns: 44px 1fr;
+        gap: 14px;
+        align-items: start;
+        background: rgba(255, 250, 242, 0.86);
+        border: 1px solid rgba(28, 27, 24, 0.08);
+        border-radius: 20px;
+        padding: 18px;
+      }
+
+      .journey-step {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(23, 98, 74, 0.12);
+        color: var(--accent);
+        font-weight: 700;
+      }
+
+      .journey-card h2 {
+        margin: 0;
+        font-size: 22px;
+      }
+
+      .journey-card p {
+        margin: 10px 0 0;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .journey-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 14px;
       }
 
       .card {
@@ -199,15 +246,50 @@
   <body>
     <main class="wrap">
       <section class="hero">
-        <p class="eyebrow">GitHub Pages -> GAS Web App</p>
-        <h1>LearningPlatform<br>MVP Check</h1>
+        <p class="eyebrow">LINE で始める学習体験</p>
+        <h1>LearningPlatform<br>はじめ方ガイド</h1>
         <p class="lead">
-          GitHub Pages から公開されたフロントが、GAS Web App の `health`、`getMe`、`getHome`、`resolveDailySession` へ到達できるかを確認するための最小ページです。
+          最初の窓口は LINE です。友だち追加のあとに使い方を確認し、まずは個人で5問体験を試してから、有料プランや導入相談へ進めます。
         </p>
+
+        <div class="journey">
+          <section class="journey-card" id="help">
+            <div class="journey-step">1</div>
+            <div>
+              <h2>まずは LINE を追加</h2>
+              <p>最初の入口は LINE です。友だち追加後は「ヘルプ」と送ると、使い方と次の進め方を確認できます。</p>
+              <div class="journey-actions">
+                <a class="button" href="#help">ヘルプを見る</a>
+              </div>
+            </div>
+          </section>
+
+          <section class="journey-card">
+            <div class="journey-step">2</div>
+            <div>
+              <h2>まずは個人で5問体験</h2>
+              <p>いきなり契約へ進むのではなく、5問だけ試して学習の流れを体験できます。現在は `kanji-park` の小学1年生向け読み問題を体験用に再利用しています。</p>
+              <div class="journey-actions">
+                <a class="button primary-link" href="./learn.html">5問体験を開く</a>
+              </div>
+            </div>
+          </section>
+
+          <section class="journey-card" id="plans">
+            <div class="journey-step">3</div>
+            <div>
+              <h2>有料プラン・導入相談へ進む</h2>
+              <p>個人で試したあとに、継続利用や組織導入を検討できます。LINE では「導入相談」や「有料」と送ると相談導線を案内します。</p>
+              <div class="journey-actions">
+                <a class="button" href="#plans">導入相談の案内</a>
+              </div>
+            </div>
+          </section>
+        </div>
 
         <div class="grid">
           <section class="card">
-            <h2>Connection</h2>
+            <h2>接続確認</h2>
             <div id="status" class="status waiting">
               <span class="dot"></span>
               <span>Waiting</span>
@@ -230,11 +312,11 @@
               <button id="meButton" type="button">Get Me</button>
               <button id="homeButton" type="button">Get Home</button>
               <button id="dailyButton" type="button">Resolve Daily</button>
-              <a class="button primary-link" href="./learn.html">Open Learning UI</a>
-              <a id="openEndpoint" class="button" href="#" target="_blank" rel="noreferrer">Open Endpoint</a>
+              <a class="button primary-link" href="./learn.html">学習画面を開く</a>
+              <a id="openEndpoint" class="button" href="#" target="_blank" rel="noreferrer">Endpoint を開く</a>
             </div>
             <p class="note">
-              GitHub Pages 設定は `main` ブランチの `/docs` を公開先にしてください。初回は `Setup Status` と `Get Me` が通ることを確認し、その後 `Resolve Daily` を押します。
+              GitHub Pages 設定は `main` ブランチの `/docs` を公開先にしてください。初回は `Setup Status` と `Get Me` が通ることを確認し、その後 `Resolve Daily` で5問体験の取得を確認します。
             </p>
           </section>
 

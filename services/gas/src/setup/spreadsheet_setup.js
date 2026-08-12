@@ -15,7 +15,8 @@ function setupLearningPlatformSheets() {
     { name: "assignments", headers: ["assignment_id", "tenant_id", "course_id", "target_type", "target_id", "question_count", "start_at", "due_at", "created_by_membership_id", "status", "created_at", "updated_at"] },
     { name: "learning_sessions", headers: ["learning_session_id", "tenant_id", "user_id", "membership_id", "course_id", "assignment_id", "session_type", "status", "question_count", "started_at", "completed_at", "expires_at", "business_date", "created_at"] },
     { name: "session_questions", headers: ["session_question_id", "tenant_id", "learning_session_id", "question_id", "display_order", "question_snapshot_payload", "created_at"] },
-    { name: "answer_events", headers: ["answer_event_id", "tenant_id", "learning_session_id", "session_question_id", "question_id", "user_id", "membership_id", "attempt_no", "idempotency_key", "answer_payload", "is_correct", "score", "elapsed_ms", "hint_used", "explanation_viewed", "answered_at", "synced_at"] }
+    { name: "answer_events", headers: ["answer_event_id", "tenant_id", "learning_session_id", "session_question_id", "question_id", "user_id", "membership_id", "attempt_no", "idempotency_key", "answer_payload", "is_correct", "score", "elapsed_ms", "hint_used", "explanation_viewed", "answered_at", "synced_at"] },
+    { name: "debug_logs", headers: ["log_id", "request_id", "level", "request_method", "action", "route_type", "status", "error_code", "error_message", "duration_ms", "event_count", "user_id", "membership_id", "line_user_id", "request_summary", "response_summary", "created_at"] }
   ];
 
   definitions.forEach(function (definition) {
@@ -104,6 +105,8 @@ function setupLearningPlatformScriptProperties() {
     DEFAULT_USER_ID: "user_demo_001",
     DEFAULT_USER_NAME: "Demo Learner",
     DEFAULT_LINE_USER_ID: "",
+    SYSTEM_ADMIN_LINE_USER_ID: "",
+    SYSTEM_ADMIN_LINE: "",
     DEFAULT_MEMBERSHIP_ID: "membership_demo_001",
     DEFAULT_MEMBERSHIP_ROLE: "LEARNER",
     ALLOWED_ORIGIN: "https://example.github.io"
@@ -115,6 +118,99 @@ function setupLearningPlatformScriptProperties() {
     ok: true,
     message: "Default script properties were set. Replace placeholder values before production use.",
     defaults: defaults
+  };
+}
+
+function authorizeLearningPlatformExternalRequest() {
+  var response = UrlFetchApp.fetch("https://www.google.com/generate_204", {
+    method: "get",
+    muteHttpExceptions: true
+  });
+
+  return {
+    ok: true,
+    message: "External request authorization succeeded.",
+    statusCode: response.getResponseCode()
+  };
+}
+
+function inspectLearningPlatformLineSetup() {
+  var config = ScriptConfig.getLineMessagingConfig();
+  var token = config.channelAccessToken || "";
+  var destination = config.systemAdminLineUserId || "";
+
+  return {
+    ok: true,
+    appBaseUrl: config.appBaseUrl || "",
+    defaultTenantId: config.defaultTenantId || "",
+    liffId: config.liffId || "",
+    systemAdminLineUserId: destination,
+    hasChannelAccessToken: !!token,
+    maskedChannelAccessToken: maskToken_(token),
+    checks: {
+      externalRequestScopeReady: true,
+      pushDestinationReady: !!destination,
+      channelAccessTokenReady: !!token
+    }
+  };
+}
+
+function authorizeLearningPlatformLineMessaging() {
+  var setup = inspectLearningPlatformLineSetup();
+  var externalRequest = authorizeLearningPlatformExternalRequest();
+
+  return {
+    ok: true,
+    message: "Manual authorization path completed on the host GAS project.",
+    setup: setup,
+    externalRequest: externalRequest
+  };
+}
+
+function pushSystemAdminLineTestMessage() {
+  var config = ScriptConfig.getLineMessagingConfig();
+  var destination = config.systemAdminLineUserId;
+
+  if (!destination) {
+    throw AppError.validation(
+      "missing_system_admin_line_user_id",
+      "Set SYSTEM_ADMIN_LINE_USER_ID or SYSTEM_ADMIN_LINE before sending a test push."
+    );
+  }
+
+  var now = new Date();
+  var appBaseUrl = config.appBaseUrl || "";
+  var messages = [{
+    type: "text",
+    text: [
+      "LearningPlatform 管理通知テスト",
+      "日時: " + now.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }),
+      "送信先: " + destination,
+      appBaseUrl ? "App: " + appBaseUrl : ""
+    ].filter(function (line) {
+      return !!line;
+    }).join("\n")
+  }];
+
+  var result = LineMessagingClient.pushMessage(destination, messages);
+
+  return {
+    ok: true,
+    message: "System admin LINE push message sent.",
+    destination: destination,
+    result: result
+  };
+}
+
+function authorizeAndPushSystemAdminLineTestMessage() {
+  var authorization = authorizeLearningPlatformLineMessaging();
+  var pushResult = pushSystemAdminLineTestMessage();
+
+  return {
+    ok: true,
+    message: "Authorization and LINE push test completed.",
+    authorization: authorization,
+    push: pushResult
   };
 }
 
@@ -138,6 +234,18 @@ function requireValue_(value, keyName) {
   return value;
 }
 
+function maskToken_(token) {
+  if (!token) {
+    return "";
+  }
+
+  if (token.length <= 10) {
+    return token;
+  }
+
+  return token.slice(0, 6) + "..." + token.slice(-4);
+}
+
 function createEntitlement_(tenantId, featureKey, enabled, limitValue, now) {
   return {
     feature_entitlement_id: tenantId + "_" + featureKey,
@@ -157,13 +265,45 @@ function seedCourseAndQuestionData_(tenantId, now) {
   var courseId = "course_demo_001";
   var categoryId = "category_demo_001";
   var unitId = "unit_demo_001";
+  var trialQuestions = [
+    createTrialQuestionSet_(tenantId, courseId, categoryId, unitId, {
+      id: "question_demo_001",
+      text: "「一つ」の読み方は？",
+      answer: "ひとつ",
+      explanation: "「一つ」は「ひとつ」と読みます。"
+    }, now),
+    createTrialQuestionSet_(tenantId, courseId, categoryId, unitId, {
+      id: "question_demo_002",
+      text: "「右手」の読み方は？",
+      answer: "みぎて",
+      explanation: "「右手」は「みぎて」と読みます。"
+    }, now),
+    createTrialQuestionSet_(tenantId, courseId, categoryId, unitId, {
+      id: "question_demo_003",
+      text: "「大雨」の読み方は？",
+      answer: "おおあめ",
+      explanation: "「大雨」は「おおあめ」と読みます。"
+    }, now),
+    createTrialQuestionSet_(tenantId, courseId, categoryId, unitId, {
+      id: "question_demo_004",
+      text: "「百円」の読み方は？",
+      answer: "ひゃくえん",
+      explanation: "「百円」は「ひゃくえん」と読みます。"
+    }, now),
+    createTrialQuestionSet_(tenantId, courseId, categoryId, unitId, {
+      id: "question_demo_005",
+      text: "「王様」の読み方は？",
+      answer: "おうさま",
+      explanation: "「王様」は「おうさま」と読みます。"
+    }, now)
+  ];
 
   SpreadsheetGateway.replaceAllObjects("courses", [{
     course_id: courseId,
     tenant_id: tenantId,
     source_type: "TENANT",
-    title: "Demo Course",
-    description: "MVP demo course for daily sessions",
+    title: "かんじパーク 5問体験",
+    description: "kanji-park の問題を再利用した個人体験用の5問コース",
     status: "ACTIVE",
     created_at: now,
     updated_at: now
@@ -173,7 +313,7 @@ function seedCourseAndQuestionData_(tenantId, now) {
     category_id: categoryId,
     tenant_id: tenantId,
     course_id: courseId,
-    name: "Getting Started",
+    name: "まずは体験",
     sort_order: 1
   }]);
 
@@ -182,27 +322,44 @@ function seedCourseAndQuestionData_(tenantId, now) {
     tenant_id: tenantId,
     course_id: courseId,
     category_id: categoryId,
-    name: "Daily Practice",
+    name: "小学1年生レベル 漢字読み",
     sort_order: 1
   }]);
 
-  SpreadsheetGateway.replaceAllObjects("questions", [
-    createQuestion_(tenantId, courseId, categoryId, unitId, "question_demo_001", "TEXT_EXACT", "AUTO", "日本の首都は？", "東京です。", now),
-    createQuestion_(tenantId, courseId, categoryId, unitId, "question_demo_002", "TRUE_FALSE", "AUTO", "地球は太陽の周りを回る。", "正しい説明です。", now),
-    createQuestion_(tenantId, courseId, categoryId, unitId, "question_demo_003", "NUMBER", "AUTO", "2 + 3 は？", "5です。", now),
-    createQuestion_(tenantId, courseId, categoryId, unitId, "question_demo_004", "TEXT_EXACT", "AUTO", "富士山がある国は？", "日本です。", now),
-    createQuestion_(tenantId, courseId, categoryId, unitId, "question_demo_005", "TEXT_EXACT", "AUTO", "LearningPlatform の公開フロントは？", "GitHub Pagesです。", now)
-  ]);
+  SpreadsheetGateway.replaceAllObjects("questions", trialQuestions.map(function (entry) {
+    return entry.question;
+  }));
 
-  SpreadsheetGateway.replaceAllObjects("question_grading_configs", [
-    createGradingConfig_("question_demo_001", tenantId, { type: "string" }, { exact: "東京" }, "", now),
-    createGradingConfig_("question_demo_002", tenantId, { type: "boolean" }, { exact: true }, "", now),
-    createGradingConfig_("question_demo_003", tenantId, { type: "number" }, { exact: 5 }, "0", now),
-    createGradingConfig_("question_demo_004", tenantId, { type: "string" }, { exact: "日本" }, "", now),
-    createGradingConfig_("question_demo_005", tenantId, { type: "string" }, { exact: "GitHub Pages" }, "", now)
-  ]);
+  SpreadsheetGateway.replaceAllObjects("question_grading_configs", trialQuestions.map(function (entry) {
+    return entry.gradingConfig;
+  }));
 
   SpreadsheetGateway.replaceAllObjects("question_options", []);
+}
+
+function createTrialQuestionSet_(tenantId, courseId, categoryId, unitId, definition, now) {
+  return {
+    question: createQuestion_(
+      tenantId,
+      courseId,
+      categoryId,
+      unitId,
+      definition.id,
+      "TEXT_EXACT",
+      "AUTO",
+      definition.text,
+      definition.explanation,
+      now
+    ),
+    gradingConfig: createGradingConfig_(
+      definition.id,
+      tenantId,
+      { type: "string" },
+      { exact: definition.answer },
+      "",
+      now
+    )
+  };
 }
 
 function createQuestion_(tenantId, courseId, categoryId, unitId, questionId, questionType, gradingType, questionText, explanation, now) {

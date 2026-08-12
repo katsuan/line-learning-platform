@@ -4,14 +4,18 @@ var DomainConstants = {
     USERS: "users",
     MEMBERSHIPS: "memberships",
     FEATURE_ENTITLEMENTS: "feature_entitlements",
+    LINE_CONNECTIONS: "line_connections",
     COURSES: "courses",
     CATEGORIES: "categories",
     UNITS: "units",
     QUESTIONS: "questions",
+    QUESTION_OPTIONS: "question_options",
     QUESTION_GRADING_CONFIGS: "question_grading_configs",
+    ASSIGNMENTS: "assignments",
     LEARNING_SESSIONS: "learning_sessions",
     SESSION_QUESTIONS: "session_questions",
-    ANSWER_EVENTS: "answer_events"
+    ANSWER_EVENTS: "answer_events",
+    DEBUG_LOGS: "debug_logs"
   },
   MEMBERSHIP_STATUS: {
     ACTIVE: "ACTIVE"

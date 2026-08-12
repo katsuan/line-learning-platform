@@ -129,9 +129,7 @@ var SessionQuestionSheetRepository = (function () {
   }
 
   function appendMany(records) {
-    records.forEach(function (record) {
-      SpreadsheetGateway.appendObject(DomainConstants.SHEETS.SESSION_QUESTIONS, record);
-    });
+    SpreadsheetGateway.appendObjects(DomainConstants.SHEETS.SESSION_QUESTIONS, records);
     return records;
   }
 
