@@ -1318,16 +1318,50 @@
               return;
             }
 
+            state.answers[entry.sessionQuestionId] = entry.answerValue || state.answers[entry.sessionQuestionId] || "";
             state.results[entry.sessionQuestionId] = {
               isCorrect: entry.isCorrect === true,
               score: Number(entry.score || 0),
               explanation: question.explanation || "",
-              normalizedAnswer: "",
+              normalizedAnswer: entry.answerValue || "",
               correctAnswerText: toCorrectAnswerText_(question, (question.gradingConfig && question.gradingConfig.correctAnswerPayload) || {})
             };
             state.saveStatus[entry.sessionQuestionId] = "回答を保存しました。";
             state.submittingAnswers[entry.sessionQuestionId] = false;
           });
+        }
+
+        function upsertTodayAnswerEvent_(question, currentAnswer, gradingResult) {
+          if (!state.home) {
+            state.home = {};
+          }
+
+          if (!Array.isArray(state.home.todayAnswerEvents)) {
+            state.home.todayAnswerEvents = [];
+          }
+
+          var nextEntry = {
+            sessionQuestionId: question.sessionQuestionId,
+            questionId: question.questionId,
+            answerValue: currentAnswer,
+            isCorrect: gradingResult.isCorrect === true,
+            score: Number(gradingResult.score || 0),
+            answeredAt: new Date().toISOString()
+          };
+          var updated = false;
+
+          state.home.todayAnswerEvents = state.home.todayAnswerEvents.map(function (entry) {
+            if (entry.sessionQuestionId === question.sessionQuestionId) {
+              updated = true;
+              return nextEntry;
+            }
+
+            return entry;
+          });
+
+          if (!updated) {
+            state.home.todayAnswerEvents.push(nextEntry);
+          }
         }
 
         function buildSessionQuestionMap_() {
@@ -1941,7 +1975,7 @@
               state.submittingAnswers[answerKey] = false;
               state.saveStatus[answerKey] = response.duplicated ? "この回答はすでに保存されています。" : "回答を保存しました。";
               state.answers[answerKey] = currentAnswer;
-              loadHomeData_();
+              upsertTodayAnswerEvent_(question, currentAnswer, gradingResult);
               renderLearningState_();
               renderResponse_(response);
             })

@@ -14,9 +14,13 @@ var LearningService = (function () {
         : null,
       learningSummary: learningSummary,
       todayAnswerEvents: todayAnswerEvents.map(function (row) {
+        var answerPayload = parseJsonSafely_(row.answer_payload);
         return {
           sessionQuestionId: row.session_question_id,
           questionId: row.question_id,
+          answerValue: answerPayload && answerPayload.value !== undefined && answerPayload.value !== null
+            ? String(answerPayload.value)
+            : "",
           isCorrect: row.is_correct === true || row.is_correct === "true",
           score: Number(row.score || 0),
           answeredAt: row.answered_at || ""
@@ -109,6 +113,18 @@ var LearningService = (function () {
     return SpreadsheetGateway.readObjects(DomainConstants.SHEETS.ANSWER_EVENTS).filter(function (row) {
       return row.learning_session_id === learningSessionId;
     });
+  }
+
+  function parseJsonSafely_(value) {
+    if (!value) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(value);
+    } catch (error) {
+      return null;
+    }
   }
 
   return {
