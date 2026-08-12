@@ -942,6 +942,7 @@
           isBootstrapping: false,
           isResolvingSession: false,
           isSharing: false,
+          shareReceiptCodes: {},
           liff: {
             ready: false,
             loggedIn: false,
@@ -2061,22 +2062,45 @@
         }
 
         function buildShareMessages_() {
-          var total = state.session && state.session.questions ? state.session.questions.length : 0;
-          var correctCount = getCorrectCount_();
-          var accuracy = total === 0 ? 0 : Math.round((correctCount / total) * 100);
           var learnerName = state.liff.profile && state.liff.profile.displayName
             ? state.liff.profile.displayName
             : (state.me && state.me.user ? state.me.user.display_name : "学習者");
+          var receiptCode = getOrCreateShareReceiptCode_();
 
           return [{
             type: "text",
             text: [
-              learnerName + " の5問体験結果",
-              "正解 " + correctCount + " / " + total + "問",
-              "正答率 " + accuracy + "%",
-              "LearningPlatform で今日の学習を続けました。"
+              learnerName + " が5問体験を完了しました。",
+              "提出コード " + receiptCode,
+              "詳細は学習画面で確認できます。"
             ].join("\n")
           }];
+        }
+
+        function getOrCreateShareReceiptCode_() {
+          var sessionId = state.session && state.session.sessionId ? state.session.sessionId : "default";
+          if (state.shareReceiptCodes[sessionId]) {
+            return state.shareReceiptCodes[sessionId];
+          }
+
+          var alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+          var randomPart = "";
+          var index;
+
+          if (window.crypto && window.crypto.getRandomValues) {
+            var values = new Uint32Array(6);
+            window.crypto.getRandomValues(values);
+            for (index = 0; index < values.length; index += 1) {
+              randomPart += alphabet.charAt(values[index] % alphabet.length);
+            }
+          } else {
+            for (index = 0; index < 6; index += 1) {
+              randomPart += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+            }
+          }
+
+          state.shareReceiptCodes[sessionId] = "LPR-" + randomPart;
+          return state.shareReceiptCodes[sessionId];
         }
 
         function shareToCurrentChat_() {

@@ -30,6 +30,15 @@ var LineWebhookUsecase = (function () {
       };
     }
 
+    var messageText = event.message && event.message.type === "text" ? String(event.message.text || "").trim() : "";
+    if (shouldIgnoreMessageText_(messageText)) {
+      return {
+        handled: false,
+        eventType: event.type,
+        reason: "ignored_message"
+      };
+    }
+
     var messages = LineMessageBuilder.buildReplyMessages({
       event: event
     });
@@ -68,4 +77,16 @@ var LineWebhookUsecase = (function () {
   return {
     handleEvent: handleEvent
   };
+
+  function shouldIgnoreMessageText_(messageText) {
+    if (!messageText) {
+      return true;
+    }
+
+    if (/提出コード\s+LPR-[A-Z0-9-]+/i.test(messageText)) {
+      return true;
+    }
+
+    return !/(学習|学習する|5問|ヘルプ|使い方|はじめかた|初め方|案内|導入|有料|料金|契約|相談|法人|申し込み|申込|管理|一覧|学習者|履歴|記録|成績|メニュー)/.test(messageText);
+  }
 })();
