@@ -106,8 +106,68 @@
       }
 
       .settings-trigger-icon {
-        font-size: 20px;
-        line-height: 1;
+        position: relative;
+        width: 20px;
+        height: 20px;
+        display: inline-block;
+      }
+
+      .settings-trigger-icon::before {
+        content: "";
+        position: absolute;
+        left: 1px;
+        top: 6px;
+        width: 8px;
+        height: 8px;
+        background: currentColor;
+        border-radius: 2px 0 0 2px;
+      }
+
+      .settings-trigger-icon::after {
+        content: "";
+        position: absolute;
+        left: 7px;
+        top: 4px;
+        width: 0;
+        height: 0;
+        border-top: 6px solid transparent;
+        border-bottom: 6px solid transparent;
+        border-left: 9px solid currentColor;
+      }
+
+      .settings-trigger-icon .wave {
+        position: absolute;
+        top: 3px;
+        left: 11px;
+        width: 8px;
+        height: 14px;
+        border-right: 2px solid currentColor;
+        border-radius: 0 12px 12px 0;
+        opacity: 0;
+        transform: scale(0.9);
+      }
+
+      .settings-trigger-icon .wave.wave-1 {
+        left: 12px;
+      }
+
+      .settings-trigger-icon .wave.wave-2 {
+        left: 14px;
+        width: 10px;
+        height: 16px;
+        top: 2px;
+      }
+
+      .settings-trigger.is-on .settings-trigger-icon .wave {
+        opacity: 1;
+      }
+
+      .settings-trigger:not(.is-on) .settings-trigger-icon .wave {
+        opacity: 0;
+      }
+
+      .settings-trigger:not(.is-on) .settings-trigger-icon {
+        transform: translateX(1px);
       }
 
       .button,
@@ -806,7 +866,7 @@
           <h1>今日の5問</h1>
           <div class="topbar-meta">
             <button id="soundToggleButton" class="settings-trigger is-on" type="button" aria-pressed="true" aria-label="効果音をオフにする">
-              <span id="soundToggleIcon" class="settings-trigger-icon" aria-hidden="true">🔊</span>
+              <span id="soundToggleIcon" class="settings-trigger-icon" aria-hidden="true"><span class="wave wave-1"></span><span class="wave wave-2"></span></span>
             </button>
             <span id="versionPill" class="version-pill">ver -</span>
           </div>
@@ -1132,9 +1192,6 @@
             soundToggleButtonEl.setAttribute("aria-label", state.audio.enabled ? "効果音をオフにする" : "効果音をオンにする");
           }
 
-          if (soundToggleIconEl) {
-            soundToggleIconEl.textContent = state.audio.enabled ? "🔊" : "🔈";
-          }
         }
 
         function loadLiffProfile_() {
