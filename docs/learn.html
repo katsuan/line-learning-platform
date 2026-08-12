@@ -961,6 +961,8 @@
             loggedIn: false,
             inClient: false,
             profile: null,
+            userId: "",
+            idToken: "",
             contextType: "",
             canSendMessages: false,
             canShareTargetPicker: false,
@@ -1017,14 +1019,17 @@
           renderTopActions_();
           renderStartupLoading_();
 
-          Promise.all([
-            requestJson_("GET", config.meAction || "getMe"),
-            requestJson_("GET", config.homeAction || "getHome"),
-            requestJson_("POST", config.resolveDailySessionAction || "resolveDailySession", {
-              action: config.resolveDailySessionAction || "resolveDailySession",
-              tenantId: config.tenantId
+          initializeLiff_()
+            .then(function () {
+              return Promise.all([
+                requestJson_("POST", config.meAction || "getMe"),
+                requestJson_("POST", config.homeAction || "getHome"),
+                requestJson_("POST", config.resolveDailySessionAction || "resolveDailySession", {
+                  action: config.resolveDailySessionAction || "resolveDailySession",
+                  tenantId: config.tenantId
+                })
+              ]);
             })
-          ])
             .then(function (results) {
               state.me = results[0];
               state.home = results[1];
@@ -1057,18 +1062,26 @@
             state.liff.statusText = "未設定";
             state.liff.profileText = "LIFF ID を設定すると、LINEログイン連携と共有機能を使えます。";
             renderLiffStatus_();
-            return;
+            return Promise.resolve();
           }
 
-          window.liff.init({ liffId: config.liffId })
+          if (!/^https?:/i.test(String(window.location.href || ""))) {
+            state.liff.statusText = "利用不可";
+            state.liff.profileText = "LINE連携は公開URLから開いたときに利用できます。";
+            renderLiffStatus_();
+            return Promise.resolve();
+          }
+
+          return window.liff.init({ liffId: config.liffId })
             .then(function () {
               state.liff.ready = true;
               state.liff.inClient = window.liff.isInClient();
               state.liff.loggedIn = window.liff.isLoggedIn();
+              state.liff.idToken = window.liff.getIDToken ? (window.liff.getIDToken() || "") : "";
 
               if (!state.liff.loggedIn && !state.liff.inClient) {
                 window.liff.login({ redirectUri: window.location.href });
-                return;
+                return Promise.resolve();
               }
 
               return Promise.all([
@@ -1086,7 +1099,7 @@
               renderError_({
                 liff: error && error.message ? error.message : String(error)
               });
-            });
+            })
         }
 
         function initializeAudioSettings_() {
@@ -1153,6 +1166,7 @@
           return window.liff.getProfile()
             .then(function (profile) {
               state.liff.profile = profile;
+              state.liff.userId = profile && profile.userId ? profile.userId : "";
               state.liff.statusText = "連携済み";
               state.liff.profileText = (profile.displayName || "LINEユーザー") + " と連携しています。";
             })
@@ -1190,8 +1204,8 @@
 
         function loadHomeData_() {
           Promise.all([
-            requestJson_("GET", config.meAction || "getMe"),
-            requestJson_("GET", config.homeAction || "getHome")
+            requestJson_("POST", config.meAction || "getMe"),
+            requestJson_("POST", config.homeAction || "getHome")
           ])
             .then(function (results) {
               state.me = results[0];
@@ -1242,10 +1256,17 @@
 
         function requestJson_(method, action, body) {
           var url = new URL(config.gasWebAppUrl, window.location.href);
-          url.searchParams.set("action", action);
-          if (config.tenantId) {
-            url.searchParams.set("tenantId", config.tenantId);
-          }
+          var authPayload = buildAuthPayload_();
+          var queryPayload = {
+            action: action,
+            tenantId: config.tenantId
+          };
+
+          Object.keys(queryPayload).forEach(function (key) {
+            if (queryPayload[key] !== undefined && queryPayload[key] !== null && queryPayload[key] !== "") {
+              url.searchParams.set(key, queryPayload[key]);
+            }
+          });
 
           var options = {
             method: method,
@@ -1256,7 +1277,10 @@
           };
 
           if (method === "POST") {
-            options.body = JSON.stringify(body || { action: action, tenantId: config.tenantId });
+            options.body = JSON.stringify(Object.assign({}, authPayload, body || {}, {
+              action: action,
+              tenantId: config.tenantId
+            }));
           }
 
           return fetch(url.toString(), options).then(function (response) {
@@ -1275,6 +1299,15 @@
               return payload;
             });
           });
+        }
+
+        function buildAuthPayload_() {
+          return {
+            lineUserId: state.liff.userId || "",
+            lineIdToken: state.liff.idToken || "",
+            lineDisplayName: state.liff.profile && state.liff.profile.displayName ? state.liff.profile.displayName : "",
+            linePhotoUrl: state.liff.profile && state.liff.profile.pictureUrl ? state.liff.profile.pictureUrl : ""
+          };
         }
 
         function renderSidebar_() {

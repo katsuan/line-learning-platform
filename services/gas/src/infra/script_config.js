@@ -33,8 +33,10 @@ var ScriptConfig = (function () {
     return {
       appBaseUrl: get_("APP_BASE_URL"),
       liffId: get_("LIFF_ID"),
+      lineLoginChannelId: get_("LINE_LOGIN_CHANNEL_ID") || "",
       defaultTenantId: get_("DEFAULT_TENANT_ID"),
-      allowedOrigin: get_("ALLOWED_ORIGIN")
+      allowedOrigin: get_("ALLOWED_ORIGIN"),
+      defaultMembershipRole: get_("DEFAULT_MEMBERSHIP_ROLE") || "LEARNER"
     };
   }
 

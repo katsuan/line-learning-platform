@@ -17,8 +17,21 @@ var UserSheetRepository = (function () {
     }) || null;
   }
 
+  function findByLineUserId(lineUserId) {
+    return SpreadsheetGateway.readObjects(DomainConstants.SHEETS.USERS).find(function (row) {
+      return row.line_user_id === lineUserId;
+    }) || null;
+  }
+
+  function append(record) {
+    SpreadsheetGateway.appendObject(DomainConstants.SHEETS.USERS, record);
+    return record;
+  }
+
   return {
-    findByUserId: findByUserId
+    findByUserId: findByUserId,
+    findByLineUserId: findByLineUserId,
+    append: append
   };
 })();
 
@@ -35,9 +48,24 @@ var MembershipSheetRepository = (function () {
     }) || null;
   }
 
+  function findFirstActiveByTenantIdAndUserId(tenantId, userId) {
+    return SpreadsheetGateway.readObjects(DomainConstants.SHEETS.MEMBERSHIPS).find(function (row) {
+      return row.tenant_id === tenantId
+        && row.user_id === userId
+        && row.status === DomainConstants.MEMBERSHIP_STATUS.ACTIVE;
+    }) || null;
+  }
+
+  function append(record) {
+    SpreadsheetGateway.appendObject(DomainConstants.SHEETS.MEMBERSHIPS, record);
+    return record;
+  }
+
   return {
     findFirstActiveByTenantId: findFirstActiveByTenantId,
-    findByMembershipId: findByMembershipId
+    findByMembershipId: findByMembershipId,
+    findFirstActiveByTenantIdAndUserId: findFirstActiveByTenantIdAndUserId,
+    append: append
   };
 })();
 
