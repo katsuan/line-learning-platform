@@ -2256,6 +2256,13 @@
         }
 
         function buildShareLaunchUrl_() {
+          var params = new URLSearchParams();
+          params.set("entry", "shared-result");
+
+          if (config.liffId) {
+            return "https://liff.line.me/" + encodeURIComponent(config.liffId) + "?" + params.toString();
+          }
+
           var url = new URL("./learn.html", window.location.href);
           url.searchParams.set("entry", "shared-result");
           return url.toString();
