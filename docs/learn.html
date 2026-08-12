@@ -934,6 +934,7 @@
           answers: {},
           results: {},
           saveStatus: {},
+          submittingAnswers: {},
           audio: {
             enabled: true,
             volume: 0.55
@@ -961,6 +962,7 @@
         var refreshHomeButtonEl = document.getElementById("refreshHomeButton");
         var startDailyButtonEl = document.getElementById("startDailyButton");
         var debugMode = new URLSearchParams(window.location.search).get("debug") === "1";
+        var activeSessionId = "";
 
         if (debugMode) {
           debugPanelEl.style.display = "";
@@ -988,10 +990,8 @@
               state.me = payload.me || null;
               state.home = payload.home || null;
               state.session = payload.session || null;
+              syncStateWithSession_();
               state.currentQuestionIndex = 0;
-              state.answers = {};
-              state.results = {};
-              state.saveStatus = {};
               state.isBootstrapping = false;
               renderTopActions_();
               renderSidebar_();
@@ -1161,6 +1161,7 @@
               state.me = payload.me || null;
               state.home = payload.home || null;
               state.session = payload.session || state.session;
+              syncStateWithSession_();
               renderSidebar_();
               renderSessionMeta_();
               renderResponse_(payload);
@@ -1183,10 +1184,8 @@
           })
             .then(function (payload) {
               state.session = payload.session || null;
+              syncStateWithSession_();
               state.currentQuestionIndex = 0;
-              state.answers = {};
-              state.results = {};
-              state.saveStatus = {};
               state.isResolvingSession = false;
               renderTopActions_();
               renderSidebar_();
@@ -1461,6 +1460,7 @@
           var savedAnswer = state.answers[answerKey] || "";
           var result = state.results[answerKey] || null;
           var saveStatus = state.saveStatus[answerKey] || "";
+          var isSubmitting = state.submittingAnswers[answerKey] === true;
 
           questionShellEl.innerHTML = [
             '<article class="question-card' + (result ? ' revealed' : '') + '">',
@@ -1471,8 +1471,8 @@
             '  <p class="question-text">' + escapeHtml_(question.questionText) + '</p>',
             '  <div class="answer-zone">',
             '    <label for="answerInput">回答入力</label>',
-            renderAnswerControl_(question, savedAnswer),
-            '    <button id="submitAnswerButton" class="primary-cta" type="button"' + (result ? " disabled" : "") + '>回答する</button>',
+            renderAnswerControl_(question, savedAnswer, !!(result || isSubmitting)),
+            '    <button id="submitAnswerButton" class="primary-cta" type="button"' + ((result || isSubmitting) ? " disabled" : "") + '>' + (isSubmitting ? '送信中です' : '回答する') + '</button>',
             renderResultCard_(result, saveStatus),
             '  </div>',
             '</article>',
@@ -1496,14 +1496,21 @@
 
           if (submitAnswerButtonEl) {
             submitAnswerButtonEl.addEventListener("click", function () {
+              if (state.submittingAnswers[answerKey] || state.results[answerKey]) {
+                return;
+              }
+
               var currentAnswer = state.answers[answerKey] || "";
               if (currentAnswer === "") {
                 state.saveStatus[answerKey] = "回答を入力してください。";
                 renderQuestionView_();
                 return;
               }
+
+              state.answers[answerKey] = currentAnswer;
               var gradingResult = gradeAnswer_(question, currentAnswer);
               state.results[answerKey] = gradingResult;
+              state.submittingAnswers[answerKey] = true;
               state.saveStatus[answerKey] = "保存中...";
               playResultSound_(gradingResult.isCorrect);
               renderSessionMeta_();
@@ -1558,14 +1565,16 @@
           renderSessionLoading_();
         }
 
-        function renderAnswerControl_(question, savedAnswer) {
+        function renderAnswerControl_(question, savedAnswer, disabled) {
+          var disabledAttr = disabled ? " disabled" : "";
+
           if (question.questionType === "NUMBER") {
-            return '<input id="answerInput" type="number" value="' + escapeAttribute_(savedAnswer) + '" placeholder="数字で入力">';
+            return '<input id="answerInput" type="number" value="' + escapeAttribute_(savedAnswer) + '" placeholder="数字で入力"' + disabledAttr + '>';
           }
 
           if (question.questionType === "TRUE_FALSE") {
             return [
-              '<select id="answerInput">',
+              '<select id="answerInput"' + disabledAttr + '>',
               '  <option value="">選択してください</option>',
               '  <option value="true"' + (savedAnswer === "true" ? " selected" : "") + '>正しい</option>',
               '  <option value="false"' + (savedAnswer === "false" ? " selected" : "") + '>誤り</option>',
@@ -1573,7 +1582,7 @@
             ].join("");
           }
 
-          return '<textarea id="answerInput" placeholder="ここに回答を入力">' + escapeHtml_(savedAnswer) + '</textarea>';
+          return '<textarea id="answerInput" placeholder="ここに回答を入力"' + disabledAttr + '>' + escapeHtml_(savedAnswer) + '</textarea>';
         }
 
         function renderResultCard_(result, saveStatus) {
@@ -1633,9 +1642,7 @@
 
         function renderCompletionView_() {
           var total = state.session.questions.length;
-          var correctCount = Object.keys(state.results).filter(function (key) {
-            return state.results[key] && state.results[key].isCorrect;
-          }).length;
+          var correctCount = getCorrectCount_();
           var incorrectCount = total - correctCount;
           var accuracy = total === 0 ? 0 : Math.round((correctCount / total) * 100);
 
@@ -1799,6 +1806,7 @@
 
           requestJson_("POST", config.createAnswerEventAction || "createAnswerEvent", payload)
             .then(function (response) {
+              state.submittingAnswers[answerKey] = false;
               state.saveStatus[answerKey] = response.duplicated ? "この回答はすでに保存されています。" : "回答を保存しました。";
               loadHomeData_();
               renderSessionMeta_();
@@ -1807,6 +1815,7 @@
               renderResponse_(response);
             })
             .catch(function (error) {
+              state.submittingAnswers[answerKey] = false;
               state.saveStatus[answerKey] = "保存に失敗しました。通信状態を確認してください。";
               renderQuestionView_();
               renderError_(error);
@@ -1919,9 +1928,7 @@
 
         function buildShareMessages_() {
           var total = state.session && state.session.questions ? state.session.questions.length : 0;
-          var correctCount = Object.keys(state.results).filter(function (key) {
-            return state.results[key] && state.results[key].isCorrect;
-          }).length;
+          var correctCount = getCorrectCount_();
           var accuracy = total === 0 ? 0 : Math.round((correctCount / total) * 100);
           var learnerName = state.liff.profile && state.liff.profile.displayName
             ? state.liff.profile.displayName
@@ -1994,7 +2001,7 @@
         }
 
         function getAnsweredCount_() {
-          return Object.keys(state.results).length;
+          return getSessionResultEntries_().length;
         }
 
         function isLastQuestion_() {
@@ -2003,6 +2010,62 @@
 
         function isSessionCompleted_() {
           return state.session && getAnsweredCount_() >= state.session.questions.length && state.currentQuestionIndex >= state.session.questions.length;
+        }
+
+        function getCorrectCount_() {
+          return getSessionResultEntries_().filter(function (entry) {
+            return entry && entry.isCorrect;
+          }).length;
+        }
+
+        function getSessionResultEntries_() {
+          return getSessionQuestionIds_().map(function (questionId) {
+            return state.results[questionId] || null;
+          }).filter(function (entry) {
+            return !!entry;
+          });
+        }
+
+        function getSessionQuestionIds_() {
+          if (!state.session || !state.session.questions) {
+            return [];
+          }
+
+          return state.session.questions.map(function (question) {
+            return question.sessionQuestionId;
+          });
+        }
+
+        function syncStateWithSession_() {
+          var nextSessionId = state.session && state.session.sessionId ? state.session.sessionId : "";
+          var allowedKeys = {};
+
+          getSessionQuestionIds_().forEach(function (key) {
+            allowedKeys[key] = true;
+          });
+
+          if (nextSessionId !== activeSessionId) {
+            activeSessionId = nextSessionId;
+            state.answers = {};
+            state.results = {};
+            state.saveStatus = {};
+            state.submittingAnswers = {};
+            return;
+          }
+
+          state.answers = filterStateMapByKeys_(state.answers, allowedKeys);
+          state.results = filterStateMapByKeys_(state.results, allowedKeys);
+          state.saveStatus = filterStateMapByKeys_(state.saveStatus, allowedKeys);
+          state.submittingAnswers = filterStateMapByKeys_(state.submittingAnswers, allowedKeys);
+        }
+
+        function filterStateMapByKeys_(source, allowedKeys) {
+          return Object.keys(source || {}).reduce(function (accumulator, key) {
+            if (allowedKeys[key]) {
+              accumulator[key] = source[key];
+            }
+            return accumulator;
+          }, {});
         }
 
         function toQuestionTypeLabel_(questionType) {
