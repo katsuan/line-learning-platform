@@ -186,6 +186,42 @@
         line-height: 1.6;
       }
 
+      .mobile-quickbar {
+        display: none;
+      }
+
+      .mobile-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .mobile-summary-card {
+        padding: 12px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.7);
+      }
+
+      .mobile-summary-card .summary-label {
+        font-size: 11px;
+      }
+
+      .mobile-summary-card .summary-value {
+        font-size: 18px;
+      }
+
+      .mobile-summary-note {
+        margin-top: 8px;
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: rgba(18, 99, 71, 0.08);
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.5;
+      }
+
       .settings-panel {
         display: none;
       }
@@ -383,6 +419,10 @@
         margin-top: 14px;
         display: grid;
         gap: 16px;
+      }
+
+      .question-map-inline {
+        display: none;
       }
 
       .question-card {
@@ -766,13 +806,42 @@
       }
 
       @media (max-width: 640px) {
+        .shell {
+          padding: 10px 10px 108px;
+        }
+
+        .topbar {
+          gap: 8px;
+          margin-bottom: 10px;
+        }
+
+        .flow-card {
+          padding: 10px 12px;
+        }
+
+        .flow-text {
+          font-size: 13px;
+        }
+
+        .mobile-quickbar {
+          display: block;
+        }
+
+        .mobile-summary-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
         .topbar-meta {
           width: 100%;
           justify-content: space-between;
         }
 
         .top-actions {
-          grid-template-columns: 1fr auto;
+          grid-template-columns: 1fr;
+        }
+
+        .top-actions button {
+          min-height: 52px;
         }
 
         .summary-grid,
@@ -784,17 +853,43 @@
           font-size: 18px;
         }
 
-        .sidebar {
-          order: 2;
-        }
-
         .main {
-          order: 1;
+          padding: 10px;
         }
 
-        .sidebar section:nth-child(1),
-        .sidebar section:nth-child(3) {
+        .sidebar {
           display: none;
+        }
+
+        .session-strip {
+          position: sticky;
+          top: 8px;
+          z-index: 3;
+          padding: 12px;
+        }
+
+        .question-map-inline {
+          display: block;
+          margin-top: 12px;
+        }
+
+        .question-map-inline .section-title {
+          margin-bottom: 6px;
+          font-size: 15px;
+        }
+
+        .question-map-inline .mini-list {
+          grid-auto-flow: column;
+          grid-auto-columns: minmax(112px, 1fr);
+          overflow-x: auto;
+          overscroll-behavior-x: contain;
+          padding-bottom: 4px;
+          scroll-snap-type: x proximity;
+        }
+
+        .question-map-inline .mini-item {
+          min-width: 112px;
+          scroll-snap-align: start;
         }
 
         .response-box {
@@ -802,12 +897,52 @@
         }
 
         .question-card {
-          padding: 16px;
+          padding: 16px 14px;
+          border-radius: 22px;
         }
 
         .mini-item button {
           font-size: 14px;
           line-height: 1.5;
+        }
+
+        .question-text {
+          font-size: clamp(22px, 7vw, 28px);
+        }
+
+        .answer-zone {
+          gap: 12px;
+        }
+
+        .answer-zone textarea,
+        .answer-zone input,
+        .answer-zone select {
+          padding: 14px 16px;
+          border-radius: 16px;
+        }
+
+        .primary-cta,
+        .result-actions button,
+        .question-nav button {
+          min-height: 52px;
+        }
+
+        .question-nav {
+          bottom: 8px;
+          padding: 8px;
+          border-radius: 18px;
+        }
+
+        .result-hero {
+          grid-template-columns: 56px 1fr;
+          gap: 12px;
+        }
+
+        .result-mark {
+          width: 56px;
+          height: 56px;
+          font-size: 28px;
+          border-radius: 18px;
         }
 
         .completion-stats {
@@ -873,6 +1008,23 @@
         </div>
         <div class="flow-card">
           <p id="flowText" class="flow-text">1問ずつ答えて、結果を見ながら5問終えるだけです。迷ったら上の緑のボタンを押してください。</p>
+        </div>
+        <div class="mobile-quickbar">
+          <div class="mobile-summary-grid">
+            <div class="mobile-summary-card">
+              <p class="summary-label">回答済み</p>
+              <p id="mobileAnsweredCount" class="summary-value">0</p>
+            </div>
+            <div class="mobile-summary-card">
+              <p class="summary-label">正答率</p>
+              <p id="mobileAccuracyRate" class="summary-value">0%</p>
+            </div>
+            <div class="mobile-summary-card">
+              <p class="summary-label">次の一歩</p>
+              <p id="mobileActionHint" class="summary-value" style="font-size: 15px; line-height: 1.35;">開始</p>
+            </div>
+          </div>
+          <div id="mobileStatusNote" class="mobile-summary-note">LINEアプリから開くと共有までスムーズに進められます。</div>
         </div>
       </div>
 
@@ -943,6 +1095,14 @@
                 <div id="progressFill" class="progress-fill"></div>
               </div>
             </div>
+            <section class="question-map-inline">
+              <h2 class="section-title">問題一覧</h2>
+              <div id="questionMapInline" class="mini-list">
+                <div class="mini-item">
+                  <span class="muted">まだセッションが読み込まれていません。</span>
+                </div>
+              </div>
+            </section>
           </div>
 
           <div id="questionShell" class="question-shell">
@@ -1022,6 +1182,10 @@
         var progressFillEl = document.getElementById("progressFill");
         var answeredCountEl = document.getElementById("answeredCount");
         var accuracyRateEl = document.getElementById("accuracyRate");
+        var mobileAnsweredCountEl = document.getElementById("mobileAnsweredCount");
+        var mobileAccuracyRateEl = document.getElementById("mobileAccuracyRate");
+        var mobileActionHintEl = document.getElementById("mobileActionHint");
+        var mobileStatusNoteEl = document.getElementById("mobileStatusNote");
         var lineLoginStatusEl = document.getElementById("lineLoginStatus");
         var lineProfileTextEl = document.getElementById("lineProfileText");
         var flowTextEl = document.getElementById("flowText");
@@ -1029,6 +1193,7 @@
         var sessionPillLabelEl = document.getElementById("sessionPillLabel");
         var sessionMetaEl = document.getElementById("sessionMeta");
         var questionMapEl = document.getElementById("questionMap");
+        var questionMapInlineEl = document.getElementById("questionMapInline");
         var questionShellEl = document.getElementById("questionShell");
         var responsePanelEl = document.getElementById("responsePanel");
         var debugPanelEl = document.getElementById("debugPanel");
@@ -1474,7 +1639,71 @@
           }
 
           renderLiffStatus_();
+          renderMobileQuickbar_();
           renderQuestionMap_();
+        }
+
+        function renderMobileQuickbar_() {
+          if (mobileAnsweredCountEl) {
+            mobileAnsweredCountEl.textContent = String(getAnsweredCount_());
+          }
+
+          if (mobileAccuracyRateEl) {
+            mobileAccuracyRateEl.textContent = getMobileAccuracyText_();
+          }
+
+          if (mobileActionHintEl) {
+            mobileActionHintEl.textContent = resolveMobileActionHint_();
+          }
+
+          if (mobileStatusNoteEl) {
+            mobileStatusNoteEl.textContent = resolveMobileStatusNote_();
+          }
+        }
+
+        function getMobileAccuracyText_() {
+          var answeredCount = getAnsweredCount_();
+          if (answeredCount === 0) {
+            return "0%";
+          }
+
+          return String(Math.round((getCorrectCount_() / answeredCount) * 100)) + "%";
+        }
+
+        function resolveMobileActionHint_() {
+          if (state.isBootstrapping || state.isResolvingSession) {
+            return "準備中";
+          }
+
+          if (!state.session) {
+            return "5問開始";
+          }
+
+          if (isSessionCompleted_()) {
+            return "結果確認";
+          }
+
+          return "第" + (state.currentQuestionIndex + 1) + "問";
+        }
+
+        function resolveMobileStatusNote_() {
+          if (state.isBootstrapping || state.isResolvingSession) {
+            return "最初の5問を先に準備しています。";
+          }
+
+          if (!state.liff.inClient) {
+            return "LINEアプリから開くと共有までスムーズに進められます。";
+          }
+
+          if (!state.session) {
+            return "上のボタンから今日の5問を始めましょう。";
+          }
+
+          if (isSessionCompleted_()) {
+            return "結果確認とLINE共有はこのまま下で進められます。";
+          }
+
+          return "答えたらすぐ結果が出ます。横の問題一覧から戻り直しもできます。";
         }
 
         function renderLiffStatus_() {
@@ -1561,6 +1790,7 @@
         }
 
         function renderLearningState_() {
+          renderMobileQuickbar_();
           renderSessionMeta_();
           renderQuestionMap_();
           renderQuestionView_();
@@ -1590,11 +1820,11 @@
 
         function renderQuestionMap_() {
           if (!state.session || !state.session.questions || state.session.questions.length === 0) {
-            questionMapEl.innerHTML = '<div class="mini-item"><span class="muted">今日の5問を始めると、ここに進み具合が出ます。</span></div>';
+            renderQuestionMapContents_('<div class="mini-item"><span class="muted">今日の5問を始めると、ここに進み具合が出ます。</span></div>');
             return;
           }
 
-          questionMapEl.innerHTML = "";
+          var items = [];
           state.session.questions.forEach(function (question, index) {
             var item = document.createElement("div");
             item.className = "mini-item" + (index === state.currentQuestionIndex ? " current" : "");
@@ -1605,9 +1835,7 @@
             var button = document.createElement("button");
             button.type = "button";
             button.textContent = "第" + (index + 1) + "問";
-            button.addEventListener("click", function () {
-              moveToQuestion_(index);
-            });
+            button.setAttribute("data-question-index", String(index));
 
             var meta = document.createElement("span");
             meta.className = "muted";
@@ -1631,7 +1859,33 @@
             top.appendChild(status);
             item.appendChild(top);
             item.appendChild(meta);
-            questionMapEl.appendChild(item);
+            items.push(item.outerHTML);
+          });
+
+          renderQuestionMapContents_(items.join(""));
+          bindQuestionMapButtons_(questionMapEl);
+          bindQuestionMapButtons_(questionMapInlineEl);
+        }
+
+        function renderQuestionMapContents_(html) {
+          if (questionMapEl) {
+            questionMapEl.innerHTML = html;
+          }
+
+          if (questionMapInlineEl) {
+            questionMapInlineEl.innerHTML = html;
+          }
+        }
+
+        function bindQuestionMapButtons_(container) {
+          if (!container) {
+            return;
+          }
+
+          Array.prototype.slice.call(container.querySelectorAll("button[data-question-index]")).forEach(function (button) {
+            button.addEventListener("click", function () {
+              moveToQuestion_(Number(button.getAttribute("data-question-index") || 0));
+            });
           });
         }
 
