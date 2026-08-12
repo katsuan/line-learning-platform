@@ -24,7 +24,7 @@
       body {
         margin: 0;
         color: var(--ink);
-        font-family: Georgia, "Hiragino Mincho ProN", serif;
+        font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic", sans-serif;
         background:
           radial-gradient(circle at top right, rgba(18, 99, 71, 0.12), transparent 22%),
           radial-gradient(circle at bottom left, rgba(208, 139, 53, 0.16), transparent 30%),
@@ -40,8 +40,8 @@
 
       .topbar {
         display: grid;
-        gap: 14px;
-        margin-bottom: 14px;
+        gap: 10px;
+        margin-bottom: 12px;
       }
 
       .brand {
@@ -60,9 +60,9 @@
 
       h1 {
         margin: 0;
-        font-size: clamp(22px, 8vw, 44px);
-        line-height: 1;
-        font-weight: 600;
+        font-size: clamp(24px, 8vw, 36px);
+        line-height: 1.15;
+        font-weight: 700;
       }
 
       .top-actions {
@@ -99,8 +99,68 @@
       .helper-text {
         margin: 0;
         color: var(--muted);
-        font-size: 13px;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .flow-card {
+        padding: 14px 16px;
+        border-radius: 20px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.68);
+        display: grid;
+        gap: 8px;
+      }
+
+      .flow-title {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .flow-text {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
         line-height: 1.6;
+      }
+
+      .sound-settings {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 14px;
+        align-items: center;
+        padding: 12px 14px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.54);
+        border: 1px solid var(--line);
+      }
+
+      .sound-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .sound-toggle input {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--accent);
+      }
+
+      .volume-wrap {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .volume-wrap input {
+        width: 120px;
+        accent-color: var(--accent);
       }
 
       .loading-card {
@@ -147,12 +207,7 @@
       }
 
       .guide-card {
-        padding: 16px 18px;
-        border-radius: 22px;
-        border: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.58);
-        display: grid;
-        gap: 10px;
+        display: none;
       }
 
       .guide-title {
@@ -199,24 +254,24 @@
         background: var(--panel);
         backdrop-filter: blur(10px);
         border: 1px solid var(--line);
-        border-radius: 28px;
+        border-radius: 24px;
         box-shadow: var(--shadow);
       }
 
       .sidebar {
-        padding: 18px;
+        padding: 14px;
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 10px;
       }
 
       .main {
-        padding: 18px;
+        padding: 14px;
       }
 
       .section-title {
         margin: 0 0 8px;
-        font-size: 20px;
+        font-size: 16px;
       }
 
       .muted {
@@ -239,8 +294,8 @@
 
       .summary-card {
         border: 1px solid var(--line);
-        border-radius: 20px;
-        padding: 14px;
+        border-radius: 16px;
+        padding: 12px;
         background: rgba(255, 255, 255, 0.45);
       }
 
@@ -251,17 +306,17 @@
       }
 
       .summary-value {
-        margin: 8px 0 0;
-        font-size: 24px;
+        margin: 6px 0 0;
+        font-size: 20px;
         line-height: 1;
       }
 
       .session-strip {
         display: grid;
         gap: 10px;
-        padding: 14px 16px;
+        padding: 14px;
         border: 1px solid var(--line);
-        border-radius: 22px;
+        border-radius: 18px;
         background: linear-gradient(135deg, rgba(18, 99, 71, 0.08), rgba(208, 139, 53, 0.08));
       }
 
@@ -318,8 +373,8 @@
 
       .question-text {
         margin: 0;
-        font-size: clamp(24px, 7vw, 38px);
-        line-height: 1.2;
+        font-size: clamp(24px, 7vw, 32px);
+        line-height: 1.35;
       }
 
       .answer-zone {
@@ -405,6 +460,54 @@
         font-size: 22px;
       }
 
+      .result-hero {
+        display: grid;
+        grid-template-columns: 68px 1fr;
+        gap: 14px;
+        align-items: center;
+      }
+
+      .result-mark {
+        width: 68px;
+        height: 68px;
+        border-radius: 22px;
+        display: grid;
+        place-items: center;
+        font-size: 34px;
+        font-weight: 700;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(28, 27, 24, 0.08);
+      }
+
+      .result-card.correct .result-mark {
+        color: var(--accent);
+      }
+
+      .result-card.incorrect .result-mark {
+        color: #a85a0f;
+      }
+
+      .result-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+        width: fit-content;
+      }
+
+      .result-badge.correct {
+        background: rgba(18, 99, 71, 0.12);
+        color: var(--accent);
+      }
+
+      .result-badge.incorrect {
+        background: rgba(208, 139, 53, 0.18);
+        color: #8a5513;
+      }
+
       .result-meta {
         display: grid;
         gap: 6px;
@@ -481,11 +584,50 @@
         background: rgba(18, 99, 71, 0.08);
       }
 
+      .mini-item.answered-correct {
+        border-color: rgba(18, 99, 71, 0.22);
+      }
+
+      .mini-item.answered-incorrect {
+        border-color: rgba(208, 139, 53, 0.28);
+      }
+
       .mini-item button {
         background: transparent;
         color: inherit;
         text-align: left;
         padding: 0;
+      }
+
+      .mini-item-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .mini-status {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 34px;
+        height: 28px;
+        border-radius: 999px;
+        padding: 0 10px;
+        font-size: 13px;
+        font-weight: 700;
+        background: rgba(28, 27, 24, 0.06);
+        color: var(--muted);
+      }
+
+      .mini-status.correct {
+        background: rgba(18, 99, 71, 0.12);
+        color: var(--accent);
+      }
+
+      .mini-status.incorrect {
+        background: rgba(208, 139, 53, 0.18);
+        color: #8a5513;
       }
 
       .response-box {
@@ -511,7 +653,7 @@
 
       .compact-meta {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px;
       }
 
@@ -575,10 +717,6 @@
       }
 
       @media (max-width: 640px) {
-        .topbar {
-          gap: 12px;
-        }
-
         .top-actions {
           grid-template-columns: 1fr;
         }
@@ -598,6 +736,11 @@
 
         .main {
           order: 1;
+        }
+
+        .sidebar section:nth-child(1),
+        .sidebar section:nth-child(3) {
+          display: none;
         }
 
         .response-box {
@@ -630,8 +773,8 @@
         }
 
         .layout {
-          grid-template-columns: 300px minmax(0, 1fr);
-          gap: 20px;
+          grid-template-columns: 260px minmax(0, 1fr);
+          gap: 16px;
         }
 
         .top-actions {
@@ -670,7 +813,22 @@
           <button id="startDailyButton" type="button">今日の5問を始める</button>
           <button id="refreshHomeButton" class="secondary" type="button">状態を更新</button>
         </div>
-        <p class="helper-text">最初は「今日の5問を始める」から始めます。答えるたびに、すぐ結果と解説を確認できます。</p>
+        <div class="flow-card">
+          <p class="flow-title">この画面でやること</p>
+          <p id="flowText" class="flow-text">1問ずつ答えて、結果を見ながら5問終えるだけです。迷ったら上の緑のボタンを押してください。</p>
+        </div>
+        <div class="sound-settings">
+          <label class="sound-toggle" for="soundEnabledToggle">
+            <input id="soundEnabledToggle" type="checkbox" checked>
+            <span>正解音を鳴らす</span>
+          </label>
+          <label class="volume-wrap" for="soundVolumeRange">
+            <span>音量</span>
+            <input id="soundVolumeRange" type="range" min="0" max="100" step="5" value="55">
+            <strong id="soundVolumeLabel">55%</strong>
+          </label>
+        </div>
+        <p class="helper-text">学習は 1. 答える → 2. 解説を見る → 3. 次へ進む、のくり返しです。</p>
       </div>
 
       <div class="layout">
@@ -795,6 +953,7 @@
           me: null,
           home: null,
           session: null,
+          isBootstrapping: false,
           isResolvingSession: false,
           isSharing: false,
           liff: {
@@ -811,7 +970,11 @@
           currentQuestionIndex: 0,
           answers: {},
           results: {},
-          saveStatus: {}
+          saveStatus: {},
+          audio: {
+            enabled: true,
+            volume: 0.55
+          }
         };
 
         var displayNameEl = document.getElementById("displayName");
@@ -824,6 +987,10 @@
         var accuracyRateEl = document.getElementById("accuracyRate");
         var lineLoginStatusEl = document.getElementById("lineLoginStatus");
         var lineProfileTextEl = document.getElementById("lineProfileText");
+        var flowTextEl = document.getElementById("flowText");
+        var soundEnabledToggleEl = document.getElementById("soundEnabledToggle");
+        var soundVolumeRangeEl = document.getElementById("soundVolumeRange");
+        var soundVolumeLabelEl = document.getElementById("soundVolumeLabel");
         var sessionPillLabelEl = document.getElementById("sessionPillLabel");
         var sessionMetaEl = document.getElementById("sessionMeta");
         var questionMapEl = document.getElementById("questionMap");
@@ -838,14 +1005,51 @@
           debugPanelEl.style.display = "";
         }
 
+        initializeAudioSettings_();
         refreshHomeButtonEl.addEventListener("click", loadHomeData_);
-        startDailyButtonEl.addEventListener("click", resolveDailySession_);
+        startDailyButtonEl.addEventListener("click", handlePrimaryAction_);
 
         bootstrap_();
 
         function bootstrap_() {
           initializeLiff_();
-          loadHomeData_();
+          state.isBootstrapping = true;
+          renderTopActions_();
+          renderStartupLoading_();
+
+          Promise.all([
+            requestJson_("GET", config.meAction || "getMe"),
+            requestJson_("GET", config.homeAction || "getHome"),
+            requestJson_("POST", config.resolveDailySessionAction || "resolveDailySession", {
+              action: config.resolveDailySessionAction || "resolveDailySession",
+              tenantId: config.tenantId
+            })
+          ])
+            .then(function (results) {
+              state.me = results[0];
+              state.home = results[1];
+              state.session = results[2].session || null;
+              state.currentQuestionIndex = 0;
+              state.answers = {};
+              state.results = {};
+              state.saveStatus = {};
+              state.isBootstrapping = false;
+              renderTopActions_();
+              renderSidebar_();
+              renderSessionMeta_();
+              renderQuestionView_();
+              renderResponse_({
+                me: state.me,
+                home: state.home,
+                session: state.session
+              });
+            })
+            .catch(function (error) {
+              state.isBootstrapping = false;
+              renderTopActions_();
+              renderQuestionView_();
+              renderError_(error);
+            });
         }
 
         function initializeLiff_() {
@@ -883,6 +1087,60 @@
                 liff: error && error.message ? error.message : String(error)
               });
             });
+        }
+
+        function initializeAudioSettings_() {
+          try {
+            var raw = window.localStorage.getItem("learningPlatformAudioSettings");
+            if (raw) {
+              var parsed = JSON.parse(raw);
+              state.audio.enabled = parsed.enabled !== false;
+              state.audio.volume = typeof parsed.volume === "number" ? Math.max(0, Math.min(1, parsed.volume)) : 0.55;
+            }
+          } catch (error) {
+            state.audio.enabled = true;
+            state.audio.volume = 0.55;
+          }
+
+          if (soundEnabledToggleEl) {
+            soundEnabledToggleEl.checked = state.audio.enabled;
+            soundEnabledToggleEl.addEventListener("change", function (event) {
+              state.audio.enabled = !!event.target.checked;
+              persistAudioSettings_();
+              updateAudioSettingsUi_();
+            });
+          }
+
+          if (soundVolumeRangeEl) {
+            soundVolumeRangeEl.value = String(Math.round(state.audio.volume * 100));
+            soundVolumeRangeEl.addEventListener("input", function (event) {
+              state.audio.volume = Number(event.target.value || 0) / 100;
+              persistAudioSettings_();
+              updateAudioSettingsUi_();
+            });
+          }
+
+          updateAudioSettingsUi_();
+        }
+
+        function persistAudioSettings_() {
+          try {
+            window.localStorage.setItem("learningPlatformAudioSettings", JSON.stringify({
+              enabled: state.audio.enabled,
+              volume: state.audio.volume
+            }));
+          } catch (error) {
+          }
+        }
+
+        function updateAudioSettingsUi_() {
+          if (soundVolumeRangeEl) {
+            soundVolumeRangeEl.disabled = !state.audio.enabled;
+          }
+
+          if (soundVolumeLabelEl) {
+            soundVolumeLabelEl.textContent = Math.round(state.audio.volume * 100) + "%";
+          }
         }
 
         function loadLiffProfile_() {
@@ -949,7 +1207,7 @@
         }
 
         function resolveDailySession_() {
-          if (state.isResolvingSession) {
+          if (state.isResolvingSession || state.isBootstrapping) {
             return;
           }
 
@@ -1042,10 +1300,81 @@
         }
 
         function renderTopActions_() {
-          startDailyButtonEl.disabled = state.isResolvingSession;
-          refreshHomeButtonEl.disabled = state.isResolvingSession;
-          startDailyButtonEl.textContent = state.isResolvingSession ? "5問を準備しています" : "今日の5問を始める";
-          startDailyButtonEl.classList.toggle("button-loading", state.isResolvingSession);
+          var isBusy = state.isBootstrapping || state.isResolvingSession;
+          startDailyButtonEl.disabled = isBusy;
+          refreshHomeButtonEl.disabled = isBusy;
+          refreshHomeButtonEl.textContent = "学習情報を更新";
+          startDailyButtonEl.textContent = resolvePrimaryActionLabel_();
+          startDailyButtonEl.classList.toggle("button-loading", isBusy);
+          renderFlowText_();
+        }
+
+        function renderFlowText_() {
+          if (!flowTextEl) {
+            return;
+          }
+
+          if (state.isBootstrapping || state.isResolvingSession) {
+            flowTextEl.textContent = "最初の5問を準備しています。画面が切り替わるまでそのままお待ちください。";
+            return;
+          }
+
+          if (!state.session) {
+            flowTextEl.textContent = "5問がまだ開けていません。緑のボタンを押すと今日の問題を読み込みます。";
+            return;
+          }
+
+          if (isSessionCompleted_()) {
+            flowTextEl.textContent = "5問が終わりました。結果を見て、気になる問題だけ見直せます。";
+            return;
+          }
+
+          if (getAnsweredCount_() === 0) {
+            flowTextEl.textContent = "1問ずつ答えるだけで進められます。まずは1問目に答えてみましょう。";
+            return;
+          }
+
+          flowTextEl.textContent = "答えたら結果を見て、次の問題へ進みます。上の進行表示から見直しもできます。";
+        }
+
+        function resolvePrimaryActionLabel_() {
+          if (state.isBootstrapping || state.isResolvingSession) {
+            return "5問を準備しています";
+          }
+
+          if (!state.session) {
+            return "今日の5問を読み込む";
+          }
+
+          if (isSessionCompleted_()) {
+            return "結果を見る";
+          }
+
+          if (getAnsweredCount_() === 0 && state.currentQuestionIndex === 0) {
+            return "1問目に進む";
+          }
+
+          return "つづきを解く";
+        }
+
+        function handlePrimaryAction_() {
+          if (state.isBootstrapping || state.isResolvingSession) {
+            return;
+          }
+
+          if (!state.session) {
+            resolveDailySession_();
+            return;
+          }
+
+          if (isSessionCompleted_()) {
+            renderCompletionView_();
+            scrollToQuestionCard_();
+            return;
+          }
+
+          scrollToQuestionCard_();
+          focusAnswerInput_();
         }
 
         function renderSessionMeta_() {
@@ -1054,6 +1383,7 @@
             sessionMetaEl.textContent = "今日の5問を始めると、問題数と進み具合がここに表示されます。";
             progressInlineEl.textContent = "0 / 0";
             progressFillEl.style.width = "0%";
+            renderFlowText_();
             return;
           }
 
@@ -1066,6 +1396,7 @@
             : questionCount + "問中 " + displayIndex + "問目です。回答すると、すぐに結果と解説が出ます。";
           progressInlineEl.textContent = answered + " / " + questionCount;
           progressFillEl.style.width = questionCount === 0 ? "0%" : ((answered / questionCount) * 100) + "%";
+          renderFlowText_();
         }
 
         function renderQuestionMap_() {
@@ -1098,14 +1429,28 @@
               ? (state.results[question.sessionQuestionId].isCorrect ? "回答済み" : "見直したい")
               : "未回答";
 
-            item.appendChild(button);
+            var top = document.createElement("div");
+            top.className = "mini-item-top";
+
+            var status = document.createElement("span");
+            status.className = "mini-status";
+            if (state.results[question.sessionQuestionId]) {
+              status.className += state.results[question.sessionQuestionId].isCorrect ? " correct" : " incorrect";
+              status.textContent = state.results[question.sessionQuestionId].isCorrect ? "○" : "!";
+            } else {
+              status.textContent = "-";
+            }
+
+            top.appendChild(button);
+            top.appendChild(status);
+            item.appendChild(top);
             item.appendChild(meta);
             questionMapEl.appendChild(item);
           });
         }
 
         function renderQuestionView_() {
-          if (state.isResolvingSession) {
+          if (state.isBootstrapping || state.isResolvingSession) {
             renderSessionLoading_();
             return;
           }
@@ -1113,10 +1458,17 @@
           if (!state.session || !state.session.questions || state.session.questions.length === 0) {
             questionShellEl.innerHTML = [
               '<div class="empty-state">',
-              '<h2>はじめる準備ができています</h2>',
-              '<p>「今日の5問を始める」を押すと、ここに今日の問題が表示されます。</p>',
+              '<h2>5問体験を読み込めませんでした</h2>',
+              '<p>通信状況を確認して、もう一度5問を読み込んでください。</p>',
+              '<div class="result-actions" style="max-width: 320px; margin: 18px auto 0;">',
+              '  <button id="retrySessionButton" type="button">今日の5問を読み込む</button>',
+              '</div>',
               '</div>'
             ].join("");
+            var retrySessionButtonEl = document.getElementById("retrySessionButton");
+            if (retrySessionButtonEl) {
+              retrySessionButtonEl.addEventListener("click", resolveDailySession_);
+            }
             return;
           }
 
@@ -1150,7 +1502,7 @@
 
           var answerInputEl = document.getElementById("answerInput");
           if (answerInputEl) {
-            answerInputEl.focus();
+            focusAnswerInput_();
             answerInputEl.addEventListener("input", function (event) {
               state.answers[answerKey] = event.target.value;
             });
@@ -1174,6 +1526,7 @@
               var gradingResult = gradeAnswer_(question, currentAnswer);
               state.results[answerKey] = gradingResult;
               state.saveStatus[answerKey] = "保存中...";
+              playResultSound_(gradingResult.isCorrect);
               renderSessionMeta_();
               renderQuestionMap_();
               renderQuestionView_();
@@ -1213,13 +1566,17 @@
             '<section class="loading-card">',
             '  <div class="loading-spinner" aria-hidden="true"></div>',
             '  <h2 class="loading-title">今日の5問を準備しています</h2>',
-            '  <p class="note">問題を選んでいます。数秒お待ちください。</p>',
+            '  <p class="note">最初の5問を先に読み込んでいます。数秒お待ちください。</p>',
             '</section>'
           ].join("");
           sessionPillLabelEl.textContent = "準備中";
-          sessionMetaEl.textContent = "今日の5問を読み込んでいます。";
+          sessionMetaEl.textContent = "最初の5問を先に読み込んでいます。";
           progressInlineEl.textContent = "-";
           progressFillEl.style.width = "12%";
+        }
+
+        function renderStartupLoading_() {
+          renderSessionLoading_();
         }
 
         function renderAnswerControl_(question, savedAnswer) {
@@ -1247,6 +1604,8 @@
 
           var className = result.isCorrect ? 'result-card correct' : 'result-card incorrect';
           var title = result.isCorrect ? '正解です' : 'もう一度見直そう';
+          var badge = result.isCorrect ? '正解' : '見直し';
+          var mark = result.isCorrect ? '○' : '!';
           var explanation = result.explanation || '解説はまだありません。';
           var correctText = result.correctAnswerText ? '<span class="muted">正解: ' + escapeHtml_(result.correctAnswerText) + '</span>' : '';
           var flowText = result.isCorrect
@@ -1255,8 +1614,14 @@
 
           return [
             '<div class="' + className + '">',
-            '  <h3 class="result-title">' + title + '</h3>',
-            '  <p class="result-flow">' + flowText + '</p>',
+            '  <div class="result-hero">',
+            '    <div class="result-mark" aria-hidden="true">' + mark + '</div>',
+            '    <div>',
+            '      <span class="result-badge ' + (result.isCorrect ? 'correct' : 'incorrect') + '">' + badge + '</span>',
+            '      <h3 class="result-title">' + title + '</h3>',
+            '      <p class="result-flow">' + flowText + '</p>',
+            '    </div>',
+            '  </div>',
             '  <div class="result-meta">',
             '    <span>スコア: ' + escapeHtml_(String(result.score)) + '</span>',
             correctText,
@@ -1508,6 +1873,55 @@
             behavior: "smooth",
             block: "start"
           });
+        }
+
+        function focusAnswerInput_() {
+          var answerInputEl = document.getElementById("answerInput");
+          if (answerInputEl && typeof answerInputEl.focus === "function") {
+            answerInputEl.focus();
+          }
+        }
+
+        function playResultSound_(isCorrect) {
+          if (!state.audio.enabled || state.audio.volume <= 0 || !window.AudioContext) {
+            return;
+          }
+
+          try {
+            var context = new window.AudioContext();
+            var now = context.currentTime;
+            var gainNode = context.createGain();
+            gainNode.gain.value = 0.0001;
+            gainNode.connect(context.destination);
+
+            if (isCorrect) {
+              playTone_(context, gainNode, 523.25, now, 0.11, state.audio.volume);
+              playTone_(context, gainNode, 659.25, now + 0.12, 0.16, state.audio.volume * 0.9);
+            } else {
+              playTone_(context, gainNode, 330.0, now, 0.14, state.audio.volume * 0.8);
+              playTone_(context, gainNode, 262.0, now + 0.12, 0.2, state.audio.volume * 0.7);
+            }
+
+            window.setTimeout(function () {
+              context.close().catch(function () {
+              });
+            }, 500);
+          } catch (error) {
+          }
+        }
+
+        function playTone_(context, gainNode, frequency, startAt, duration, volume) {
+          var oscillator = context.createOscillator();
+          var noteGain = context.createGain();
+          oscillator.type = "sine";
+          oscillator.frequency.value = frequency;
+          noteGain.gain.setValueAtTime(0.0001, startAt);
+          noteGain.gain.exponentialRampToValueAtTime(Math.max(0.0001, volume), startAt + 0.02);
+          noteGain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+          oscillator.connect(noteGain);
+          noteGain.connect(gainNode);
+          oscillator.start(startAt);
+          oscillator.stop(startAt + duration + 0.02);
         }
 
         function canUsePremiumShare_() {
