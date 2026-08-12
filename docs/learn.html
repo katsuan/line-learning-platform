@@ -106,68 +106,38 @@
       }
 
       .settings-trigger-icon {
-        position: relative;
-        width: 20px;
-        height: 20px;
-        display: inline-block;
+        width: 22px;
+        height: 22px;
+        display: block;
       }
 
-      .settings-trigger-icon::before {
-        content: "";
-        position: absolute;
-        left: 1px;
-        top: 6px;
-        width: 8px;
-        height: 8px;
-        background: currentColor;
-        border-radius: 2px 0 0 2px;
+      .settings-trigger-icon .speaker-fill {
+        fill: currentColor;
       }
 
-      .settings-trigger-icon::after {
-        content: "";
-        position: absolute;
-        left: 7px;
-        top: 4px;
-        width: 0;
-        height: 0;
-        border-top: 6px solid transparent;
-        border-bottom: 6px solid transparent;
-        border-left: 9px solid currentColor;
+      .settings-trigger-icon .speaker-wave,
+      .settings-trigger-icon .speaker-slash {
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.9;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
 
-      .settings-trigger-icon .wave {
-        position: absolute;
-        top: 3px;
-        left: 11px;
-        width: 8px;
-        height: 14px;
-        border-right: 2px solid currentColor;
-        border-radius: 0 12px 12px 0;
+      .settings-trigger-icon .speaker-slash {
         opacity: 0;
-        transform: scale(0.9);
       }
 
-      .settings-trigger-icon .wave.wave-1 {
-        left: 12px;
-      }
-
-      .settings-trigger-icon .wave.wave-2 {
-        left: 14px;
-        width: 10px;
-        height: 16px;
-        top: 2px;
-      }
-
-      .settings-trigger.is-on .settings-trigger-icon .wave {
+      .settings-trigger.is-on .settings-trigger-icon .speaker-wave {
         opacity: 1;
       }
 
-      .settings-trigger:not(.is-on) .settings-trigger-icon .wave {
+      .settings-trigger:not(.is-on) .settings-trigger-icon .speaker-wave {
         opacity: 0;
       }
 
-      .settings-trigger:not(.is-on) .settings-trigger-icon {
-        transform: translateX(1px);
+      .settings-trigger:not(.is-on) .settings-trigger-icon .speaker-slash {
+        opacity: 1;
       }
 
       .button,
@@ -866,7 +836,12 @@
           <h1>今日の5問</h1>
           <div class="topbar-meta">
             <button id="soundToggleButton" class="settings-trigger is-on" type="button" aria-pressed="true" aria-label="効果音をオフにする">
-              <span id="soundToggleIcon" class="settings-trigger-icon" aria-hidden="true"><span class="wave wave-1"></span><span class="wave wave-2"></span></span>
+              <svg id="soundToggleIcon" class="settings-trigger-icon" aria-hidden="true" viewBox="0 0 24 24">
+                <path class="speaker-fill" d="M3 10.4h4.5l5-4.1c.5-.4 1.2 0 1.2.6v10.2c0 .6-.7 1-1.2.6l-5-4.1H3.9c-.5 0-.9-.4-.9-.9v-1.4c0-.5.4-.9.9-.9Z"></path>
+                <path class="speaker-wave" d="M16.6 9.1c1 .8 1.6 1.9 1.6 2.9s-.6 2.1-1.6 2.9"></path>
+                <path class="speaker-wave" d="M18.9 6.9c1.6 1.4 2.6 3.2 2.6 5.1s-1 3.7-2.6 5.1"></path>
+                <path class="speaker-slash" d="M16.7 7.3 21 16.7"></path>
+              </svg>
             </button>
             <span id="versionPill" class="version-pill">ver -</span>
           </div>
@@ -1030,7 +1005,6 @@
         var lineProfileTextEl = document.getElementById("lineProfileText");
         var flowTextEl = document.getElementById("flowText");
         var soundToggleButtonEl = document.getElementById("soundToggleButton");
-        var soundToggleIconEl = document.getElementById("soundToggleIcon");
         var sessionPillLabelEl = document.getElementById("sessionPillLabel");
         var sessionMetaEl = document.getElementById("sessionMeta");
         var questionMapEl = document.getElementById("questionMap");
@@ -1949,6 +1923,22 @@
             return "別のトークへの共有は使えますが、今のトークへの直接報告はLINEアプリから開いたときのみ利用できます。";
           }
 
+          if (!state.liff.inClient) {
+            return "別トーク共有は、LINEアプリ内で開いたときのみ安定して利用できます。";
+          }
+
+          if (!state.liff.loggedIn) {
+            return "別トーク共有を使うには、LINEログイン済みの状態で開いてください。";
+          }
+
+          if (!state.liff.canShareTargetPicker) {
+            return "この起動方法では別トーク共有を利用できません。LINEトークから開き直してください。";
+          }
+
+          if (!hasEntitlement_(config.premiumShareEntitlementKey || "shareTargetPicker")) {
+            return "別トーク共有は有料プランで利用できます。";
+          }
+
           return "LINE共有を使うには、LINE連携と共有設定を有効にしてください。";
         }
 
@@ -2135,7 +2125,13 @@
         }
 
         function canUsePremiumShare_() {
-          return !!(state.liff.ready && state.liff.loggedIn && state.liff.canShareTargetPicker && hasEntitlement_(config.premiumShareEntitlementKey || "shareTargetPicker"));
+          return !!(
+            state.liff.ready &&
+            state.liff.inClient &&
+            state.liff.loggedIn &&
+            state.liff.canShareTargetPicker &&
+            hasEntitlement_(config.premiumShareEntitlementKey || "shareTargetPicker")
+          );
         }
 
         function hasEntitlement_(featureKey) {
@@ -2326,6 +2322,26 @@
 
         function shareViaTargetPicker_() {
           if (!canUsePremiumShare_()) {
+            if (!state.liff.inClient) {
+              updateShareStatusText_("別トーク共有は、LINEアプリ内で開いたときのみ利用できます。");
+              return;
+            }
+
+            if (!state.liff.loggedIn) {
+              updateShareStatusText_("別トーク共有を使うには、LINEログイン済みの状態で開いてください。");
+              return;
+            }
+
+            if (!state.liff.canShareTargetPicker) {
+              updateShareStatusText_("この起動方法では別トーク共有を利用できません。LINEトークから開き直してください。");
+              return;
+            }
+
+            if (!hasEntitlement_(config.premiumShareEntitlementKey || "shareTargetPicker")) {
+              updateShareStatusText_("別トーク共有は有料プランで利用できます。");
+              return;
+            }
+
             return;
           }
 
@@ -2334,7 +2350,9 @@
 
           ensureShareReceipt_("share_target_picker")
             .then(function () {
-              return window.liff.shareTargetPicker(buildShareMessages_());
+              return window.liff.shareTargetPicker(buildShareMessages_(), {
+                isMultiple: false
+              });
             })
             .then(function (result) {
               state.isSharing = false;
