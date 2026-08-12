@@ -8,7 +8,7 @@ window.APP_CONFIG = {
   createAnswerEventAction: "createAnswerEvent",
   adminLearnersAction: "listAdminLearners",
   adminLearnerDetailAction: "getAdminLearnerDetail",
-  liffId: "",
+  liffId: "2011071914-4lKlbUGo",
   premiumShareEntitlementKey: "shareTargetPicker",
   lineShareEntitlementKey: "lineResultShare",
   tenantId: "tenant_demo_001",
