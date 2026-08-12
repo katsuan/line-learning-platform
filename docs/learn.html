@@ -976,33 +976,23 @@
 
         function bootstrap_() {
           state.isBootstrapping = true;
-          renderTopActions_();
-          renderStartupLoading_();
+          renderLoadingState_();
 
           initializeLiff_()
             .then(function () {
-              return requestJson_("POST", config.bootstrapAction || "bootstrapLearning", {
-                action: config.bootstrapAction || "bootstrapLearning",
-                tenantId: config.tenantId
-              });
+              return fetchBootstrapPayload_();
             })
             .then(function (payload) {
-              state.me = payload.me || null;
-              state.home = payload.home || null;
-              state.session = payload.session || null;
-              syncStateWithSession_();
-              state.currentQuestionIndex = 0;
+              applyBootstrapPayload_(payload, {
+                resetQuestionIndex: true
+              });
               state.isBootstrapping = false;
-              renderTopActions_();
-              renderSidebar_();
-              renderSessionMeta_();
-              renderQuestionView_();
+              renderAll_();
               renderResponse_(payload);
             })
             .catch(function (error) {
               state.isBootstrapping = false;
-              renderTopActions_();
-              renderQuestionView_();
+              renderLoadingErrorState_();
               renderError_(error);
             });
         }
@@ -1153,20 +1143,18 @@
         }
 
         function loadHomeData_() {
-          requestJson_("POST", config.bootstrapAction || "bootstrapLearning", {
-            action: config.bootstrapAction || "bootstrapLearning",
-            tenantId: config.tenantId
-          })
+          fetchBootstrapPayload_()
             .then(function (payload) {
-              state.me = payload.me || null;
-              state.home = payload.home || null;
-              state.session = payload.session || state.session;
-              syncStateWithSession_();
-              renderSidebar_();
-              renderSessionMeta_();
+              applyBootstrapPayload_(payload, {
+                preserveQuestionIndex: true
+              });
+              renderAll_();
               renderResponse_(payload);
             })
-            .catch(renderError_);
+            .catch(function (error) {
+              renderAll_();
+              renderError_(error);
+            });
         }
 
         function resolveDailySession_() {
@@ -1175,30 +1163,88 @@
           }
 
           state.isResolvingSession = true;
-          renderTopActions_();
-          renderSessionLoading_();
+          renderLoadingState_();
 
           requestJson_("POST", config.resolveDailySessionAction || "resolveDailySession", {
             action: config.resolveDailySessionAction || "resolveDailySession",
             tenantId: config.tenantId
           })
             .then(function (payload) {
-              state.session = payload.session || null;
-              syncStateWithSession_();
-              state.currentQuestionIndex = 0;
+              applySessionPayload_(payload, {
+                resetQuestionIndex: true
+              });
               state.isResolvingSession = false;
-              renderTopActions_();
-              renderSidebar_();
-              renderSessionMeta_();
-              renderQuestionView_();
+              renderAll_();
               renderResponse_(payload);
             })
             .catch(function (error) {
               state.isResolvingSession = false;
-              renderTopActions_();
-              renderQuestionView_();
+              renderLoadingErrorState_();
               renderError_(error);
             });
+        }
+
+        function fetchBootstrapPayload_() {
+          return requestJson_("POST", config.bootstrapAction || "bootstrapLearning", {
+            action: config.bootstrapAction || "bootstrapLearning",
+            tenantId: config.tenantId
+          });
+        }
+
+        function applyBootstrapPayload_(payload, options) {
+          state.me = payload.me || null;
+          state.home = payload.home || null;
+          applySessionPayload_(payload, options);
+        }
+
+        function applySessionPayload_(payload, options) {
+          var safeOptions = options || {};
+          state.session = payload.session || null;
+          syncStateWithSession_();
+
+          if (safeOptions.resetQuestionIndex) {
+            state.currentQuestionIndex = 0;
+          }
+
+          if (!safeOptions.preserveQuestionIndex) {
+            clampCurrentQuestionIndex_();
+            return;
+          }
+
+          clampCurrentQuestionIndex_();
+        }
+
+        function clampCurrentQuestionIndex_() {
+          if (!state.session || !state.session.questions || state.session.questions.length === 0) {
+            state.currentQuestionIndex = 0;
+            return;
+          }
+
+          var maxIndex = state.session.questions.length - 1;
+          if (isSessionCompleted_()) {
+            state.currentQuestionIndex = state.session.questions.length;
+            return;
+          }
+
+          state.currentQuestionIndex = Math.max(0, Math.min(state.currentQuestionIndex, maxIndex));
+        }
+
+        function renderAll_() {
+          renderTopActions_();
+          renderSidebar_();
+          renderSessionMeta_();
+          renderQuestionView_();
+        }
+
+        function renderLoadingState_() {
+          renderTopActions_();
+          renderSessionLoading_();
+        }
+
+        function renderLoadingErrorState_() {
+          renderTopActions_();
+          renderSessionMeta_();
+          renderQuestionView_();
         }
 
         function requestJson_(method, action, body) {
