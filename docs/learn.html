@@ -52,6 +52,12 @@
         flex-wrap: wrap;
       }
 
+      .topbar-meta {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
       h1 {
         margin: 0;
         font-size: clamp(24px, 8vw, 32px);
@@ -77,6 +83,31 @@
         display: grid;
         grid-template-columns: 1.45fr 0.85fr;
         gap: 10px;
+      }
+
+      .settings-trigger {
+        width: 46px;
+        min-width: 46px;
+        height: 46px;
+        padding: 0;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 251, 244, 0.84);
+        color: var(--ink);
+        border: 1px solid var(--line);
+      }
+
+      .settings-trigger.is-on {
+        background: rgba(18, 99, 71, 0.14);
+        color: var(--accent);
+        border-color: rgba(18, 99, 71, 0.24);
+      }
+
+      .settings-trigger-icon {
+        font-size: 20px;
+        line-height: 1;
       }
 
       .button,
@@ -125,41 +156,8 @@
         line-height: 1.6;
       }
 
-      .sound-settings {
-        display: grid;
-        flex-wrap: wrap;
-        gap: 10px 14px;
-        padding: 12px 14px;
-        border-radius: 18px;
-        background: rgba(255, 255, 255, 0.54);
-        border: 1px solid var(--line);
-      }
-
-      .sound-toggle {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 14px;
-        font-weight: 700;
-      }
-
-      .sound-toggle input {
-        width: 18px;
-        height: 18px;
-        accent-color: var(--accent);
-      }
-
-      .volume-wrap {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        color: var(--muted);
-        font-size: 13px;
-      }
-
-      .volume-wrap input {
-        width: 120px;
-        accent-color: var(--accent);
+      .settings-panel {
+        display: none;
       }
 
       .loading-card {
@@ -717,8 +715,13 @@
       }
 
       @media (max-width: 640px) {
+        .topbar-meta {
+          width: 100%;
+          justify-content: space-between;
+        }
+
         .top-actions {
-          grid-template-columns: 1fr;
+          grid-template-columns: 1fr auto;
         }
 
         .summary-grid,
@@ -801,7 +804,12 @@
       <div class="topbar">
         <div class="topbar-head">
           <h1>今日の5問</h1>
-          <span id="versionPill" class="version-pill">ver -</span>
+          <div class="topbar-meta">
+            <button id="soundToggleButton" class="settings-trigger is-on" type="button" aria-pressed="true" aria-label="効果音をオフにする">
+              <span id="soundToggleIcon" class="settings-trigger-icon" aria-hidden="true">🔊</span>
+            </button>
+            <span id="versionPill" class="version-pill">ver -</span>
+          </div>
         </div>
         <div class="top-actions">
           <button id="startDailyButton" type="button">今日の5問を始める</button>
@@ -851,21 +859,6 @@
                 <p id="lineLoginStatus" class="summary-value" style="font-size: 20px;">未確認</p>
                 <p id="lineProfileText" class="note" style="margin-top: 10px;">LINEアプリから開くと、LINEアカウントと連動します。</p>
               </div>
-            </div>
-          </section>
-
-          <section>
-            <h2 class="section-title">音の設定</h2>
-            <div class="sound-settings">
-              <label class="sound-toggle" for="soundEnabledToggle">
-                <input id="soundEnabledToggle" type="checkbox" checked>
-                <span>正解音を鳴らす</span>
-              </label>
-              <label class="volume-wrap" for="soundVolumeRange">
-                <span>音量</span>
-                <input id="soundVolumeRange" type="range" min="0" max="100" step="5" value="55">
-                <strong id="soundVolumeLabel">55%</strong>
-              </label>
             </div>
           </section>
 
@@ -976,9 +969,8 @@
         var lineLoginStatusEl = document.getElementById("lineLoginStatus");
         var lineProfileTextEl = document.getElementById("lineProfileText");
         var flowTextEl = document.getElementById("flowText");
-        var soundEnabledToggleEl = document.getElementById("soundEnabledToggle");
-        var soundVolumeRangeEl = document.getElementById("soundVolumeRange");
-        var soundVolumeLabelEl = document.getElementById("soundVolumeLabel");
+        var soundToggleButtonEl = document.getElementById("soundToggleButton");
+        var soundToggleIconEl = document.getElementById("soundToggleIcon");
         var sessionPillLabelEl = document.getElementById("sessionPillLabel");
         var sessionMetaEl = document.getElementById("sessionMeta");
         var questionMapEl = document.getElementById("questionMap");
@@ -1106,26 +1098,16 @@
             if (raw) {
               var parsed = JSON.parse(raw);
               state.audio.enabled = parsed.enabled !== false;
-              state.audio.volume = typeof parsed.volume === "number" ? Math.max(0, Math.min(1, parsed.volume)) : 0.55;
             }
           } catch (error) {
             state.audio.enabled = true;
-            state.audio.volume = 0.55;
           }
 
-          if (soundEnabledToggleEl) {
-            soundEnabledToggleEl.checked = state.audio.enabled;
-            soundEnabledToggleEl.addEventListener("change", function (event) {
-              state.audio.enabled = !!event.target.checked;
-              persistAudioSettings_();
-              updateAudioSettingsUi_();
-            });
-          }
+          state.audio.volume = 0.55;
 
-          if (soundVolumeRangeEl) {
-            soundVolumeRangeEl.value = String(Math.round(state.audio.volume * 100));
-            soundVolumeRangeEl.addEventListener("input", function (event) {
-              state.audio.volume = Number(event.target.value || 0) / 100;
+          if (soundToggleButtonEl) {
+            soundToggleButtonEl.addEventListener("click", function () {
+              state.audio.enabled = !state.audio.enabled;
               persistAudioSettings_();
               updateAudioSettingsUi_();
             });
@@ -1137,20 +1119,21 @@
         function persistAudioSettings_() {
           try {
             window.localStorage.setItem("learningPlatformAudioSettings", JSON.stringify({
-              enabled: state.audio.enabled,
-              volume: state.audio.volume
+              enabled: state.audio.enabled
             }));
           } catch (error) {
           }
         }
 
         function updateAudioSettingsUi_() {
-          if (soundVolumeRangeEl) {
-            soundVolumeRangeEl.disabled = !state.audio.enabled;
+          if (soundToggleButtonEl) {
+            soundToggleButtonEl.classList.toggle("is-on", state.audio.enabled);
+            soundToggleButtonEl.setAttribute("aria-pressed", state.audio.enabled ? "true" : "false");
+            soundToggleButtonEl.setAttribute("aria-label", state.audio.enabled ? "効果音をオフにする" : "効果音をオンにする");
           }
 
-          if (soundVolumeLabelEl) {
-            soundVolumeLabelEl.textContent = Math.round(state.audio.volume * 100) + "%";
+          if (soundToggleIconEl) {
+            soundToggleIconEl.textContent = state.audio.enabled ? "🔊" : "🔈";
           }
         }
 
