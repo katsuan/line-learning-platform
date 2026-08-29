@@ -8,7 +8,7 @@ LINEを入口にし、LIFF内で学習体験を完結させるマルチテナン
 
 要件定義・設計のメモは、開発者の手元で管理しています（非公開）。
 
-1. [OpenAPI 初版](/Users/katsu/GitHub/LearningPlatform/packages/openapi/openapi.yaml)
+1. [OpenAPI 初版](packages/openapi/openapi.yaml)
 
 ## ディレクトリ構成
 
@@ -45,4 +45,4 @@ LINEを入口にし、LIFF内で学習体験を完結させるマルチテナン
 - `Branch`: `main`
 - `Folder`: `/docs`
 
-最初の公開確認は [docs/index.html](/Users/katsu/GitHub/LearningPlatform/docs/index.html) を使う。
+最初の公開確認は [docs/index.html](docs/index.html) を使う。
