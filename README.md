@@ -6,13 +6,9 @@ LINEを入口にし、LIFF内で学習体験を完結させるマルチテナン
 
 ## 参照順
 
-1. [要件定義](/Users/katsu/GitHub/LearningPlatform/RULES/01_requirement_definition.md)
-2. [MVP情報設計](/Users/katsu/GitHub/LearningPlatform/RULES/02_mvp_information_architecture.md)
-3. [データモデルと認可](/Users/katsu/GitHub/LearningPlatform/RULES/03_data_model_and_authorization.md)
-4. [画面遷移とAPIカタログ](/Users/katsu/GitHub/LearningPlatform/RULES/04_screen_flow_and_api_catalog.md)
-5. [ER図とテーブル定義たたき台](/Users/katsu/GitHub/LearningPlatform/RULES/05_er_and_table_draft.md)
-6. [GAS / Spreadsheet 実装方針](/Users/katsu/GitHub/LearningPlatform/RULES/06_gas_spreadsheet_mvp.md)
-7. [OpenAPI 初版](/Users/katsu/GitHub/LearningPlatform/packages/openapi/openapi.yaml)
+要件定義・設計のメモは、開発者の手元で管理しています（非公開）。
+
+1. [OpenAPI 初版](/Users/katsu/GitHub/LearningPlatform/packages/openapi/openapi.yaml)
 
 ## ディレクトリ構成
 
