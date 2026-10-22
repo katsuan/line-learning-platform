@@ -20,7 +20,12 @@ var AppError = (function () {
     return create(code, message, 403);
   }
 
+  function busy(code, message) {
+    return create(code, message, 503);
+  }
+
   return {
+    busy: busy,
     validation: validation,
     notFound: notFound,
     forbidden: forbidden

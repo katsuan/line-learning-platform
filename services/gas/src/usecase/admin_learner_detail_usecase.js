@@ -1,7 +1,7 @@
 var AdminLearnerDetailUsecase = (function () {
   function execute(request) {
     var access = AdminAccess.requireAdmin(request);
-    var membershipId = request.params.membershipId || (request.body && request.body.membershipId);
+    var membershipId = InputLimits.id(request.params.membershipId || (request.body && request.body.membershipId));
 
     if (!membershipId) {
       throw AppError.validation("missing_membership_id", "membershipId is required");
@@ -24,7 +24,8 @@ var AdminLearnerDetailUsecase = (function () {
       learner: {
         membershipId: membership.membership_id,
         role: membership.role,
-        user: user,
+        // 管理の画面に出すのは名前と写真だけ（LINE のユーザー ID は返さない）
+        user: user ? { user_id: user.user_id, display_name: user.display_name, photo_url: user.photo_url || "" } : null,
         summary: {
           totalAnsweredCount: total,
           accuracyRate: total === 0 ? 0 : Number((correctCount / total).toFixed(2)),

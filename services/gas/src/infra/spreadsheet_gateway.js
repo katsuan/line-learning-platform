@@ -63,7 +63,8 @@ var SpreadsheetGateway = (function () {
     var headers = getHeaders_(sheetName);
     var rows = records.map(function (record) {
       return headers.map(function (header) {
-        return record[header] !== undefined ? record[header] : "";
+        // 外から来た文字が = + - @ で始まっても、式として動かないようにする
+        return record[header] !== undefined ? safeCell(record[header]) : "";
       });
     });
 
@@ -86,7 +87,8 @@ var SpreadsheetGateway = (function () {
 
     var rows = records.map(function (record) {
       return headers.map(function (header) {
-        return record[header] !== undefined ? record[header] : "";
+        // 外から来た文字が = + - @ で始まっても、式として動かないようにする
+        return record[header] !== undefined ? safeCell(record[header]) : "";
       });
     });
 

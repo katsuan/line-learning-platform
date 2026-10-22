@@ -4,7 +4,7 @@ var LearningService = (function () {
     var todaySessionSummary = todaySessionRecord ? SessionPresenter.toSummary(todaySessionRecord) : null;
     var learningSummary = buildLearningSummary_(me.membership.membership_id);
     var todayAnswerEvents = todaySessionRecord
-      ? listAnswerEventsByLearningSessionId_(todaySessionRecord.learning_session_id)
+      ? listAnswerEventsByLearningSessionId_(todaySessionRecord.learning_session_id, me.membership.membership_id)
       : [];
 
     return {
@@ -30,6 +30,20 @@ var LearningService = (function () {
   }
 
   function resolveDailySessionForMe(me, businessDate) {
+    var existing = findDailySessionRecord_(me.membership.membership_id, businessDate);
+    if (existing) {
+      return {
+        session: SessionPresenter.toSummary(existing),
+        reused: true
+      };
+    }
+    // 同じ人が2回続けて押しても、今日の回は1つだけ
+    return ScriptLock.run(function () {
+      return createDailySession_(me, businessDate);
+    });
+  }
+
+  function createDailySession_(me, businessDate) {
     var existingSessionRecord = findDailySessionRecord_(me.membership.membership_id, businessDate);
     if (existingSessionRecord) {
       return {
@@ -42,7 +56,7 @@ var LearningService = (function () {
     if (questions.length === 0) {
       throw AppError.notFound(
         "questions_not_found",
-        "No active questions were found for tenantId=" + me.tenant.tenant_id + ". Seed question data first."
+        "No active questions were found for this tenant"
       );
     }
 
@@ -109,9 +123,9 @@ var LearningService = (function () {
     );
   }
 
-  function listAnswerEventsByLearningSessionId_(learningSessionId) {
+  function listAnswerEventsByLearningSessionId_(learningSessionId, membershipId) {
     return SpreadsheetGateway.readObjects(DomainConstants.SHEETS.ANSWER_EVENTS).filter(function (row) {
-      return row.learning_session_id === learningSessionId;
+      return row.learning_session_id === learningSessionId && row.membership_id === membershipId;
     });
   }
 

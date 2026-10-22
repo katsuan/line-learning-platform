@@ -34,6 +34,12 @@ var EntryWeb = (function () {
   }
 
   function executeWebhook_(e) {
+    // Webhook の URL の合言葉（?key=）。WEBHOOK_KEY を入れたら、合わない知らせには何もしない
+    var expectedKey = ScriptConfig.getWebhookKey();
+    var givenKey = e && e.parameter && e.parameter.key ? String(e.parameter.key) : "";
+    if (expectedKey && givenKey !== expectedKey) {
+      return { ok: true, source: "line_webhook", eventCount: 0, results: [], ignored: "bad_key" };
+    }
     return LineWebhookRouter.handle(e);
   }
 
@@ -90,10 +96,9 @@ var EntryWeb = (function () {
       eventTypes: events.map(function (event) {
         return event.type;
       }),
-      messageTexts: events.map(function (event) {
-        return event.message && event.message.text ? event.message.text : "";
-      }).filter(function (text) {
-        return !!text;
+      // 送られた文はログに残さない（長さだけ）
+      messageLengths: events.map(function (event) {
+        return event.message && event.message.text ? String(event.message.text).length : 0;
       })
     });
   }

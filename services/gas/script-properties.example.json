@@ -14,6 +14,8 @@
   "DEFAULT_LINE_USER_ID": "",
   "DEFAULT_MEMBERSHIP_ID": "membership_demo_001",
   "DEFAULT_MEMBERSHIP_ROLE": "LEARNER",
+  "SYSTEM_ADMIN_LINE_USER_ID": "",
+  "WEBHOOK_KEY": "REPLACE_WITH_RANDOM_TEXT",
   "ALLOWED_ORIGIN": "https://example.github.io",
   "DEBUG_ENABLED": "true"
 }

@@ -57,6 +57,10 @@ var ScriptConfig = (function () {
     };
   }
 
+  function getWebhookKey() {
+    return get_("WEBHOOK_KEY") || "";
+  }
+
   function getSystemAdminLineUserId_() {
     return get_("SYSTEM_ADMIN_LINE_USER_ID") || get_("SYSTEM_ADMIN_LINE") || "";
   }
@@ -66,6 +70,7 @@ var ScriptConfig = (function () {
     getPublicConfig: getPublicConfig,
     getRequiredSetupConfig: getRequiredSetupConfig,
     getLineMessagingConfig: getLineMessagingConfig,
+    getWebhookKey: getWebhookKey,
     setProperties: setProperties
   };
 })();

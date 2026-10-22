@@ -225,6 +225,7 @@ function ensureSheet_(spreadsheet, name, headers) {
   }
 
   if (sheet.getLastRow() === 0) {
+    // qcheck-ok: G1 見出しはコードで決めた文字だけ
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
     sheet.setFrozenRows(1);
   }

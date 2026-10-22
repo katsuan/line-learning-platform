@@ -4,7 +4,7 @@ var DebugLogger = (function () {
       SpreadsheetGateway.appendObject(DomainConstants.SHEETS.DEBUG_LOGS, normalizeEntry_(entry));
     } catch (error) {
       consoleLog_("debug_log_failed", {
-        message: error && error.message ? error.message : String(error)
+        message: error && error.message ? error.message : String(error) // qcheck-ok: G2 実行ログ（管理者だけが見る）に出すだけ
       });
     }
   }
@@ -28,7 +28,7 @@ var DebugLogger = (function () {
       properties.setProperty("LAST_LINE_ERRORS", JSON.stringify(list.slice(0, 5)));
     } catch (error) {
       consoleLog_("line_error_record_failed", {
-        message: error && error.message ? error.message : String(error)
+        message: error && error.message ? error.message : String(error) // qcheck-ok: G2 実行ログ（管理者だけが見る）に出すだけ
       });
     }
   }
@@ -53,11 +53,22 @@ var DebugLogger = (function () {
       event_count: safeEntry.eventCount || 0,
       user_id: safeEntry.userId || "",
       membership_id: safeEntry.membershipId || "",
-      line_user_id: safeEntry.lineUserId || "",
+      // LINE のユーザー ID はそのまま残さない（数えるだけなら足りるので、SHA-256 の頭だけ）
+      line_user_id: hashId_(safeEntry.lineUserId),
       request_summary: truncate_(safeEntry.requestSummary, 1000),
       response_summary: truncate_(safeEntry.responseSummary, 1000),
       created_at: safeEntry.createdAt || new Date().toISOString()
     };
+  }
+
+  function hashId_(value) {
+    if (!value) {
+      return "";
+    }
+    var bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(value), Utilities.Charset.UTF_8);
+    return "sha256:" + bytes.slice(0, 8).map(function (b) {
+      return ((b + 256) % 256).toString(16).replace(/^(.)$/, "0$1");
+    }).join("");
   }
 
   function truncate_(value, maxLength) {
