@@ -20,12 +20,18 @@ var AppError = (function () {
     return create(code, message, 403);
   }
 
+  // LINE など外のサービスが断ったとき。中身はログにだけ残し、呼んだ人には返さない
+  function upstream(code, message) {
+    return create(code, message, 502);
+  }
+
   function busy(code, message) {
     return create(code, message, 503);
   }
 
   return {
     busy: busy,
+    upstream: upstream,
     validation: validation,
     notFound: notFound,
     forbidden: forbidden

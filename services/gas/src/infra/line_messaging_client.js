@@ -41,7 +41,7 @@ var LineMessagingClient = (function () {
 
     var statusCode = response.getResponseCode();
     if (statusCode < 200 || statusCode >= 300) {
-      throw AppError.validation(
+      throw AppError.upstream(
         errorCode,
         "LINE Messaging API returned status " + statusCode + ": " + response.getContentText()
       );

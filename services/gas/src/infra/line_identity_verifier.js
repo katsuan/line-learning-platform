@@ -27,7 +27,7 @@ var LineIdentityVerifier = (function () {
     var payload = parseJson_(response.getContentText());
 
     if (statusCode < 200 || statusCode >= 300) {
-      throw AppError.validation(
+      throw AppError.upstream(
         "line_id_token_verify_failed",
         "LINE idToken verification failed: " + (payload.error_description || payload.error || response.getContentText())
       );
