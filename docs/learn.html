@@ -1,1177 +1,449 @@
 <!doctype html>
-<html lang="ja">
+<html lang="ja" data-ls-dark="auto">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>LearningPlatform 学習画面</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>今日の5問｜LearningPlatform</title>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#f4efe6" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#121614" media="(prefers-color-scheme: dark)">
+    <!-- Q キット（おくるんの共通部品）。色は下の :root で、今の緑に -->
+    <link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css">
     <style>
       :root {
-        --bg: #f2eadc;
-        --panel: rgba(255, 251, 244, 0.88);
-        --ink: #1d1b17;
-        --muted: #6d665b;
-        --line: rgba(30, 27, 24, 0.1);
-        --accent: #126347;
-        --accent-strong: #0c4e37;
-        --warm: #d08b35;
-        --shadow: 0 20px 60px rgba(55, 38, 12, 0.12);
+        --ls-accent: #126347;
+        --ls-accent-strong: #0c4e37;
+        --ls-accent-soft: #e2efe8;
+        --ls-accent-ink: #0c4e37;
+        --ls-bg: #f4efe6;
+        --ls-surface-sub: #faf6ef;
+        --ls-tabs-bg: #ebe3d6;
+        --warm: #b8671a;
+        --warm-soft: #fbeedd;
       }
 
-      * {
-        box-sizing: border-box;
+      /* iPhone：入力欄の見た目を OS にまかせない（C1） */
+      .ls-input {
+        appearance: none;
+        -webkit-appearance: none;
       }
 
-      body {
-        margin: 0;
-        color: var(--ink);
-        font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic", sans-serif;
-        background:
-          radial-gradient(circle at top right, rgba(18, 99, 71, 0.12), transparent 22%),
-          radial-gradient(circle at bottom left, rgba(208, 139, 53, 0.16), transparent 30%),
-          linear-gradient(180deg, #efe6d7 0%, var(--bg) 100%);
-        min-height: 100vh;
+      .sound-button {
+        display: inline-grid;
+        place-items: center;
       }
 
-      .shell {
-        max-width: 1180px;
-        margin: 0 auto;
-        padding: 16px 14px 96px;
-      }
-
-      .topbar {
-        display: grid;
-        gap: 10px;
-        margin-bottom: 12px;
-      }
-
-      .topbar-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        flex-wrap: wrap;
-      }
-
-      .topbar-meta {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      h1 {
-        margin: 0;
-        font-size: clamp(24px, 8vw, 32px);
-        line-height: 1.15;
-        font-weight: 700;
-      }
-
-      .version-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 10px;
-        border-radius: 999px;
-        border: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.72);
-        color: var(--muted);
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.04em;
-      }
-
-      .top-actions {
-        display: grid;
-        grid-template-columns: 1.45fr 0.85fr;
-        gap: 10px;
-      }
-
-      .settings-trigger {
-        width: 46px;
-        min-width: 46px;
-        height: 46px;
-        padding: 0;
-        border-radius: 50%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(255, 251, 244, 0.84);
-        color: var(--ink);
-        border: 1px solid var(--line);
-      }
-
-      .settings-trigger.is-on {
-        background: rgba(18, 99, 71, 0.14);
-        color: var(--accent);
-        border-color: rgba(18, 99, 71, 0.24);
-      }
-
-      .settings-trigger-icon {
+      .sound-button svg {
         width: 22px;
         height: 22px;
-        display: block;
       }
 
-      .settings-trigger-icon .speaker-fill {
+      .sound-button .speaker-fill {
         fill: currentColor;
       }
 
-      .settings-trigger-icon .speaker-wave,
-      .settings-trigger-icon .speaker-slash {
+      .sound-button .speaker-wave,
+      .sound-button .speaker-slash {
         fill: none;
         stroke: currentColor;
         stroke-width: 1.9;
         stroke-linecap: round;
-        stroke-linejoin: round;
       }
 
-      .settings-trigger-icon .speaker-slash {
-        opacity: 0;
+      .sound-button[aria-pressed="true"] {
+        color: var(--ls-accent);
       }
 
-      .settings-trigger.is-on .settings-trigger-icon .speaker-wave {
-        opacity: 1;
-      }
-
-      .settings-trigger:not(.is-on) .settings-trigger-icon .speaker-wave {
-        opacity: 0;
-      }
-
-      .settings-trigger:not(.is-on) .settings-trigger-icon .speaker-slash {
-        opacity: 1;
-      }
-
-      .button,
-      button {
-        appearance: none;
-        border: none;
-        border-radius: 999px;
-        padding: 13px 16px;
-        font: inherit;
-        font-weight: 700;
-        cursor: pointer;
-        text-decoration: none;
-        text-align: center;
-      }
-
-      button {
-        background: var(--accent);
-        color: #f6f1e8;
-      }
-
-      button.secondary,
-      .button {
-        background: rgba(255, 251, 244, 0.84);
-        color: var(--ink);
-        border: 1px solid var(--line);
-      }
-
-      .helper-text {
-        margin: 0;
-        color: var(--muted);
-        font-size: 13px;
-        line-height: 1.5;
-      }
-
-      .flow-card {
-        padding: 12px 14px;
-        border-radius: 18px;
-        border: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.68);
-      }
-
-      .flow-text {
-        margin: 0;
-        color: var(--muted);
-        font-size: 14px;
-        line-height: 1.6;
-      }
-
-      .mobile-quickbar {
+      .sound-button[aria-pressed="true"] .speaker-slash,
+      .sound-button[aria-pressed="false"] .speaker-wave {
         display: none;
       }
 
-      .mobile-summary-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 8px;
-      }
-
-      .mobile-summary-card {
-        padding: 12px;
-        border-radius: 16px;
-        border: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.7);
-      }
-
-      .mobile-summary-card .summary-label {
-        font-size: 11px;
-      }
-
-      .mobile-summary-card .summary-value {
-        font-size: 18px;
-      }
-
-      .mobile-summary-note {
-        margin-top: 8px;
-        padding: 10px 12px;
-        border-radius: 14px;
-        background: rgba(18, 99, 71, 0.08);
-        color: var(--accent);
-        font-size: 12px;
-        font-weight: 700;
-        line-height: 1.5;
-      }
-
-      .settings-panel {
-        display: none;
-      }
-
-      .loading-card {
-        padding: 34px 22px;
-        border-radius: 24px;
-        border: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.6);
-        display: grid;
-        justify-items: center;
-        gap: 14px;
-        text-align: center;
-      }
-
-      .loading-spinner {
-        width: 42px;
-        height: 42px;
-        border-radius: 50%;
-        border: 4px solid rgba(18, 99, 71, 0.14);
-        border-top-color: var(--accent);
-        animation: spin 0.9s linear infinite;
-      }
-
-      .loading-title {
-        margin: 0;
-        font-size: 22px;
-      }
-
-      .button-loading {
-        position: relative;
-        pointer-events: none;
-      }
-
-      .button-loading::after {
-        content: "";
-        width: 14px;
-        height: 14px;
-        margin-left: 10px;
-        display: inline-block;
-        border-radius: 50%;
-        border: 2px solid rgba(246, 241, 232, 0.4);
-        border-top-color: rgba(246, 241, 232, 1);
-        animation: spin 0.8s linear infinite;
-        vertical-align: -2px;
-      }
-
-      .guide-card {
-        display: none;
-      }
-
-      .guide-title {
-        margin: 0;
-        font-size: 18px;
-      }
-
-      .guide-steps {
-        display: grid;
-        gap: 8px;
-      }
-
-      .guide-step {
-        display: grid;
-        grid-template-columns: 28px 1fr;
-        gap: 10px;
-        align-items: start;
-      }
-
-      .guide-step strong {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        background: rgba(18, 99, 71, 0.12);
-        color: var(--accent);
-        font-size: 14px;
-      }
-
-      button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-
-      .layout {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 14px;
-      }
-
-      .panel {
-        background: var(--panel);
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--line);
-        border-radius: 24px;
-        box-shadow: var(--shadow);
-      }
-
-      .sidebar {
-        padding: 14px;
-        display: flex;
-        flex-direction: column;
+      /* 進み具合 */
+      .progress-panel {
         gap: 10px;
       }
 
-      .main {
-        padding: 14px;
-      }
-
-      .section-title {
-        margin: 0 0 8px;
-        font-size: 16px;
-      }
-
-      .muted {
-        color: var(--muted);
-      }
-
-      .summary-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-      }
-
-      .summary-grid.single {
-        grid-template-columns: 1fr;
-      }
-
-      .summary-card.compact {
-        padding: 12px 14px;
-      }
-
-      .summary-card {
-        border: 1px solid var(--line);
-        border-radius: 16px;
-        padding: 12px;
-        background: rgba(255, 255, 255, 0.45);
-      }
-
-      .summary-label {
-        margin: 0;
-        color: var(--muted);
-        font-size: 13px;
-      }
-
-      .summary-value {
-        margin: 6px 0 0;
-        font-size: 20px;
-        line-height: 1;
-      }
-
-      .session-strip {
-        display: grid;
-        gap: 10px;
-        padding: 14px;
-        border: 1px solid var(--line);
-        border-radius: 18px;
-        background: linear-gradient(135deg, rgba(18, 99, 71, 0.08), rgba(208, 139, 53, 0.08));
-      }
-
-      .session-progress-line {
+      .progress-head {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-        margin-top: 12px;
+        align-items: baseline;
+        gap: 10px;
+        font-weight: 800;
       }
 
-      .progress-inline {
-        color: var(--muted);
-        font-size: 13px;
-        white-space: nowrap;
+      .progress-count {
+        color: var(--ls-subtext);
+        font-size: 14px;
       }
 
-      .pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
+      .progress-bar {
+        height: 8px;
         border-radius: 999px;
-        padding: 10px 14px;
-        background: rgba(18, 99, 71, 0.1);
-        color: var(--accent);
-        font-weight: 700;
+        overflow: hidden;
+        background: var(--ls-accent-soft);
       }
 
-      .pill-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: currentColor;
+      .progress-fill {
+        width: 0%;
+        height: 100%;
+        border-radius: inherit;
+        background: var(--ls-accent);
+        transition: width 180ms ease;
       }
 
-      .question-shell {
-        margin-top: 14px;
-        display: grid;
-        gap: 16px;
+      .qmap .ls-chip {
+        min-width: 56px;
+        min-height: var(--ls-tap);
       }
 
-      .question-map-inline {
-        display: none;
+      .qmap .ls-chip[aria-current="step"] {
+        border-color: var(--ls-accent);
+        border-width: 2px;
       }
 
-      .question-card {
-        border: 1px solid var(--line);
-        border-radius: 26px;
-        padding: 18px;
-        background: rgba(255, 255, 255, 0.56);
+      .qmap .mark-ok {
+        color: var(--ls-accent-ink);
       }
 
-      .question-card.revealed {
-        box-shadow: 0 18px 38px rgba(18, 99, 71, 0.08);
+      .qmap .mark-ng {
+        color: var(--warm);
       }
 
+      /* 問題 */
       .question-meta {
         display: flex;
         justify-content: space-between;
         gap: 10px;
-        flex-wrap: wrap;
-        margin-bottom: 14px;
+        color: var(--ls-subtext);
+        font-size: 13px;
+        font-weight: 700;
       }
 
       .question-type {
-        color: var(--accent);
-        font-size: 13px;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
+        color: var(--ls-accent-ink);
       }
 
       .question-text {
         margin: 0;
-        font-size: clamp(24px, 7vw, 32px);
-        line-height: 1.35;
+        font-size: clamp(22px, 7vw, 28px);
+        font-weight: 800;
+        line-height: 1.4;
+        overflow-wrap: anywhere;
       }
 
       .answer-zone {
-        margin-top: 22px;
-        display: grid;
-        gap: 14px;
-      }
-
-      .answer-zone label {
-        font-size: 14px;
-        color: var(--muted);
-      }
-
-      .answer-zone textarea,
-      .answer-zone input,
-      .answer-zone select {
-        width: 100%;
-        border: 1px solid rgba(28, 27, 24, 0.14);
-        border-radius: 18px;
-        padding: 16px 18px;
-        font: inherit;
-        background: rgba(255, 253, 248, 0.92);
-        color: var(--ink);
-      }
-
-      .answer-zone textarea {
-        min-height: 120px;
-        resize: vertical;
-      }
-
-      .note {
-        margin: 0;
-        font-size: 14px;
-        color: var(--muted);
-        line-height: 1.7;
-      }
-
-      .progress-bar {
-        position: relative;
-        width: 100%;
-        height: 10px;
-        border-radius: 999px;
-        overflow: hidden;
-        background: rgba(18, 99, 71, 0.1);
-      }
-
-      .progress-fill {
-        position: absolute;
-        inset: 0 auto 0 0;
-        width: 0%;
-        border-radius: inherit;
-        background: linear-gradient(90deg, var(--accent), #1f8b67);
-        transition: width 180ms ease;
-      }
-
-      .primary-cta {
-        width: 100%;
-        padding: 16px 18px;
-        font-size: 17px;
-      }
-
-      .result-card {
-        border-radius: 22px;
-        border: 1px solid var(--line);
-        padding: 16px;
-        background: rgba(255, 255, 255, 0.72);
         display: grid;
         gap: 10px;
       }
 
-      .result-card.correct {
-        border-color: rgba(18, 99, 71, 0.22);
-        background: rgba(18, 99, 71, 0.08);
+      .tf-choices {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
       }
 
-      .result-card.incorrect {
-        border-color: rgba(208, 139, 53, 0.24);
-        background: rgba(208, 139, 53, 0.12);
+      .tf-choices .ls-chip {
+        min-height: 52px;
+        font-size: 16px;
+      }
+
+      .big-button {
+        min-height: 52px;
+        font-size: 16px;
+      }
+
+      .question-nav {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      /* 答え合わせ */
+      .result {
+        display: grid;
+        gap: 10px;
+        padding: 14px;
+        border-radius: var(--ls-radius-md);
+        border: 1px solid var(--ls-line);
+      }
+
+      .result.is-correct {
+        border-color: color-mix(in srgb, var(--ls-accent) 30%, transparent);
+        background: var(--ls-accent-soft);
+      }
+
+      .result.is-incorrect {
+        border-color: color-mix(in srgb, var(--warm) 30%, transparent);
+        background: var(--warm-soft);
+      }
+
+      .result-head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .result-mark {
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
+        background: var(--ls-surface);
+        font-size: 28px;
+        font-weight: 800;
+      }
+
+      .is-correct .result-mark {
+        color: var(--ls-accent-ink);
+      }
+
+      .is-incorrect .result-mark {
+        color: var(--warm);
       }
 
       .result-title {
         margin: 0;
-        font-size: 22px;
+        font-size: 20px;
       }
 
-      .result-hero {
-        display: grid;
-        grid-template-columns: 68px 1fr;
-        gap: 14px;
-        align-items: center;
-      }
-
-      .result-mark {
-        width: 68px;
-        height: 68px;
-        border-radius: 22px;
-        display: grid;
-        place-items: center;
-        font-size: 34px;
-        font-weight: 700;
-        background: rgba(255, 255, 255, 0.72);
-        border: 1px solid rgba(28, 27, 24, 0.08);
-      }
-
-      .result-card.correct .result-mark {
-        color: var(--accent);
-      }
-
-      .result-card.incorrect .result-mark {
-        color: #a85a0f;
-      }
-
-      .result-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 7px 12px;
-        border-radius: 999px;
-        font-size: 13px;
-        font-weight: 700;
-        width: fit-content;
-      }
-
-      .result-badge.correct {
-        background: rgba(18, 99, 71, 0.12);
-        color: var(--accent);
-      }
-
-      .result-badge.incorrect {
-        background: rgba(208, 139, 53, 0.18);
-        color: #8a5513;
-      }
-
-      .result-meta {
-        display: grid;
-        gap: 6px;
-      }
-
-      .result-actions {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 10px;
-        margin-top: 8px;
-      }
-
-      .result-flow {
+      .result-body {
         margin: 0;
-        color: var(--muted);
-        font-size: 14px;
+        font-size: 15px;
         line-height: 1.7;
       }
 
-      .result-callout {
-        padding: 12px 14px;
-        border-radius: 16px;
-        background: rgba(255, 255, 255, 0.56);
-        border: 1px solid rgba(28, 27, 24, 0.08);
-      }
-
-      .save-status {
-        font-size: 13px;
-        color: var(--muted);
-      }
-
-      .share-actions {
-        display: grid;
-        gap: 10px;
-        margin-top: 4px;
-      }
-
-      .share-note {
+      .save-line {
         margin: 0;
-        color: var(--muted);
-        font-size: 13px;
-        line-height: 1.7;
-      }
-
-      .share-loading {
         display: flex;
         align-items: center;
-        gap: 10px;
-        margin-top: 10px;
-        padding: 12px 14px;
-        border-radius: 16px;
-        background: rgba(18, 99, 71, 0.08);
-        border: 1px solid rgba(18, 99, 71, 0.14);
-        color: var(--accent);
-        font-size: 13px;
-        font-weight: 700;
-      }
-
-      .share-loading .loading-spinner {
-        width: 18px;
-        height: 18px;
-        border-width: 3px;
-        flex: 0 0 auto;
-      }
-
-      .question-nav {
-        position: sticky;
-        bottom: 12px;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-        padding: 10px;
-        border-radius: 22px;
-        background: rgba(255, 251, 244, 0.92);
-        backdrop-filter: blur(8px);
-        border: 1px solid var(--line);
-      }
-
-      .mini-list {
-        display: grid;
-        gap: 10px;
-      }
-
-      .mini-item {
-        display: grid;
-        gap: 6px;
-        padding: 12px 14px;
-        border-radius: 16px;
-        border: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.42);
-      }
-
-      .mini-item.current {
-        border-color: rgba(18, 99, 71, 0.24);
-        background: rgba(18, 99, 71, 0.08);
-      }
-
-      .mini-item.answered-correct {
-        border-color: rgba(18, 99, 71, 0.22);
-      }
-
-      .mini-item.answered-incorrect {
-        border-color: rgba(208, 139, 53, 0.28);
-      }
-
-      .mini-item button {
-        background: transparent;
-        color: inherit;
-        text-align: left;
-        padding: 0;
-      }
-
-      .mini-item-top {
-        display: flex;
         justify-content: space-between;
-        align-items: center;
-        gap: 10px;
+        gap: 8px;
+        min-height: 32px;
+        color: var(--ls-subtext);
+        font-size: 13px;
       }
 
-      .mini-status {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 34px;
-        height: 28px;
-        border-radius: 999px;
-        padding: 0 10px;
+      .save-line.is-error {
+        color: var(--ls-danger);
+        font-weight: 700;
+      }
+
+      .save-line .ls-button {
+        min-height: 36px;
+      }
+
+      /* 5問おわり */
+      .completion-title {
+        margin: 0;
+        font-size: 26px;
+      }
+
+      .stat {
+        display: grid;
+        gap: 4px;
+        padding: 12px;
+        border-radius: var(--ls-radius-md);
+        background: var(--ls-surface-sub);
+      }
+
+      .stat-label {
+        color: var(--ls-subtext);
         font-size: 13px;
         font-weight: 700;
-        background: rgba(28, 27, 24, 0.06);
-        color: var(--muted);
       }
 
-      .mini-status.correct {
-        background: rgba(18, 99, 71, 0.12);
-        color: var(--accent);
+      .stat-value {
+        font-size: 24px;
+        font-weight: 800;
       }
 
-      .mini-status.incorrect {
-        background: rgba(208, 139, 53, 0.18);
-        color: #8a5513;
+      /* 送る前の見本（LINE のトークの見た目なので、暗い表示でも明るいまま） */
+      .talk-preview {
+        padding: 14px;
+        border-radius: var(--ls-radius-md);
+        background: var(--ls-talk-bg);
       }
 
-      .response-box {
-        margin-top: 18px;
-        border-radius: 20px;
+      .talk-card {
+        width: min(100%, 280px);
+        overflow: hidden;
+        border-radius: 16px;
+        background: #ffffff;
+        color: #1c1b18;
+        font-size: 13px;
+      }
+
+      .talk-card-band {
+        display: grid;
+        gap: 2px;
+        padding: 14px 16px;
+        background: #17624a;
+        color: #f8f4ed;
+      }
+
+      .talk-card-band small {
+        color: #ddefe7;
+        font-size: 11px;
+      }
+
+      .talk-card-band strong {
+        font-size: 17px;
+      }
+
+      .talk-card-body {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        padding: 12px 16px;
+      }
+
+      .talk-card-body div {
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: #f6efe4;
+      }
+
+      .talk-card-body small {
+        display: block;
+        color: #7a7165;
+        font-size: 11px;
+      }
+
+      .talk-card-body b {
+        font-size: 16px;
+      }
+
+      .talk-card-code {
+        grid-column: 1 / -1;
+      }
+
+      .talk-card-actions {
+        display: grid;
+        gap: 6px;
+        padding: 0 16px 14px;
+      }
+
+      .talk-card-actions span {
+        padding: 9px;
+        border-radius: 8px;
+        background: #eeeeee;
+        color: #1c1b18;
+        font-weight: 700;
+        text-align: center;
+      }
+
+      .talk-card-actions .is-primary {
+        background: #17624a;
+        color: #ffffff;
+      }
+
+      .version {
+        margin: 8px 0 0;
+        color: var(--ls-faint);
+        font-size: 11px;
+        text-align: center;
+      }
+
+      .debug-log {
+        max-height: 220px;
+        margin: 0;
+        padding: 12px;
+        overflow: auto;
+        border-radius: var(--ls-radius-md);
         background: #201d1a;
         color: #f6f1e8;
-        padding: 16px;
-        overflow: auto;
+        font-size: 12px;
+      }
+
+      .skeleton-card .ls-skeleton.is-short {
+        min-height: 20px;
+        width: 40%;
+      }
+
+      .skeleton-card .ls-skeleton.is-text {
+        min-height: 72px;
+      }
+
+      .wait-text {
+        margin: 0;
+        color: var(--ls-subtext);
         font-size: 13px;
-        line-height: 1.55;
-        max-height: 220px;
-      }
-
-      .details-toggle {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        cursor: pointer;
-        color: var(--muted);
-        font-size: 14px;
-      }
-
-      .compact-meta {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
-      }
-
-      .completion-card {
-        display: grid;
-        gap: 16px;
-        padding: 24px 20px;
-        border-radius: 28px;
-        border: 1px solid rgba(18, 99, 71, 0.16);
-        background: linear-gradient(145deg, rgba(18, 99, 71, 0.08), rgba(255, 255, 255, 0.72));
-      }
-
-      .completion-card h2 {
-        margin: 0;
-        font-size: clamp(28px, 8vw, 42px);
-        line-height: 1.05;
-      }
-
-      .completion-stats {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-      }
-
-      .completion-actions {
-        display: grid;
-        gap: 10px;
-      }
-
-      .empty-state {
-        padding: 50px 22px;
         text-align: center;
-        border: 1px dashed rgba(18, 99, 71, 0.2);
-        border-radius: 26px;
-        background: rgba(255, 255, 255, 0.4);
+        white-space: pre-line;
       }
 
-      .empty-state h2 {
-        margin: 0;
-        font-size: 28px;
-      }
-
-      .empty-state p {
-        max-width: 520px;
-        margin: 14px auto 0;
-        color: var(--muted);
-        line-height: 1.75;
-      }
-
-      @media (max-width: 640px) {
-        .shell {
-          padding: 10px 10px 108px;
-        }
-
-        .topbar {
-          gap: 8px;
-          margin-bottom: 10px;
-        }
-
-        .flow-card {
-          padding: 10px 12px;
-        }
-
-        .flow-text {
-          font-size: 13px;
-        }
-
-        .mobile-quickbar {
-          display: block;
-        }
-
-        .mobile-summary-grid {
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
-
-        .topbar-meta {
-          width: 100%;
-          justify-content: space-between;
-        }
-
-        .top-actions {
-          grid-template-columns: 1fr;
-        }
-
-        .top-actions button {
-          min-height: 52px;
-        }
-
-        .summary-grid,
-        .compact-meta {
-          grid-template-columns: 1fr 1fr;
-        }
-
-        .section-title {
-          font-size: 18px;
-        }
-
-        .main {
-          padding: 10px;
-        }
-
-        .sidebar {
-          display: none;
-        }
-
-        .session-strip {
-          position: static;
-          padding: 12px;
-        }
-
-        .question-map-inline {
-          display: block;
-          margin-top: 10px;
-        }
-
-        .question-map-inline .section-title {
-          margin-bottom: 6px;
-          font-size: 14px;
-        }
-
-        .question-map-inline .mini-list {
-          grid-auto-flow: column;
-          grid-auto-columns: minmax(96px, 108px);
-          overflow-x: auto;
-          overscroll-behavior-x: contain;
-          padding-bottom: 4px;
-          scroll-snap-type: x proximity;
-        }
-
-        .question-map-inline .mini-item {
-          min-width: 96px;
-          padding: 10px 12px;
-          gap: 4px;
-          scroll-snap-align: start;
-        }
-
-        .question-map-inline .mini-item-top {
-          align-items: flex-start;
-        }
-
-        .question-map-inline .mini-item button {
-          font-size: 13px;
-          line-height: 1.35;
-        }
-
-        .question-map-inline .muted {
-          font-size: 12px;
-          line-height: 1.3;
-        }
-
-        .question-map-inline .mini-status {
-          min-width: 28px;
-          height: 24px;
-          padding: 0 8px;
-          font-size: 12px;
-        }
-
-        .response-box {
-          font-size: 12px;
-        }
-
-        .question-card {
-          padding: 16px 14px;
-          border-radius: 22px;
-        }
-
-        .mini-item button {
-          font-size: 14px;
-          line-height: 1.5;
-        }
-
-        .question-text {
-          font-size: clamp(22px, 7vw, 28px);
-        }
-
-        .answer-zone {
-          gap: 12px;
-        }
-
-        .answer-zone textarea,
-        .answer-zone input,
-        .answer-zone select {
-          padding: 14px 16px;
-          border-radius: 16px;
-        }
-
-        .primary-cta,
-        .result-actions button,
-        .question-nav button {
-          min-height: 52px;
-        }
-
-        .question-nav {
-          bottom: 8px;
-          padding: 8px;
-          border-radius: 18px;
-        }
-
-        .result-hero {
-          grid-template-columns: 56px 1fr;
-          gap: 12px;
-        }
-
-        .result-mark {
-          width: 56px;
-          height: 56px;
-          font-size: 28px;
-          border-radius: 18px;
-        }
-
-        .completion-stats {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      @media (min-width: 941px) {
-        .shell {
-          padding: 28px 18px 72px;
-        }
-
-        .topbar {
-          grid-template-columns: minmax(0, 1fr) auto;
-          align-items: center;
-          margin-bottom: 18px;
-        }
-
-        .layout {
-          grid-template-columns: 260px minmax(0, 1fr);
-          gap: 16px;
-        }
-
-        .question-nav {
-          position: static;
-          padding: 0;
-          background: transparent;
-          border: none;
-          backdrop-filter: none;
-        }
-      }
-
-      @keyframes spin {
-        from {
-          transform: rotate(0deg);
-        }
-        to {
-          transform: rotate(360deg);
+      @media (prefers-color-scheme: dark) {
+        :root[data-ls-dark="auto"] {
+          --warm: #f0a35e;
+          --warm-soft: color-mix(in srgb, #f0a35e 16%, #1c1b21);
         }
       }
     </style>
   </head>
   <body>
-    <main class="shell">
-      <div class="topbar">
-        <div class="topbar-head">
-          <h1>今日の5問</h1>
-          <div class="topbar-meta">
-            <button id="soundToggleButton" class="settings-trigger is-on" type="button" aria-pressed="true" aria-label="効果音をオフにする">
-              <svg id="soundToggleIcon" class="settings-trigger-icon" aria-hidden="true" viewBox="0 0 24 24">
-                <path class="speaker-fill" d="M3 10.4h4.5l5-4.1c.5-.4 1.2 0 1.2.6v10.2c0 .6-.7 1-1.2.6l-5-4.1H3.9c-.5 0-.9-.4-.9-.9v-1.4c0-.5.4-.9.9-.9Z"></path>
-                <path class="speaker-wave" d="M16.6 9.1c1 .8 1.6 1.9 1.6 2.9s-.6 2.1-1.6 2.9"></path>
-                <path class="speaker-wave" d="M18.9 6.9c1.6 1.4 2.6 3.2 2.6 5.1s-1 3.7-2.6 5.1"></path>
-                <path class="speaker-slash" d="M16.7 7.3 21 16.7"></path>
-              </svg>
-            </button>
-            <span id="versionPill" class="version-pill">ver -</span>
-          </div>
+    <main class="ls-page ls-stack">
+      <header class="ls-brand">
+        <h1 class="ls-brand-name">📚 今日の5問</h1>
+        <button id="soundToggleButton" class="ls-icon-button sound-button" type="button" aria-pressed="true" aria-label="効果音">
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path class="speaker-fill" d="M3 10.4h4.5l5-4.1c.5-.4 1.2 0 1.2.6v10.2c0 .6-.7 1-1.2.6l-5-4.1H3.9c-.5 0-.9-.4-.9-.9v-1.4c0-.5.4-.9.9-.9Z"></path>
+            <path class="speaker-wave" d="M16.6 9.1c1 .8 1.6 1.9 1.6 2.9s-.6 2.1-1.6 2.9"></path>
+            <path class="speaker-wave" d="M18.9 6.9c1.6 1.4 2.6 3.2 2.6 5.1s-1 3.7-2.6 5.1"></path>
+            <path class="speaker-slash" d="M16.7 7.3 21 16.7"></path>
+          </svg>
+        </button>
+      </header>
+      <p class="ls-brand-copy">1問ずつ答えて、すぐ答え合わせ</p>
+
+      <section class="ls-panel progress-panel" aria-label="進み具合">
+        <div class="progress-head">
+          <span id="progressLabel">今日の5問</span>
+          <span id="progressCount" class="progress-count">—</span>
         </div>
-        <div class="top-actions">
-          <button id="startDailyButton" type="button">今日の5問を始める</button>
-          <button id="refreshHomeButton" class="secondary" type="button">状態を更新</button>
+        <div class="progress-bar" aria-hidden="true"><div id="progressFill" class="progress-fill"></div></div>
+        <nav id="questionMap" class="ls-chips qmap" aria-label="問題の番号"></nav>
+      </section>
+
+      <div id="questionShell" class="ls-stack"></div>
+
+      <p id="versionText" class="version">ver -</p>
+
+      <details id="debugPanel" class="ls-fold" hidden>
+        <summary>開発ログ</summary>
+        <div class="ls-fold-body">
+          <pre id="responsePanel" class="debug-log">まだリクエストは実行されていません。</pre>
         </div>
-        <div class="flow-card">
-          <p id="flowText" class="flow-text">1問ずつ答えて、結果を見ながら5問終えるだけです。迷ったら上の緑のボタンを押してください。</p>
-        </div>
-        <div class="mobile-quickbar">
-          <div class="mobile-summary-grid">
-            <div class="mobile-summary-card">
-              <p class="summary-label">回答済み</p>
-              <p id="mobileAnsweredCount" class="summary-value">0</p>
-            </div>
-            <div class="mobile-summary-card">
-              <p class="summary-label">正答率</p>
-              <p id="mobileAccuracyRate" class="summary-value">0%</p>
-            </div>
-            <div class="mobile-summary-card">
-              <p class="summary-label">次の一歩</p>
-              <p id="mobileActionHint" class="summary-value" style="font-size: 15px; line-height: 1.35;">開始</p>
-            </div>
-          </div>
-          <div id="mobileStatusNote" class="mobile-summary-note">LINEアプリから開くと共有までスムーズに進められます。</div>
-        </div>
-      </div>
-
-      <div class="layout">
-        <aside class="panel sidebar">
-          <section>
-            <h2 class="section-title">学習者</h2>
-            <div class="summary-grid">
-              <div class="summary-card">
-                <p class="summary-label">表示名</p>
-                <p id="displayName" class="summary-value" style="font-size: 22px;">-</p>
-              </div>
-              <div class="summary-card">
-                <p class="summary-label">利用テナント</p>
-                <p id="tenantName" class="summary-value" style="font-size: 20px;">-</p>
-              </div>
-            </div>
-          </section>
-
-          <section>
-            <h2 class="section-title">学習サマリ</h2>
-            <div class="compact-meta">
-              <div class="summary-card">
-                <p class="summary-label">回答済み</p>
-                <p id="answeredCount" class="summary-value">0</p>
-              </div>
-              <div class="summary-card">
-                <p class="summary-label">正答率</p>
-                <p id="accuracyRate" class="summary-value">0%</p>
-              </div>
-            </div>
-            <p class="helper-text" style="margin-top: 10px;">答える → 結果を見る → 次へ進む、の流れで進みます。</p>
-          </section>
-
-          <section>
-            <h2 class="section-title">LINE連携</h2>
-            <div class="summary-grid single">
-              <div class="summary-card compact">
-                <p class="summary-label">ログイン状態</p>
-                <p id="lineLoginStatus" class="summary-value" style="font-size: 20px;">未確認</p>
-                <p id="lineProfileText" class="note" style="margin-top: 10px;">LINEアプリから開くと、LINEアカウントと連動します。</p>
-              </div>
-            </div>
-          </section>
-
-          <section>
-            <h2 class="section-title">問題一覧</h2>
-            <div id="questionMap" class="mini-list">
-              <div class="mini-item">
-                <span class="muted">まだセッションが読み込まれていません。</span>
-              </div>
-            </div>
-          </section>
-        </aside>
-
-        <section class="panel main">
-          <div class="session-strip">
-            <div>
-              <div class="pill">
-                <span class="pill-dot"></span>
-                <span id="sessionPillLabel">セッション待機中</span>
-              </div>
-              <p id="sessionMeta" class="note" style="margin-top: 12px;">Home 情報と今日の5問セッションを読み込むと、ここに進行状況が出ます。</p>
-              <div class="session-progress-line">
-                <span id="progressInline" class="progress-inline">0 / 0</span>
-              </div>
-              <div class="progress-bar">
-                <div id="progressFill" class="progress-fill"></div>
-              </div>
-            </div>
-            <section class="question-map-inline">
-              <h2 class="section-title">問題一覧</h2>
-              <div id="questionMapInline" class="mini-list">
-                <div class="mini-item">
-                  <span class="muted">まだセッションが読み込まれていません。</span>
-                </div>
-              </div>
-            </section>
-          </div>
-
-          <div id="questionShell" class="question-shell">
-            <div class="empty-state">
-              <h2>はじめる準備ができています</h2>
-              <p>
-                まずは「今日の5問を始める」を押して、今日の学習を開始しましょう。
-              </p>
-            </div>
-            <section class="guide-card">
-              <h2 class="guide-title">進め方</h2>
-              <div class="guide-steps">
-                <div class="guide-step">
-                  <strong>1</strong>
-                  <span class="note">最初に今日の5問を始めると、今日ぶんの問題が並びます。</span>
-                </div>
-                <div class="guide-step">
-                  <strong>2</strong>
-                  <span class="note">回答すると、その場で正誤と解説を確認できます。</span>
-                </div>
-                <div class="guide-step">
-                  <strong>3</strong>
-                  <span class="note">5問終わると、結果の振り返りと見直し導線が表示されます。</span>
-                </div>
-              </div>
-            </section>
-          </div>
-
-          <details id="debugPanel" style="margin-top: 18px; display: none;">
-            <summary class="details-toggle">開発ログを見る</summary>
-            <pre id="responsePanel" class="response-box">まだリクエストは実行されていません。</pre>
-          </details>
-        </section>
-      </div>
+      </details>
     </main>
 
+    <script src="https://katsuan.github.io/line-share/shared/ui.js"></script>
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="./config.js"></script>
     <script>
       (function () {
         var config = window.APP_CONFIG || {};
+        var UI = window.LineShareUI || {
+          toast: function () {},
+          firstTip: function () {},
+          afterSent: function () {},
+          progress: function (label, show) { show(label + "…"); return function () {}; }
+        };
+        var CACHE_KEY = "learningPlatform:lastBootstrap:v1";
+        var AUDIO_KEY = "learningPlatformAudioSettings";
+
         var state = {
           me: null,
           home: null,
           session: null,
-          isBootstrapping: false,
-          isResolvingSession: false,
-          isSharing: false,
+          // ready：ネットの返事が来て、答えを保存できる状態
+          ready: false,
+          loading: false,
+          loadFailed: false,
+          fromCache: false,
+          sharing: false,
           shareReceiptCodes: {},
           liff: {
             ready: false,
@@ -1182,96 +454,84 @@
             idToken: "",
             contextType: "",
             canSendMessages: false,
-            canShareTargetPicker: false,
-            statusText: "未確認",
-            profileText: "LINEアプリから開くと、LINEアカウントと連動します。"
+            canShareTargetPicker: false
           },
           currentQuestionIndex: 0,
           answers: {},
           results: {},
-          saveStatus: {},
-          submittingAnswers: {},
+          saveState: {},
+          answerError: "",
           audio: {
             enabled: true,
             volume: 0.55
           }
         };
 
-        var displayNameEl = document.getElementById("displayName");
-        var tenantNameEl = document.getElementById("tenantName");
-        var progressInlineEl = document.getElementById("progressInline");
+        var progressLabelEl = document.getElementById("progressLabel");
+        var progressCountEl = document.getElementById("progressCount");
         var progressFillEl = document.getElementById("progressFill");
-        var answeredCountEl = document.getElementById("answeredCount");
-        var accuracyRateEl = document.getElementById("accuracyRate");
-        var mobileAnsweredCountEl = document.getElementById("mobileAnsweredCount");
-        var mobileAccuracyRateEl = document.getElementById("mobileAccuracyRate");
-        var mobileActionHintEl = document.getElementById("mobileActionHint");
-        var mobileStatusNoteEl = document.getElementById("mobileStatusNote");
-        var lineLoginStatusEl = document.getElementById("lineLoginStatus");
-        var lineProfileTextEl = document.getElementById("lineProfileText");
-        var flowTextEl = document.getElementById("flowText");
-        var soundToggleButtonEl = document.getElementById("soundToggleButton");
-        var sessionPillLabelEl = document.getElementById("sessionPillLabel");
-        var sessionMetaEl = document.getElementById("sessionMeta");
         var questionMapEl = document.getElementById("questionMap");
-        var questionMapInlineEl = document.getElementById("questionMapInline");
         var questionShellEl = document.getElementById("questionShell");
+        var soundToggleButtonEl = document.getElementById("soundToggleButton");
         var responsePanelEl = document.getElementById("responsePanel");
         var debugPanelEl = document.getElementById("debugPanel");
-        var refreshHomeButtonEl = document.getElementById("refreshHomeButton");
-        var startDailyButtonEl = document.getElementById("startDailyButton");
-        var versionPillEl = document.getElementById("versionPill");
+        var versionTextEl = document.getElementById("versionText");
         var debugMode = new URLSearchParams(window.location.search).get("debug") === "1";
         var activeSessionId = "";
+        var stopWaitText = null;
 
         if (debugMode) {
-          debugPanelEl.style.display = "";
+          debugPanelEl.hidden = false;
         }
 
-        renderVersionPill_(config.appVersion);
+        if ("serviceWorker" in navigator && window.isSecureContext) {
+          navigator.serviceWorker.register("./sw.js").catch(function () {});
+        }
+
+        renderVersion_(config.appVersion);
         loadVersionInfo_();
-
         initializeAudioSettings_();
-        refreshHomeButtonEl.addEventListener("click", loadHomeData_);
-        startDailyButtonEl.addEventListener("click", handlePrimaryAction_);
 
+        UI.firstTip("learning-platform", [
+          "1問ずつ答えると、すぐ答え合わせが出ます",
+          "上の番号を押すと、ほかの問題に移れます",
+          "5問おわったら、LINEで結果を送れます"
+        ], questionShellEl);
+
+        restoreFromCache_();
         bootstrap_();
 
+        // ---- 読みこみ ----
+
         function bootstrap_() {
-          state.isBootstrapping = true;
-          renderLoadingState_();
+          state.loading = true;
+          state.loadFailed = false;
+          renderAll_();
 
           initializeLiff_()
-            .then(function () {
-              return fetchBootstrapPayload_();
-            })
+            .then(fetchBootstrapPayload_)
             .then(function (payload) {
-              applyBootstrapPayload_(payload, {
-                resetQuestionIndex: true
-              });
-              state.isBootstrapping = false;
+              applyBootstrapPayload_(payload, { resetQuestionIndex: !state.fromCache });
+              state.loading = false;
+              state.ready = true;
+              state.fromCache = false;
+              saveCache_();
               renderAll_();
               renderResponse_(payload);
             })
             .catch(function (error) {
-              state.isBootstrapping = false;
-              renderLoadingErrorState_();
+              state.loading = false;
+              state.loadFailed = true;
+              renderAll_();
               renderError_(error);
+              if (state.session) {
+                UI.toast("つながらないので、前に開いた内容を出しています", { actionLabel: "もう一度", onAction: bootstrap_ });
+              }
             });
         }
 
         function initializeLiff_() {
-          if (!config.liffId || !window.liff) {
-            state.liff.statusText = "未設定";
-            state.liff.profileText = "LINE連携の設定を行うと、共有機能を使えます。";
-            renderLiffStatus_();
-            return Promise.resolve();
-          }
-
-          if (!/^https?:/i.test(String(window.location.href || ""))) {
-            state.liff.statusText = "利用不可";
-            state.liff.profileText = "LINE連携は公開URLから開いたときに利用できます。";
-            renderLiffStatus_();
+          if (!config.liffId || !window.liff || !/^https?:/i.test(String(window.location.href || ""))) {
             return Promise.resolve();
           }
 
@@ -1283,8 +543,9 @@
               state.liff.idToken = window.liff.getIDToken ? (window.liff.getIDToken() || "") : "";
 
               if (!state.liff.loggedIn && !state.liff.inClient) {
+                // ログインの画面へ移るので、ここで止める（だれの記録か分からないまま読みこまない）
                 window.liff.login({ redirectUri: window.location.href });
-                return Promise.resolve();
+                return new Promise(function () {});
               }
 
               return Promise.all([
@@ -1292,93 +553,13 @@
                 loadLiffCapabilities_()
               ]);
             })
-            .then(function () {
-              renderLiffStatus_();
-            })
             .catch(function (error) {
-              state.liff.statusText = "利用不可";
-              state.liff.profileText = "LINE連携の読み込みに失敗しました。";
-              renderLiffStatus_();
-              renderError_({
-                liff: error && error.message ? error.message : String(error)
-              });
-            })
-        }
-
-        function loadVersionInfo_() {
-          fetch("./version.json", {
-            cache: "no-store"
-          })
-            .then(function (response) {
-              if (!response.ok) {
-                throw new Error("version_fetch_failed");
-              }
-
-              return response.json();
-            })
-            .then(function (payload) {
-              renderVersionPill_(payload && (payload.version || payload.commit) ? (payload.version || payload.commit) : config.appVersion);
-            })
-            .catch(function () {
-              renderVersionPill_(config.appVersion);
+              renderError_({ liff: error && error.message ? error.message : String(error) });
             });
-        }
-
-        function renderVersionPill_(version) {
-          if (!versionPillEl) {
-            return;
-          }
-
-          var versionText = version ? "ver " + version : "ver dev";
-          versionPillEl.textContent = versionText;
-        }
-
-        function initializeAudioSettings_() {
-          try {
-            var raw = window.localStorage.getItem("learningPlatformAudioSettings");
-            if (raw) {
-              var parsed = JSON.parse(raw);
-              state.audio.enabled = parsed.enabled !== false;
-            }
-          } catch (error) {
-            state.audio.enabled = true;
-          }
-
-          state.audio.volume = 0.55;
-
-          if (soundToggleButtonEl) {
-            soundToggleButtonEl.addEventListener("click", function () {
-              state.audio.enabled = !state.audio.enabled;
-              persistAudioSettings_();
-              updateAudioSettingsUi_();
-            });
-          }
-
-          updateAudioSettingsUi_();
-        }
-
-        function persistAudioSettings_() {
-          try {
-            window.localStorage.setItem("learningPlatformAudioSettings", JSON.stringify({
-              enabled: state.audio.enabled
-            }));
-          } catch (error) {
-          }
-        }
-
-        function updateAudioSettingsUi_() {
-          if (soundToggleButtonEl) {
-            soundToggleButtonEl.classList.toggle("is-on", state.audio.enabled);
-            soundToggleButtonEl.setAttribute("aria-pressed", state.audio.enabled ? "true" : "false");
-            soundToggleButtonEl.setAttribute("aria-label", state.audio.enabled ? "効果音をオフにする" : "効果音をオンにする");
-          }
-
         }
 
         function loadLiffProfile_() {
           if (!state.liff.loggedIn) {
-            state.liff.statusText = "未ログイン";
-            state.liff.profileText = "ブラウザで開いているため、共有はLINEログイン後に使えます。";
             return Promise.resolve();
           }
 
@@ -1386,25 +567,17 @@
             .then(function (profile) {
               state.liff.profile = profile;
               state.liff.userId = profile && profile.userId ? profile.userId : "";
-              state.liff.statusText = "連携済み";
-              state.liff.profileText = (profile.displayName || "LINEユーザー") + " と連携しています。";
             })
-            .catch(function () {
-              state.liff.statusText = "連携済み";
-              state.liff.profileText = "LINEアカウントと連携しています。";
-            });
+            .catch(function () {});
         }
 
         function loadLiffCapabilities_() {
-          if (!state.liff.ready) {
-            return Promise.resolve();
-          }
-
           var context = window.liff.getContext ? window.liff.getContext() : null;
           state.liff.contextType = context && context.type ? context.type : "";
           state.liff.canShareTargetPicker = window.liff.isApiAvailable
             ? window.liff.isApiAvailable("shareTargetPicker")
             : false;
+          var inTalk = state.liff.inClient && /utou|group|room/.test(String(state.liff.contextType || ""));
 
           if (!window.liff.permission || !window.liff.permission.query) {
             state.liff.canSendMessages = state.liff.inClient;
@@ -1413,52 +586,38 @@
 
           return window.liff.permission.query("chat_message.write")
             .then(function (permission) {
-              var granted = permission && permission.state === "granted";
-              state.liff.canSendMessages = granted && state.liff.inClient && /utou|group|room/.test(String(state.liff.contextType || ""));
+              state.liff.canSendMessages = !!(permission && permission.state === "granted") && inTalk;
             })
             .catch(function () {
-              state.liff.canSendMessages = state.liff.inClient && /utou|group|room/.test(String(state.liff.contextType || ""));
-            });
-        }
-
-        function loadHomeData_() {
-          fetchBootstrapPayload_()
-            .then(function (payload) {
-              applyBootstrapPayload_(payload, {
-                preserveQuestionIndex: true
-              });
-              renderAll_();
-              renderResponse_(payload);
-            })
-            .catch(function (error) {
-              renderAll_();
-              renderError_(error);
+              state.liff.canSendMessages = inTalk;
             });
         }
 
         function resolveDailySession_() {
-          if (state.isResolvingSession || state.isBootstrapping) {
+          if (state.loading) {
             return;
           }
 
-          state.isResolvingSession = true;
-          renderLoadingState_();
+          state.loading = true;
+          state.loadFailed = false;
+          renderAll_();
 
           requestJson_("POST", config.resolveDailySessionAction || "resolveDailySession", {
             action: config.resolveDailySessionAction || "resolveDailySession",
             tenantId: config.tenantId
           })
             .then(function (payload) {
-              applySessionPayload_(payload, {
-                resetQuestionIndex: true
-              });
-              state.isResolvingSession = false;
+              applySessionPayload_(payload, { resetQuestionIndex: true });
+              state.loading = false;
+              state.ready = true;
+              saveCache_();
               renderAll_();
               renderResponse_(payload);
             })
             .catch(function (error) {
-              state.isResolvingSession = false;
-              renderLoadingErrorState_();
+              state.loading = false;
+              state.loadFailed = true;
+              renderAll_();
               renderError_(error);
             });
         }
@@ -1473,66 +632,58 @@
         function applyBootstrapPayload_(payload, options) {
           state.me = payload.me || null;
           state.home = payload.home || null;
-          applySessionPayload_(payload, options);
-          hydrateResultsFromHomePayload_(state.home);
-        }
-
-        function applySessionPayload_(payload, options) {
-          var safeOptions = options || {};
-          state.session = payload.session || null;
-          syncStateWithSession_();
-
-          if (safeOptions.resetQuestionIndex) {
-            state.currentQuestionIndex = 0;
+          var reset = applySessionPayload_(payload, options);
+          hydrateResultsFromHome_(state.home);
+          if (reset) {
+            // 答えた分を入れてから、まだの問題に合わせる
+            state.currentQuestionIndex = firstUnansweredIndex_();
           }
-
-          if (!safeOptions.preserveQuestionIndex) {
-            clampCurrentQuestionIndex_();
-            return;
-          }
-
           clampCurrentQuestionIndex_();
         }
 
+        function applySessionPayload_(payload, options) {
+          state.session = payload.session || null;
+          var changed = syncStateWithSession_();
+          var reset = changed || !!(options && options.resetQuestionIndex);
+          if (reset) {
+            state.currentQuestionIndex = firstUnansweredIndex_();
+          }
+          clampCurrentQuestionIndex_();
+          return reset;
+        }
+
         function clampCurrentQuestionIndex_() {
-          if (!state.session || !state.session.questions || state.session.questions.length === 0) {
+          var questions = getQuestions_();
+          if (questions.length === 0) {
             state.currentQuestionIndex = 0;
             return;
           }
+          state.currentQuestionIndex = Math.max(0, Math.min(state.currentQuestionIndex, questions.length));
+          if (state.currentQuestionIndex === questions.length && getAnsweredCount_() < questions.length) {
+            state.currentQuestionIndex = questions.length - 1;
+          }
+        }
 
-          var maxIndex = state.session.questions.length - 1;
-          if (isSessionCompleted_()) {
-            state.currentQuestionIndex = state.session.questions.length;
+        function firstUnansweredIndex_() {
+          var questions = getQuestions_();
+          for (var i = 0; i < questions.length; i += 1) {
+            if (!state.results[questions[i].sessionQuestionId]) {
+              return i;
+            }
+          }
+          return questions.length;
+        }
+
+        function hydrateResultsFromHome_(homePayload) {
+          if (!homePayload || !homePayload.todayAnswerEvents || !state.session) {
             return;
           }
 
-          state.currentQuestionIndex = Math.max(0, Math.min(state.currentQuestionIndex, maxIndex));
-        }
+          var questionMap = {};
+          getQuestions_().forEach(function (question) {
+            questionMap[question.sessionQuestionId] = question;
+          });
 
-        function renderAll_() {
-          renderTopActions_();
-          renderSidebar_();
-          renderSessionMeta_();
-          renderQuestionView_();
-        }
-
-        function renderLoadingState_() {
-          renderTopActions_();
-          renderSessionLoading_();
-        }
-
-        function renderLoadingErrorState_() {
-          renderTopActions_();
-          renderSessionMeta_();
-          renderQuestionView_();
-        }
-
-        function hydrateResultsFromHomePayload_(homePayload) {
-          if (!homePayload || !homePayload.todayAnswerEvents || !state.session || !state.session.questions) {
-            return;
-          }
-
-          var questionMap = buildSessionQuestionMap_();
           homePayload.todayAnswerEvents.forEach(function (entry) {
             var question = questionMap[entry.sessionQuestionId];
             if (!question) {
@@ -1547,8 +698,7 @@
               normalizedAnswer: entry.answerValue || "",
               correctAnswerText: toCorrectAnswerText_(question, (question.gradingConfig && question.gradingConfig.correctAnswerPayload) || {})
             };
-            state.saveStatus[entry.sessionQuestionId] = "回答を保存しました。";
-            state.submittingAnswers[entry.sessionQuestionId] = false;
+            state.saveState[entry.sessionQuestionId] = "saved";
           });
         }
 
@@ -1556,7 +706,6 @@
           if (!state.home) {
             state.home = {};
           }
-
           if (!Array.isArray(state.home.todayAnswerEvents)) {
             state.home.todayAnswerEvents = [];
           }
@@ -1564,58 +713,78 @@
           var nextEntry = {
             sessionQuestionId: question.sessionQuestionId,
             questionId: question.questionId,
-            answerValue: currentAnswer,
+            answerValue: String(currentAnswer),
             isCorrect: gradingResult.isCorrect === true,
             score: Number(gradingResult.score || 0),
             answeredAt: new Date().toISOString()
           };
           var updated = false;
-
           state.home.todayAnswerEvents = state.home.todayAnswerEvents.map(function (entry) {
             if (entry.sessionQuestionId === question.sessionQuestionId) {
               updated = true;
               return nextEntry;
             }
-
             return entry;
           });
-
           if (!updated) {
             state.home.todayAnswerEvents.push(nextEntry);
           }
         }
 
-        function buildSessionQuestionMap_() {
-          return (state.session.questions || []).reduce(function (accumulator, question) {
-            accumulator[question.sessionQuestionId] = question;
-            return accumulator;
-          }, {});
+        // ---- 前に開いたときの中身（端末に残す。きょうの分だけ使う） ----
+
+        function todayJst_() {
+          return new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
         }
+
+        function saveCache_() {
+          if (!state.session) {
+            return;
+          }
+          try {
+            window.localStorage.setItem(CACHE_KEY, JSON.stringify({
+              savedDate: todayJst_(),
+              currentQuestionIndex: state.currentQuestionIndex,
+              payload: {
+                session: state.session,
+                home: { todayAnswerEvents: (state.home && state.home.todayAnswerEvents) || [] }
+              }
+            }));
+          } catch (error) {
+            // 残せなくても使える
+          }
+        }
+
+        function restoreFromCache_() {
+          try {
+            var cached = JSON.parse(window.localStorage.getItem(CACHE_KEY) || "null");
+            if (!cached || cached.savedDate !== todayJst_() || !cached.payload || !cached.payload.session) {
+              return;
+            }
+            applyBootstrapPayload_(cached.payload, { resetQuestionIndex: true });
+            state.fromCache = true;
+          } catch (error) {
+            // 読めないときは、ネットの返事を待つ
+          }
+        }
+
+        // ---- 通信 ----
 
         function requestJson_(method, action, body) {
           var url = new URL(config.gasWebAppUrl, window.location.href);
-          var authPayload = buildAuthPayload_();
-          var queryPayload = {
-            action: action,
-            tenantId: config.tenantId
-          };
-
-          Object.keys(queryPayload).forEach(function (key) {
-            if (queryPayload[key] !== undefined && queryPayload[key] !== null && queryPayload[key] !== "") {
-              url.searchParams.set(key, queryPayload[key]);
-            }
-          });
+          url.searchParams.set("action", action);
+          if (config.tenantId) {
+            url.searchParams.set("tenantId", config.tenantId);
+          }
 
           var options = {
             method: method,
             mode: "cors",
-            headers: {
-              "Accept": "application/json"
-            }
+            headers: { "Accept": "application/json" }
           };
 
           if (method === "POST") {
-            options.body = JSON.stringify(Object.assign({}, authPayload, body || {}, {
+            options.body = JSON.stringify(Object.assign({}, buildAuthPayload_(), body || {}, {
               action: action,
               tenantId: config.tenantId
             }));
@@ -1648,287 +817,89 @@
           };
         }
 
-        function renderSidebar_() {
-          if (state.me) {
-            displayNameEl.textContent = state.me.user.display_name || "-";
-            tenantNameEl.textContent = state.me.tenant.name || "-";
-          }
+        // ---- 表示 ----
 
-          if (state.home && state.home.learningSummary) {
-            answeredCountEl.textContent = String(state.home.learningSummary.totalAnsweredCount || 0);
-            accuracyRateEl.textContent = Math.round((state.home.learningSummary.accuracyRate || 0) * 100) + "%";
-          }
-
-          renderLiffStatus_();
-          renderMobileQuickbar_();
-          renderQuestionMap_();
-        }
-
-        function renderMobileQuickbar_() {
-          if (mobileAnsweredCountEl) {
-            mobileAnsweredCountEl.textContent = String(getAnsweredCount_());
-          }
-
-          if (mobileAccuracyRateEl) {
-            mobileAccuracyRateEl.textContent = getMobileAccuracyText_();
-          }
-
-          if (mobileActionHintEl) {
-            mobileActionHintEl.textContent = resolveMobileActionHint_();
-          }
-
-          if (mobileStatusNoteEl) {
-            mobileStatusNoteEl.textContent = resolveMobileStatusNote_();
-          }
-        }
-
-        function getMobileAccuracyText_() {
-          var answeredCount = getAnsweredCount_();
-          if (answeredCount === 0) {
-            return "0%";
-          }
-
-          return String(Math.round((getCorrectCount_() / answeredCount) * 100)) + "%";
-        }
-
-        function resolveMobileActionHint_() {
-          if (state.isBootstrapping || state.isResolvingSession) {
-            return "準備中";
-          }
-
-          if (!state.session) {
-            return "5問開始";
-          }
-
-          if (isSessionCompleted_()) {
-            return "結果確認";
-          }
-
-          return "第" + (state.currentQuestionIndex + 1) + "問";
-        }
-
-        function resolveMobileStatusNote_() {
-          if (state.isBootstrapping || state.isResolvingSession) {
-            return "最初の5問を先に準備しています。";
-          }
-
-          if (!state.liff.inClient) {
-            return "LINEアプリから開くと共有までスムーズに進められます。";
-          }
-
-          if (!state.session) {
-            return "上のボタンから今日の5問を始めましょう。";
-          }
-
-          if (isSessionCompleted_()) {
-            return "結果確認とLINE共有はこのまま下で進められます。";
-          }
-
-          return "答えたらすぐ結果が出ます。横の問題一覧から戻り直しもできます。";
-        }
-
-        function renderLiffStatus_() {
-          lineLoginStatusEl.textContent = state.liff.statusText || "未確認";
-          lineProfileTextEl.textContent = state.liff.profileText || "LINEアプリから開くと、LINEアカウントと連動します。";
-        }
-
-        function renderTopActions_() {
-          var isBusy = state.isBootstrapping || state.isResolvingSession;
-          startDailyButtonEl.disabled = isBusy;
-          refreshHomeButtonEl.disabled = isBusy;
-          refreshHomeButtonEl.textContent = "学習情報を更新";
-          startDailyButtonEl.textContent = resolvePrimaryActionLabel_();
-          startDailyButtonEl.classList.toggle("button-loading", isBusy);
-          renderFlowText_();
-        }
-
-        function renderFlowText_() {
-          if (!flowTextEl) {
-            return;
-          }
-
-          if (state.isBootstrapping || state.isResolvingSession) {
-            flowTextEl.textContent = "最初の5問を準備しています。画面が切り替わるまでそのままお待ちください。";
-            return;
-          }
-
-          if (!state.session) {
-            flowTextEl.textContent = "5問がまだ開けていません。緑のボタンを押すと今日の問題を読み込みます。";
-            return;
-          }
-
-          if (isSessionCompleted_()) {
-            flowTextEl.textContent = "5問が終わりました。結果を見て、気になる問題だけ見直せます。";
-            return;
-          }
-
-          if (getAnsweredCount_() === 0) {
-            flowTextEl.textContent = "1問ずつ答えるだけで進められます。まずは1問目に答えてみましょう。";
-            return;
-          }
-
-          flowTextEl.textContent = "答えたら結果を見て、次の問題へ進みます。上の進行表示から見直しもできます。";
-        }
-
-        function resolvePrimaryActionLabel_() {
-          if (state.isBootstrapping || state.isResolvingSession) {
-            return "5問を準備しています";
-          }
-
-          if (!state.session) {
-            return "今日の5問を読み込む";
-          }
-
-          if (isSessionCompleted_()) {
-            return "結果を見る";
-          }
-
-          if (getAnsweredCount_() === 0 && state.currentQuestionIndex === 0) {
-            return "1問目に進む";
-          }
-
-          return "つづきを解く";
-        }
-
-        function handlePrimaryAction_() {
-          if (state.isBootstrapping || state.isResolvingSession) {
-            return;
-          }
-
-          if (!state.session) {
-            resolveDailySession_();
-            return;
-          }
-
-          if (isSessionCompleted_()) {
-            renderCompletionView_();
-            scrollToQuestionCard_();
-            return;
-          }
-
-          scrollToQuestionCard_();
-          focusAnswerInput_();
-        }
-
-        function renderLearningState_() {
-          renderMobileQuickbar_();
-          renderSessionMeta_();
+        function renderAll_() {
+          renderProgress_();
           renderQuestionMap_();
           renderQuestionView_();
         }
 
-        function renderSessionMeta_() {
-          if (!state.session) {
-            sessionPillLabelEl.textContent = "セッション待機中";
-            sessionMetaEl.textContent = "今日の5問を始めると、問題数と進み具合がここに表示されます。";
-            progressInlineEl.textContent = "0 / 0";
+        function renderProgress_() {
+          var questions = getQuestions_();
+          if (!questions.length) {
+            progressLabelEl.textContent = "今日の5問";
+            progressCountEl.textContent = "—";
             progressFillEl.style.width = "0%";
-            renderFlowText_();
             return;
           }
 
-          var questionCount = state.session.questionCount || 0;
           var answered = getAnsweredCount_();
-          var displayIndex = Math.min(state.currentQuestionIndex + 1, questionCount);
-          sessionPillLabelEl.textContent = "今日の5問 " + (state.session.businessDate || "");
-          sessionMetaEl.textContent = answered >= questionCount
-            ? "5問おつかれさまでした。結果を確認して、見直したい問題へ戻れます。"
-            : questionCount + "問中 " + displayIndex + "問目です。回答すると、すぐに結果と解説が出ます。";
-          progressInlineEl.textContent = answered + " / " + questionCount;
-          progressFillEl.style.width = questionCount === 0 ? "0%" : ((answered / questionCount) * 100) + "%";
-          renderFlowText_();
+          var dateText = formatDate_(state.session.businessDate);
+          progressLabelEl.textContent = dateText ? dateText + " の" + questions.length + "問" : "今日の" + questions.length + "問";
+          progressCountEl.textContent = answered + " / " + questions.length + " 問";
+          progressFillEl.style.width = ((answered / questions.length) * 100) + "%";
         }
 
         function renderQuestionMap_() {
-          if (!state.session || !state.session.questions || state.session.questions.length === 0) {
-            renderQuestionMapContents_('<div class="mini-item"><span class="muted">今日の5問を始めると、ここに進み具合が出ます。</span></div>');
-            return;
-          }
+          var questions = getQuestions_();
+          questionMapEl.innerHTML = "";
+          questionMapEl.hidden = questions.length === 0;
 
-          var items = [];
-          state.session.questions.forEach(function (question, index) {
-            var item = document.createElement("div");
-            item.className = "mini-item" + (index === state.currentQuestionIndex ? " current" : "");
-            if (state.results[question.sessionQuestionId]) {
-              item.className += state.results[question.sessionQuestionId].isCorrect ? " answered-correct" : " answered-incorrect";
-            }
-
+          questions.forEach(function (question, index) {
+            var result = state.results[question.sessionQuestionId];
             var button = document.createElement("button");
             button.type = "button";
-            button.textContent = "第" + (index + 1) + "問";
-            button.setAttribute("data-question-index", String(index));
-
-            var meta = document.createElement("span");
-            meta.className = "muted";
-            meta.textContent = state.results[question.sessionQuestionId]
-              ? (state.results[question.sessionQuestionId].isCorrect ? "回答済み" : "見直したい")
-              : "未回答";
-
-            var top = document.createElement("div");
-            top.className = "mini-item-top";
-
-            var status = document.createElement("span");
-            status.className = "mini-status";
-            if (state.results[question.sessionQuestionId]) {
-              status.className += state.results[question.sessionQuestionId].isCorrect ? " correct" : " incorrect";
-              status.textContent = state.results[question.sessionQuestionId].isCorrect ? "○" : "!";
-            } else {
-              status.textContent = "-";
+            button.className = "ls-chip";
+            if (index === state.currentQuestionIndex) {
+              button.setAttribute("aria-current", "step");
+              button.classList.add("is-active");
             }
-
-            top.appendChild(button);
-            top.appendChild(status);
-            item.appendChild(top);
-            item.appendChild(meta);
-            items.push(item.outerHTML);
-          });
-
-          renderQuestionMapContents_(items.join(""));
-          bindQuestionMapButtons_(questionMapEl);
-          bindQuestionMapButtons_(questionMapInlineEl);
-        }
-
-        function renderQuestionMapContents_(html) {
-          if (questionMapEl) {
-            questionMapEl.innerHTML = html;
-          }
-
-          if (questionMapInlineEl) {
-            questionMapInlineEl.innerHTML = html;
-          }
-        }
-
-        function bindQuestionMapButtons_(container) {
-          if (!container) {
-            return;
-          }
-
-          Array.prototype.slice.call(container.querySelectorAll("button[data-question-index]")).forEach(function (button) {
+            var label = document.createElement("span");
+            label.textContent = String(index + 1);
+            button.appendChild(label);
+            if (result) {
+              var mark = document.createElement("span");
+              mark.className = result.isCorrect ? "mark-ok" : "mark-ng";
+              mark.textContent = result.isCorrect ? "○" : "×";
+              mark.setAttribute("aria-hidden", "true");
+              button.appendChild(mark);
+            }
+            button.setAttribute("aria-label", "第" + (index + 1) + "問" + (result ? (result.isCorrect ? "（正解）" : "（見なおす）") : "（まだ）"));
             button.addEventListener("click", function () {
-              moveToQuestion_(Number(button.getAttribute("data-question-index") || 0));
+              moveToQuestion_(index);
             });
+            questionMapEl.appendChild(button);
           });
+
+          if (questions.length && getAnsweredCount_() >= questions.length) {
+            var resultButton = document.createElement("button");
+            resultButton.type = "button";
+            resultButton.className = "ls-chip";
+            resultButton.textContent = "🏁 結果";
+            if (state.currentQuestionIndex >= questions.length) {
+              resultButton.setAttribute("aria-current", "step");
+              resultButton.classList.add("is-active");
+            }
+            resultButton.addEventListener("click", function () {
+              state.currentQuestionIndex = questions.length;
+              renderAll_();
+            });
+            questionMapEl.appendChild(resultButton);
+          }
         }
 
         function renderQuestionView_() {
-          if (state.isBootstrapping || state.isResolvingSession) {
-            renderSessionLoading_();
-            return;
-          }
+          stopWaitText_();
+          var questions = getQuestions_();
 
-          if (!state.session || !state.session.questions || state.session.questions.length === 0) {
-            questionShellEl.innerHTML = [
-              '<div class="empty-state">',
-              '<h2>5問体験を読み込めませんでした</h2>',
-              '<p>通信状況を確認して、もう一度5問を読み込んでください。</p>',
-              '<div class="result-actions" style="max-width: 320px; margin: 18px auto 0;">',
-              '  <button id="retrySessionButton" type="button">今日の5問を読み込む</button>',
-              '</div>',
-              '</div>'
-            ].join("");
-            var retrySessionButtonEl = document.getElementById("retrySessionButton");
-            if (retrySessionButtonEl) {
-              retrySessionButtonEl.addEventListener("click", resolveDailySession_);
+          if (!questions.length) {
+            if (state.loading) {
+              renderSkeleton_();
+            } else if (state.loadFailed) {
+              renderLoadError_();
+            } else {
+              renderNoSession_();
             }
             return;
           }
@@ -1938,307 +909,395 @@
             return;
           }
 
-          var question = state.session.questions[state.currentQuestionIndex];
+          var question = questions[state.currentQuestionIndex];
           var answerKey = question.sessionQuestionId;
           var savedAnswer = state.answers[answerKey] || "";
           var result = state.results[answerKey] || null;
-          var saveStatus = state.saveStatus[answerKey] || "";
-          var isSubmitting = state.submittingAnswers[answerKey] === true;
+          var canAnswer = state.ready && !result;
 
           questionShellEl.innerHTML = [
-            '<article class="question-card' + (result ? ' revealed' : '') + '">',
+            '<article class="ls-panel question-card" aria-labelledby="questionText">',
             '  <div class="question-meta">',
             '    <span class="question-type">' + escapeHtml_(toQuestionTypeLabel_(question.questionType)) + '</span>',
-            '    <span class="muted">' + (state.currentQuestionIndex + 1) + ' / ' + state.session.questions.length + ' 問</span>',
+            '    <span>第' + (state.currentQuestionIndex + 1) + '問</span>',
             '  </div>',
-            '  <p class="question-text">' + escapeHtml_(question.questionText) + '</p>',
+            '  <p id="questionText" class="question-text">' + escapeHtml_(question.questionText) + '</p>',
             '  <div class="answer-zone">',
-            '    <label for="answerInput">回答入力</label>',
-            renderAnswerControl_(question, savedAnswer, !!(result || isSubmitting)),
-            '    <button id="submitAnswerButton" class="primary-cta" type="button"' + ((result || isSubmitting) ? " disabled" : "") + '>' + (isSubmitting ? '送信中です' : '回答する') + '</button>',
-            renderResultCard_(result, saveStatus),
+            renderAnswerControl_(question, savedAnswer, !canAnswer),
+            '    <p id="answerError" class="ls-hint is-error"' + (state.answerError ? '' : ' hidden') + '>' + escapeHtml_(state.answerError) + '</p>',
+            result ? renderResultCard_(question, result) : renderSubmitButton_(),
             '  </div>',
             '</article>',
-            renderQuestionNav_(result)
+            result ? '' : renderQuestionNav_()
           ].join("");
 
+          bindQuestionView_(question, answerKey);
+        }
+
+        function renderSubmitButton_() {
+          var label = "✏️ 答える";
+          var hint = "";
+          if (!state.ready) {
+            label = state.loadFailed ? "✏️ 答える" : "読みこみ中…";
+            if (state.loadFailed) {
+              hint = '<p class="ls-hint">つながると、答えを送れます。</p>';
+            }
+          }
+          return '<button id="submitAnswerButton" class="ls-button is-primary is-block big-button" type="button"' + (state.ready ? '' : ' disabled') + '>' + label + '</button>' + hint;
+        }
+
+        function renderQuestionNav_() {
+          var last = getQuestions_().length - 1;
+          return [
+            '<div class="question-nav">',
+            '  <button id="prevQuestionButton" class="ls-button" type="button"' + (state.currentQuestionIndex === 0 ? ' disabled' : '') + '>← 前の問題</button>',
+            '  <button id="nextQuestionButton" class="ls-button" type="button"' + (state.currentQuestionIndex >= last ? ' disabled' : '') + '>次の問題 →</button>',
+            '</div>'
+          ].join("");
+        }
+
+        function bindQuestionView_(question, answerKey) {
           var answerInputEl = document.getElementById("answerInput");
           if (answerInputEl) {
-            focusAnswerInput_();
             answerInputEl.addEventListener("input", function (event) {
               state.answers[answerKey] = event.target.value;
-            });
-            answerInputEl.addEventListener("change", function (event) {
-              state.answers[answerKey] = event.target.value;
-            });
-          }
-
-          var prevButtonEl = document.getElementById("prevQuestionButton");
-          var nextButtonEl = document.getElementById("nextQuestionButton");
-          var submitAnswerButtonEl = document.getElementById("submitAnswerButton");
-
-          if (submitAnswerButtonEl) {
-            submitAnswerButtonEl.addEventListener("click", function () {
-              if (state.submittingAnswers[answerKey] || state.results[answerKey]) {
-                return;
+              if (state.answerError) {
+                state.answerError = "";
+                document.getElementById("answerError").hidden = true;
               }
-
-              var currentAnswer = state.answers[answerKey] || "";
-              if (currentAnswer === "") {
-                state.saveStatus[answerKey] = "回答を入力してください。";
-                renderQuestionView_();
-                return;
+            });
+            answerInputEl.addEventListener("keydown", function (event) {
+              if (event.key === "Enter" && !event.isComposing && event.keyCode !== 229) {
+                event.preventDefault();
+                submitAnswer_(question);
               }
-
-              state.answers[answerKey] = currentAnswer;
-              var gradingResult = gradeAnswer_(question, currentAnswer);
-              state.results[answerKey] = gradingResult;
-              state.submittingAnswers[answerKey] = true;
-              state.saveStatus[answerKey] = "保存中...";
-              playResultSound_(gradingResult.isCorrect);
-              renderLearningState_();
-              persistAnswerEvent_(question, currentAnswer, gradingResult);
-              scrollToQuestionCard_();
             });
           }
 
-          if (prevButtonEl) {
-            prevButtonEl.addEventListener("click", function () {
-              moveToPreviousQuestion_();
+          Array.prototype.forEach.call(questionShellEl.querySelectorAll("[data-tf]"), function (chip) {
+            chip.addEventListener("click", function () {
+              state.answers[answerKey] = chip.getAttribute("data-tf");
+              state.answerError = "";
+              renderQuestionView_();
             });
-          }
+          });
 
-          if (nextButtonEl) {
-            nextButtonEl.addEventListener("click", function () {
-              moveToNextQuestion_();
-            });
-          }
+          bindClick_("submitAnswerButton", function () {
+            submitAnswer_(question);
+          });
+          bindClick_("prevQuestionButton", function () {
+            moveToQuestion_(state.currentQuestionIndex - 1);
+          });
+          bindClick_("nextQuestionButton", function () {
+            moveToQuestion_(state.currentQuestionIndex + 1, { focus: true });
+          });
+          bindClick_("finishSessionButton", function () {
+            state.currentQuestionIndex = getQuestions_().length;
+            renderAll_();
+            scrollToTop_();
+          });
+          bindClick_("retrySaveButton", function () {
+            persistAnswerEvent_(question, state.answers[answerKey], state.results[answerKey]);
+          });
+        }
 
-          var finishButtonEl = document.getElementById("finishSessionButton");
-          if (finishButtonEl) {
-            finishButtonEl.addEventListener("click", function () {
-              state.currentQuestionIndex = state.session.questions.length;
-              renderLearningState_();
-            });
+        function renderSkeleton_() {
+          questionShellEl.innerHTML = [
+            '<div class="ls-panel skeleton-card" aria-busy="true" aria-label="読みこみ中">',
+            '  <span class="ls-skeleton is-short"></span>',
+            '  <span class="ls-skeleton is-text"></span>',
+            '  <span class="ls-skeleton"></span>',
+            '  <span class="ls-skeleton"></span>',
+            '  <p id="waitText" class="wait-text" role="status">今日の5問を準備しています…</p>',
+            '</div>'
+          ].join("");
+
+          // 3秒をこえたら、経過秒数と理由を出す（秒数は読みこみを始めたときから数える）
+          var waitTextEl = document.getElementById("waitText");
+          var startedAt = Date.now();
+          stopWaitText = UI.progress("今日の5問を準備しています", function (text) {
+            if (Date.now() - startedAt >= 3000) {
+              waitTextEl.textContent = text;
+            }
+          }, { slowAfter: 6, slowNote: "はじめて開くときは、少し時間がかかります。" });
+        }
+
+        function stopWaitText_() {
+          if (stopWaitText) {
+            stopWaitText();
+            stopWaitText = null;
           }
         }
 
-        function renderSessionLoading_() {
+        function renderLoadError_() {
+          var canOpenInLine = !!config.liffId && !state.liff.inClient;
           questionShellEl.innerHTML = [
-            '<section class="loading-card">',
-            '  <div class="loading-spinner" aria-hidden="true"></div>',
-            '  <h2 class="loading-title">今日の5問を準備しています</h2>',
-            '  <p class="note">最初の5問を先に読み込んでいます。数秒お待ちください。</p>',
+            '<section class="ls-panel">',
+            '  <div class="ls-empty">',
+            '    <span class="ls-empty-icon" aria-hidden="true">📶</span>',
+            '    <strong>今日の5問を読みこめませんでした</strong>',
+            '    <span>電波のよいところで、もう一度ためしてね。</span>',
+            '    <div class="ls-actions">',
+            '      <button id="retryLoadButton" class="ls-button is-primary" type="button">🔄 もう一度</button>',
+            canOpenInLine ? '      <a class="ls-button" href="' + escapeHtml_(buildLiffUrl_()) + '">💬 LINEで開きなおす</a>' : '',
+            '    </div>',
+            '  </div>',
             '</section>'
           ].join("");
-          sessionPillLabelEl.textContent = "準備中";
-          sessionMetaEl.textContent = "最初の5問を先に読み込んでいます。";
-          progressInlineEl.textContent = "-";
-          progressFillEl.style.width = "12%";
+          bindClick_("retryLoadButton", bootstrap_);
         }
 
-        function renderStartupLoading_() {
-          renderSessionLoading_();
+        function renderNoSession_() {
+          questionShellEl.innerHTML = [
+            '<section class="ls-panel">',
+            '  <div class="ls-empty">',
+            '    <span class="ls-empty-icon" aria-hidden="true">📚</span>',
+            '    <strong>今日の5問を始めよう</strong>',
+            '    <button id="startDailyButton" class="ls-button is-primary" type="button">▶ 今日の5問を始める</button>',
+            '  </div>',
+            '</section>'
+          ].join("");
+          bindClick_("startDailyButton", resolveDailySession_);
         }
 
         function renderAnswerControl_(question, savedAnswer, disabled) {
           var disabledAttr = disabled ? " disabled" : "";
 
-          if (question.questionType === "NUMBER") {
-            return '<input id="answerInput" type="number" value="' + escapeAttribute_(savedAnswer) + '" placeholder="数字で入力"' + disabledAttr + '>';
-          }
-
           if (question.questionType === "TRUE_FALSE") {
             return [
-              '<select id="answerInput"' + disabledAttr + '>',
-              '  <option value="">選択してください</option>',
-              '  <option value="true"' + (savedAnswer === "true" ? " selected" : "") + '>正しい</option>',
-              '  <option value="false"' + (savedAnswer === "false" ? " selected" : "") + '>誤り</option>',
-              '</select>'
+              '<div class="tf-choices" role="radiogroup" aria-label="答え">',
+              renderTfChip_("true", "⭕ 正しい", savedAnswer, disabledAttr),
+              renderTfChip_("false", "❌ まちがい", savedAnswer, disabledAttr),
+              '</div>'
             ].join("");
           }
 
-          return '<textarea id="answerInput" placeholder="ここに回答を入力"' + disabledAttr + '>' + escapeHtml_(savedAnswer) + '</textarea>';
+          var inputMode = question.questionType === "NUMBER" ? ' inputmode="decimal"' : '';
+          var placeholder = question.questionType === "NUMBER" ? "数字を入れる" : "答えを入れる";
+          return '<input id="answerInput" class="ls-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done"' + inputMode +
+            ' aria-label="答え" aria-describedby="answerError" placeholder="' + placeholder + '" value="' + escapeHtml_(savedAnswer) + '"' + disabledAttr + '>';
         }
 
-        function renderResultCard_(result, saveStatus) {
-          if (!result) {
-            return '';
-          }
+        function renderTfChip_(value, label, savedAnswer, disabledAttr) {
+          var checked = savedAnswer === value;
+          return '<button type="button" class="ls-chip" role="radio" data-tf="' + value + '" aria-checked="' + (checked ? "true" : "false") + '"' + disabledAttr + '>' + label + '</button>';
+        }
 
-          var className = result.isCorrect ? 'result-card correct' : 'result-card incorrect';
-          var title = result.isCorrect ? '正解です' : 'もう一度見直そう';
-          var badge = result.isCorrect ? '正解' : '見直し';
-          var mark = result.isCorrect ? '○' : '!';
-          var explanation = result.explanation || '解説はまだありません。';
-          var correctText = result.correctAnswerText ? '<span class="muted">正解: ' + escapeHtml_(result.correctAnswerText) + '</span>' : '';
-          var flowText = result.isCorrect
-            ? '解説を確認できたら、そのまま次の問題へ進みましょう。'
-            : '解説と正解を確認してから、次の問題へ進みましょう。';
+        function renderResultCard_(question, result) {
+          var key = question.sessionQuestionId;
+          var explanation = result.explanation || "";
+          var isLast = state.currentQuestionIndex >= getQuestions_().length - 1;
+          var allAnswered = getAnsweredCount_() >= getQuestions_().length;
 
           return [
-            '<div class="' + className + '">',
-            '  <div class="result-hero">',
-            '    <div class="result-mark" aria-hidden="true">' + mark + '</div>',
+            '<div class="result ' + (result.isCorrect ? 'is-correct' : 'is-incorrect') + '" role="status">',
+            '  <div class="result-head">',
+            '    <span class="result-mark" aria-hidden="true">' + (result.isCorrect ? '○' : '×') + '</span>',
             '    <div>',
-            '      <span class="result-badge ' + (result.isCorrect ? 'correct' : 'incorrect') + '">' + badge + '</span>',
-            '      <h3 class="result-title">' + title + '</h3>',
-            '      <p class="result-flow">' + flowText + '</p>',
+            '      <h2 class="result-title">' + (result.isCorrect ? '正解！' : 'おしい！') + '</h2>',
+            result.correctAnswerText ? '      <span>答え：<b>' + escapeHtml_(result.correctAnswerText) + '</b></span>' : '',
             '    </div>',
             '  </div>',
-            '  <div class="result-meta">',
-            '    <span>スコア: ' + escapeHtml_(String(result.score)) + '</span>',
-            correctText,
-            '    <span>' + escapeHtml_(explanation) + '</span>',
-            '  </div>',
-            '  <div class="result-callout">',
-            '    <div class="save-status">' + escapeHtml_(saveStatus || "回答内容を保存しています。") + '</div>',
-            '  </div>',
-            '  <div class="result-actions">',
-            isLastQuestion_()
-              ? '    <button id="finishSessionButton" type="button">5問の結果を見る</button>'
-              : '    <button id="nextQuestionButton" type="button">次の問題へ進む</button>',
-            '  </div>',
-            '</div>'
-          ].join('');
+            explanation ? '  <p class="result-body">' + escapeHtml_(explanation) + '</p>' : '',
+            renderSaveLine_(key),
+            '</div>',
+            (isLast || allAnswered)
+              ? '<button id="finishSessionButton" class="ls-button is-primary is-block big-button" type="button">🏁 結果を見る</button>'
+              : '<button id="nextQuestionButton" class="ls-button is-primary is-block big-button" type="button">次の問題へ →</button>'
+          ].join("");
         }
 
-        function renderQuestionNav_(result) {
-          if (result) {
-            return '';
+        function renderSaveLine_(key) {
+          var saveState = state.saveState[key] || "";
+          if (saveState === "saving") {
+            return '<p class="save-line">保存しています…</p>';
           }
-
-          return [
-            '<div class="question-nav">',
-            '  <button class="secondary" id="prevQuestionButton" type="button"' + (state.currentQuestionIndex === 0 ? " disabled" : "") + '>前の問題</button>',
-            '  <button id="nextQuestionButton" type="button"' + (state.currentQuestionIndex === state.session.questions.length - 1 ? " disabled" : "") + '>次の問題</button>',
-            '</div>'
-          ].join('');
+          if (saveState === "failed") {
+            return '<p class="save-line is-error"><span>まだ保存できていません</span><button id="retrySaveButton" class="ls-button" type="button">🔄 もう一度</button></p>';
+          }
+          if (saveState === "saved") {
+            return '<p class="save-line">✓ 保存しました</p>';
+          }
+          return '';
         }
 
         function renderCompletionView_() {
-          var total = state.session.questions.length;
+          var total = getQuestions_().length;
           var correctCount = getCorrectCount_();
           var incorrectCount = total - correctCount;
           var accuracy = total === 0 ? 0 : Math.round((correctCount / total) * 100);
-          var nextRecommendation = resolveCompletionRecommendation_(incorrectCount, accuracy);
 
           questionShellEl.innerHTML = [
-            '<section class="completion-card">',
-            '  <h2>5問完了です</h2>',
-            '  <p class="note">ここまでの結果を確認して、気になる問題を見直すか、次の学習の準備へ進みましょう。</p>',
-            '  <div class="completion-stats">',
-            '    <div class="summary-card"><p class="summary-label">正解数</p><p class="summary-value">' + correctCount + '</p></div>',
-            '    <div class="summary-card"><p class="summary-label">見直し</p><p class="summary-value">' + incorrectCount + '</p></div>',
-            '    <div class="summary-card"><p class="summary-label">正答率</p><p class="summary-value">' + accuracy + '%</p></div>',
-            '    <div class="summary-card"><p class="summary-label">次のおすすめ</p><p class="summary-value" style="font-size: 18px;">' + escapeHtml_(nextRecommendation) + '</p></div>',
+            '<section class="ls-panel" aria-labelledby="completionTitle">',
+            '  <h2 id="completionTitle" class="completion-title">🎉 ' + total + '問おわり！</h2>',
+            '  <div class="ls-grid-2">',
+            '    <div class="stat"><span class="stat-label">正解</span><span class="stat-value">' + correctCount + ' / ' + total + '</span></div>',
+            '    <div class="stat"><span class="stat-label">正答率</span><span class="stat-value">' + accuracy + '%</span></div>',
             '  </div>',
-            renderShareSection_(correctCount, total, accuracy),
-            '  <div class="completion-actions">',
-            (incorrectCount > 0)
-              ? '    <button class="secondary" id="reviewIncorrectButton" type="button">見直したい問題を見る</button>'
-              : '    <button class="secondary" id="reviewFirstQuestionButton" type="button">最初から振り返る</button>',
-            '    <button id="restartDailyButton" type="button">今日の状態を更新する</button>',
-            '  </div>',
-            '</section>'
-          ].join('');
+            incorrectCount > 0
+              ? '  <button id="reviewIncorrectButton" class="ls-button is-block" type="button">🔍 まちがえた問題を見なおす</button>'
+              : '  <button id="reviewFirstButton" class="ls-button is-block" type="button">🔁 1問目から見なおす</button>',
+            '</section>',
+            renderShareSection_(total, accuracy)
+          ].join("");
 
-          var reviewFirstQuestionButtonEl = document.getElementById("reviewFirstQuestionButton");
-          if (reviewFirstQuestionButtonEl) {
-            reviewFirstQuestionButtonEl.addEventListener("click", function () {
-              moveToQuestion_(0);
-            });
-          }
-
-          var reviewIncorrectButtonEl = document.getElementById("reviewIncorrectButton");
-          if (reviewIncorrectButtonEl) {
-            reviewIncorrectButtonEl.addEventListener("click", function () {
-              var targetIndex = getFirstIncorrectQuestionIndex_();
-              moveToQuestion_(targetIndex === -1 ? 0 : targetIndex);
-            });
-          }
-
-          var shareCurrentChatButtonEl = document.getElementById("shareCurrentChatButton");
-          if (shareCurrentChatButtonEl) {
-            shareCurrentChatButtonEl.addEventListener("click", shareToCurrentChat_);
-          }
-
-          var shareTargetPickerButtonEl = document.getElementById("shareTargetPickerButton");
-          if (shareTargetPickerButtonEl) {
-            shareTargetPickerButtonEl.addEventListener("click", shareViaTargetPicker_);
-          }
-
-          document.getElementById("restartDailyButton").addEventListener("click", function () {
-            loadHomeData_();
+          bindClick_("reviewIncorrectButton", function () {
+            var targetIndex = getFirstIncorrectQuestionIndex_();
+            moveToQuestion_(targetIndex === -1 ? 0 : targetIndex);
           });
+          bindClick_("reviewFirstButton", function () {
+            moveToQuestion_(0);
+          });
+          bindClick_("shareTargetPickerButton", function () {
+            shareViaTargetPicker_();
+          });
+          bindClick_("shareCurrentChatButton", shareToCurrentChat_);
         }
 
-        function resolveCompletionRecommendation_(incorrectCount, accuracy) {
-          if (incorrectCount > 0) {
-            return "見直し";
+        function renderShareSection_(total, accuracy) {
+          var canPicker = canUsePremiumShare_();
+          var canCurrent = canShareCurrentChat_();
+          var buttons = [];
+          var notes = [];
+
+          if (canPicker) {
+            buttons.push('<button id="shareTargetPickerButton" class="ls-send" type="button"' + (state.sharing ? ' disabled' : '') + '>' + (state.sharing ? '送っています…' : '💬 LINEで送る') + '</button>');
+          }
+          if (canCurrent) {
+            buttons.push('<button id="shareCurrentChatButton" class="' + (canPicker ? 'ls-button is-block' : 'ls-send') + '" type="button"' + (state.sharing ? ' disabled' : '') + '>' + (state.sharing && !canPicker ? '送っています…' : '💬 このトークに送る') + '</button>');
           }
 
-          if (accuracy >= 100) {
-            return "次の学習へ";
+          var outside = "";
+          if (!state.liff.inClient && config.liffId) {
+            outside = [
+              '<div class="ls-outside">',
+              '  <p class="ls-outside-text">LINE の外で開いています。LINEで開くと送れます：</p>',
+              '  <div class="ls-outside-actions">',
+              '    <a class="ls-outside-button is-app" href="' + escapeHtml_(buildLiffUrl_()) + '">💬 LINEで開く</a>',
+              '  </div>',
+              '</div>'
+            ].join("");
+          } else if (state.liff.inClient) {
+            if (!canCurrent && !canPicker) {
+              notes.push("この開き方では送れません。トークの中のリンクから開くと、そのトークに送れます。");
+            }
+            if (!canPicker && !hasEntitlement_(config.premiumShareEntitlementKey || "shareTargetPicker")) {
+              notes.push("ほかのトークに送るのは、有料プランで使えます。");
+            }
           }
-
-          return "振り返り";
-        }
-
-        function renderShareSection_(correctCount, total, accuracy) {
-          var canShareCurrentChat = state.liff.ready && state.liff.loggedIn && state.liff.canSendMessages;
-          var canShareToOtherChats = canUsePremiumShare_();
 
           return [
-            '<div class="result-card">',
-            '  <h3 class="result-title">LINEで報告</h3>',
-            '  <p class="share-note">LINEアプリからこの画面を開いている場合は、結果を今のトークに報告できます。上位プランでは別のトークにも共有できます。</p>',
-            state.isSharing
-              ? '  <div class="share-loading"><span class="loading-spinner" aria-hidden="true"></span><span>LINEへ送信しています。画面はこのままでお待ちください。</span></div>'
-              : '',
-            '  <div class="share-actions">',
-            canShareCurrentChat
-              ? '    <button id="shareCurrentChatButton" type="button"' + (state.isSharing ? ' disabled' : '') + '>' + (state.isSharing ? '送信中です' : 'このトークに結果を報告する') + '</button>'
-              : '    <button type="button" disabled>このトークへの報告はLINEアプリから開いたときに使えます</button>',
-            canShareToOtherChats
-              ? '    <button id="shareTargetPickerButton" class="secondary" type="button"' + (state.isSharing ? ' disabled' : '') + '>' + (state.isSharing ? '送信中です' : '別のトークへ共有する') + '</button>'
-              : '    <button class="secondary" type="button" disabled>別トーク共有は有料プランで利用できます</button>',
-            '  </div>',
-            '  <p class="save-status" id="shareStatusText">' + escapeHtml_(buildShareStatusText_(canShareCurrentChat, canShareToOtherChats, correctCount, total, accuracy)) + '</p>',
-            '</div>'
-          ].join('');
+            '<section class="ls-panel" aria-labelledby="shareTitle">',
+            '  <h2 id="shareTitle" class="ls-panel-title">💬 結果を送る</h2>',
+            renderTalkPreview_(total, accuracy),
+            outside,
+            buttons.join(""),
+            notes.map(function (note) {
+              return '<p class="ls-hint">' + escapeHtml_(note) + '</p>';
+            }).join(""),
+            '</section>'
+          ].join("");
         }
 
-        function buildShareStatusText_(canShareCurrentChat, canShareToOtherChats, correctCount, total, accuracy) {
-          if (state.isSharing) {
-            return "LINEへ送信しています。";
+        function renderTalkPreview_(total, accuracy) {
+          var receipt = getShareReceiptForSession_();
+          return [
+            '<div class="talk-preview" aria-label="送るカードの見本">',
+            '  <div class="talk-card">',
+            '    <div class="talk-card-band"><small>' + escapeHtml_((formatDate_(state.session.businessDate) || "5問体験") + "・" + getLearnerName_(receipt)) + '</small><strong>5問体験 完了</strong></div>',
+            '    <div class="talk-card-body">',
+            '      <div><small>演習数</small><b>' + total + '問</b></div>',
+            '      <div><small>正答率</small><b>' + accuracy + '%</b></div>',
+            '      <div class="talk-card-code"><small>提出コード</small><b>' + escapeHtml_(receipt && receipt.receiptCode ? receipt.receiptCode : "送るときに作ります") + '</b></div>',
+            '    </div>',
+            '    <div class="talk-card-actions"><span class="is-primary">📚 5問をやってみる</span><span>提出コードをコピー</span></div>',
+            '  </div>',
+            '</div>'
+          ].join("");
+        }
+
+        // ---- 答える ----
+
+        function submitAnswer_(question) {
+          var answerKey = question.sessionQuestionId;
+          if (!state.ready || state.results[answerKey]) {
+            return;
           }
 
-          if (canShareCurrentChat) {
-            return total + "問中 " + correctCount + "問正解 (" + accuracy + "%) の結果をLINEへ共有できます。";
+          var currentAnswer = String(state.answers[answerKey] || "").trim();
+          if (currentAnswer === "") {
+            state.answerError = question.questionType === "TRUE_FALSE" ? "どちらかを選んでね" : "答えを入れてね";
+            var errorEl = document.getElementById("answerError");
+            if (errorEl) {
+              errorEl.textContent = state.answerError;
+              errorEl.hidden = false;
+            }
+            return;
+          }
+          if (question.questionType === "NUMBER" && !isFinite(Number(toHalfWidth_(currentAnswer)))) {
+            state.answerError = "数字で入れてね";
+            renderQuestionView_();
+            return;
           }
 
-          if (canShareToOtherChats) {
-            return "別のトークへの共有は使えますが、今のトークへの直接報告はLINEアプリから開いたときのみ利用できます。";
+          state.answerError = "";
+          state.answers[answerKey] = question.questionType === "NUMBER" ? toHalfWidth_(currentAnswer) : currentAnswer;
+          var gradingResult = gradeAnswer_(question, state.answers[answerKey]);
+          state.results[answerKey] = gradingResult;
+          playResultSound_(gradingResult.isCorrect);
+          if (document.activeElement && document.activeElement.blur) {
+            document.activeElement.blur();
           }
+          persistAnswerEvent_(question, state.answers[answerKey], gradingResult);
+        }
 
-          if (!state.liff.inClient) {
-            return "別トーク共有は、LINEアプリ内で開いたときのみ安定して利用できます。";
+        // 答えは先に画面に出し（E3）、保存はあとから。保存できなかったら「もう一度」を出す
+        function persistAnswerEvent_(question, currentAnswer, gradingResult) {
+          var answerKey = question.sessionQuestionId;
+          var questionIndex = getQuestions_().indexOf(question);
+          state.saveState[answerKey] = "saving";
+          upsertTodayAnswerEvent_(question, currentAnswer, gradingResult);
+          saveCache_();
+          renderAll_();
+
+          requestJson_("POST", config.createAnswerEventAction || "createAnswerEvent", {
+            action: config.createAnswerEventAction || "createAnswerEvent",
+            tenantId: config.tenantId,
+            learningSessionId: state.session.sessionId,
+            sessionQuestionId: question.sessionQuestionId,
+            questionId: question.questionId,
+            idempotencyKey: state.session.sessionId + "_" + question.sessionQuestionId + "_" + questionIndex,
+            answerPayload: {
+              value: gradingResult.normalizedAnswer
+            },
+            isCorrect: gradingResult.isCorrect,
+            score: gradingResult.score,
+            elapsedMs: 0,
+            explanationViewed: true
+          })
+            .then(function (response) {
+              state.saveState[answerKey] = "saved";
+              renderSaveState_(answerKey);
+              renderResponse_(response);
+            })
+            .catch(function (error) {
+              state.saveState[answerKey] = "failed";
+              renderSaveState_(answerKey);
+              renderError_(error);
+              UI.toast("答えを保存できませんでした", {
+                actionLabel: "もう一度",
+                onAction: function () {
+                  persistAnswerEvent_(question, currentAnswer, gradingResult);
+                }
+              });
+            });
+        }
+
+        function renderSaveState_(answerKey) {
+          var question = getQuestions_()[state.currentQuestionIndex];
+          if (question && question.sessionQuestionId === answerKey && !isSessionCompleted_()) {
+            renderQuestionView_();
           }
-
-          if (!state.liff.loggedIn) {
-            return "別トーク共有を使うには、LINEログイン済みの状態で開いてください。";
-          }
-
-          if (!state.liff.canShareTargetPicker) {
-            return "この起動方法では別トーク共有を利用できません。LINEトークから開き直してください。";
-          }
-
-          if (!hasEntitlement_(config.premiumShareEntitlementKey || "shareTargetPicker")) {
-            return "別トーク共有は有料プランで利用できます。";
-          }
-
-          return "LINE共有を使うには、LINE連携と共有設定を有効にしてください。";
         }
 
         function gradeAnswer_(question, rawAnswer) {
@@ -2274,112 +1333,89 @@
           if (question.questionType === "NUMBER") {
             return rawAnswer === "" ? "" : Number(rawAnswer);
           }
-
           if (question.questionType === "TRUE_FALSE") {
             return rawAnswer;
           }
-
           return String(rawAnswer || "").trim();
+        }
+
+        function toHalfWidth_(value) {
+          return String(value || "").replace(/[０-９．－]/g, function (ch) {
+            return String.fromCharCode(ch.charCodeAt(0) - 0xFEE0);
+          }).replace(/ー/g, "-");
         }
 
         function toCorrectAnswerText_(question, answerPayload) {
           if (!answerPayload || answerPayload.exact === undefined || answerPayload.exact === null) {
             return "";
           }
-
           if (question.questionType === "TRUE_FALSE") {
-            return answerPayload.exact === true ? "正しい" : "誤り";
+            return String(answerPayload.exact) === "true" ? "正しい" : "まちがい";
           }
-
           return String(answerPayload.exact);
         }
 
-        function persistAnswerEvent_(question, currentAnswer, gradingResult) {
-          var answerKey = question.sessionQuestionId;
-          var payload = {
-            action: config.createAnswerEventAction || "createAnswerEvent",
-            tenantId: config.tenantId,
-            learningSessionId: state.session.sessionId,
-            sessionQuestionId: question.sessionQuestionId,
-            questionId: question.questionId,
-            idempotencyKey: buildIdempotencyKey_(question),
-            answerPayload: {
-              value: gradingResult.normalizedAnswer
-            },
-            isCorrect: gradingResult.isCorrect,
-            score: gradingResult.score,
-            elapsedMs: 0,
-            explanationViewed: true
-          };
+        // ---- 移動 ----
 
-          requestJson_("POST", config.createAnswerEventAction || "createAnswerEvent", payload)
-            .then(function (response) {
-              state.submittingAnswers[answerKey] = false;
-              state.saveStatus[answerKey] = response.duplicated ? "この回答はすでに保存されています。" : "回答を保存しました。";
-              state.answers[answerKey] = currentAnswer;
-              upsertTodayAnswerEvent_(question, currentAnswer, gradingResult);
-              renderLearningState_();
-              renderResponse_(response);
-            })
-            .catch(function (error) {
-              state.submittingAnswers[answerKey] = false;
-              state.saveStatus[answerKey] = "保存に失敗しました。通信状態を確認してください。";
-              renderQuestionView_();
-              renderError_(error);
-            });
+        function moveToQuestion_(index, options) {
+          var questions = getQuestions_();
+          state.currentQuestionIndex = Math.max(0, Math.min(index, questions.length - 1));
+          state.answerError = "";
+          renderAll_();
+          scrollToTop_();
+          if (options && options.focus) {
+            var input = document.getElementById("answerInput");
+            if (input && !input.disabled) {
+              input.focus({ preventScroll: true });
+            }
+          }
         }
 
-        function buildIdempotencyKey_(question) {
-          return state.session.sessionId + "_" + question.sessionQuestionId + "_" + state.currentQuestionIndex;
-        }
-
-        function moveToNextQuestion_() {
-          state.currentQuestionIndex = Math.min(state.session.questions.length - 1, state.currentQuestionIndex + 1);
-          renderLearningState_();
-        }
-
-        function moveToPreviousQuestion_() {
-          state.currentQuestionIndex = Math.max(0, state.currentQuestionIndex - 1);
-          renderLearningState_();
-        }
-
-        function moveToQuestion_(index) {
-          state.currentQuestionIndex = Math.max(0, Math.min(index, state.session.questions.length - 1));
-          renderLearningState_();
+        function scrollToTop_() {
+          var panel = document.querySelector(".progress-panel");
+          if (panel && panel.getBoundingClientRect().top < 0) {
+            panel.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
         }
 
         function getFirstIncorrectQuestionIndex_() {
-          if (!state.session || !state.session.questions) {
-            return -1;
-          }
-
-          return state.session.questions.findIndex(function (question) {
+          return getQuestions_().findIndex(function (question) {
             var result = state.results[question.sessionQuestionId];
             return result && !result.isCorrect;
           });
         }
 
-        function scrollToQuestionCard_() {
-          var card = questionShellEl.querySelector(".question-card, .completion-card");
-          if (!card) {
-            return;
+        // ---- 効果音 ----
+
+        function initializeAudioSettings_() {
+          try {
+            var raw = window.localStorage.getItem(AUDIO_KEY);
+            if (raw) {
+              state.audio.enabled = JSON.parse(raw).enabled !== false;
+            }
+          } catch (error) {
+            state.audio.enabled = true;
           }
 
-          card.scrollIntoView({
-            behavior: "smooth",
-            block: "start"
+          soundToggleButtonEl.addEventListener("click", function () {
+            state.audio.enabled = !state.audio.enabled;
+            try {
+              window.localStorage.setItem(AUDIO_KEY, JSON.stringify({ enabled: state.audio.enabled }));
+            } catch (error) {
+              // 残せなくても切りかえはできる
+            }
+            updateAudioUi_();
+            UI.toast(state.audio.enabled ? "🔊 効果音をオンにしました" : "🔇 効果音をオフにしました", { ms: 2000 });
           });
+          updateAudioUi_();
         }
 
-        function focusAnswerInput_() {
-          var answerInputEl = document.getElementById("answerInput");
-          if (answerInputEl && typeof answerInputEl.focus === "function") {
-            answerInputEl.focus();
-          }
+        function updateAudioUi_() {
+          soundToggleButtonEl.setAttribute("aria-pressed", state.audio.enabled ? "true" : "false");
         }
 
         function playResultSound_(isCorrect) {
-          if (!state.audio.enabled || state.audio.volume <= 0 || !window.AudioContext) {
+          if (!state.audio.enabled || !window.AudioContext) {
             return;
           }
 
@@ -2402,10 +1438,10 @@
             }
 
             window.setTimeout(function () {
-              context.close().catch(function () {
-              });
+              context.close().catch(function () {});
             }, 500);
           } catch (error) {
+            // 音が出せなくても続けられる
           }
         }
 
@@ -2423,6 +1459,12 @@
           oscillator.stop(startAt + duration + 0.02);
         }
 
+        // ---- LINE で送る ----
+
+        function canShareCurrentChat_() {
+          return state.liff.ready && state.liff.loggedIn && state.liff.canSendMessages;
+        }
+
         function canUsePremiumShare_() {
           return !!(
             state.liff.ready &&
@@ -2437,64 +1479,52 @@
           if (!state.me || !state.me.entitlements || !featureKey) {
             return false;
           }
-
           return state.me.entitlements.some(function (entry) {
             return entry.feature_key === featureKey && (entry.enabled === true || entry.enabled === "true");
           });
+        }
+
+        function getLearnerName_(receipt) {
+          if (receipt && receipt.learnerName) {
+            return receipt.learnerName;
+          }
+          if (state.liff.profile && state.liff.profile.displayName) {
+            return state.liff.profile.displayName;
+          }
+          return state.me && state.me.user && state.me.user.display_name ? state.me.user.display_name : "学習者";
+        }
+
+        function getShareReceiptForSession_() {
+          var sessionId = state.session && state.session.sessionId ? state.session.sessionId : "";
+          return sessionId && state.shareReceiptCodes[sessionId] ? state.shareReceiptCodes[sessionId] : null;
         }
 
         function buildShareMessages_() {
           var receipt = getShareReceiptForSession_();
           return [{
             type: "flex",
-            altText: "5問体験の提出コード",
+            altText: "5問体験の結果（提出コード " + (receipt && receipt.receiptCode ? receipt.receiptCode : "") + "）",
             contents: buildShareResultBubble_(receipt)
           }];
         }
 
-        function getShareReceiptForSession_() {
-          var sessionId = state.session && state.session.sessionId ? state.session.sessionId : "";
-          return sessionId && state.shareReceiptCodes[sessionId]
-            ? state.shareReceiptCodes[sessionId]
-            : null;
-        }
-
         function buildShareResultBubble_(receipt) {
-          var learnerName = receipt && receipt.learnerName
-            ? receipt.learnerName
-            : (state.liff.profile && state.liff.profile.displayName
-              ? state.liff.profile.displayName
-              : (state.me && state.me.user ? state.me.user.display_name : "学習者"));
           var receiptCode = receipt && receipt.receiptCode ? receipt.receiptCode : "発行準備中";
-          var totalQuestions = receipt && receipt.totalQuestions ? Number(receipt.totalQuestions) : (state.session && state.session.questions ? state.session.questions.length : 0);
+          var totalQuestions = receipt && receipt.totalQuestions ? Number(receipt.totalQuestions) : getQuestions_().length;
           var accuracyRate = receipt && receipt.accuracyRate !== undefined && receipt.accuracyRate !== null
             ? Number(receipt.accuracyRate)
             : (totalQuestions === 0 ? 0 : Math.round((getCorrectCount_() / totalQuestions) * 100));
-          var appUrl = buildShareLaunchUrl_();
 
           return {
             type: "bubble",
-            hero: {
+            header: {
               type: "box",
               layout: "vertical",
-              paddingAll: "20px",
+              paddingAll: "16px",
               backgroundColor: "#17624A",
               contents: [
-                {
-                  type: "text",
-                  text: "5問体験 完了",
-                  color: "#F8F4ED",
-                  weight: "bold",
-                  size: "xl"
-                },
-                {
-                  type: "text",
-                  text: learnerName,
-                  color: "#DDEFE7",
-                  size: "sm",
-                  margin: "md",
-                  wrap: true
-                }
+                { type: "text", text: (formatDate_(state.session && state.session.businessDate) || "5問体験") + "・" + getLearnerName_(receipt), color: "#DDEFE7", size: "xs", wrap: true },
+                { type: "text", text: "5問体験 完了", color: "#F8F4ED", weight: "bold", size: "xl", margin: "sm" }
               ]
             },
             body: {
@@ -2503,65 +1533,12 @@
               spacing: "md",
               contents: [
                 {
-                  type: "text",
-                  text: "結果の概要を共有しています。詳細確認は提出コードをもとに管理者が行います。",
-                  size: "sm",
-                  wrap: true,
-                  color: "#3E3A34"
-                },
-                {
                   type: "box",
                   layout: "horizontal",
                   spacing: "sm",
                   contents: [
-                    {
-                      type: "box",
-                      layout: "vertical",
-                      flex: 1,
-                      cornerRadius: "12px",
-                      paddingAll: "12px",
-                      backgroundColor: "#F6EFE4",
-                      contents: [
-                        {
-                          type: "text",
-                          text: "演習数",
-                          size: "xs",
-                          color: "#7A7165"
-                        },
-                        {
-                          type: "text",
-                          text: String(totalQuestions) + "問",
-                          size: "lg",
-                          weight: "bold",
-                          color: "#1C1B18",
-                          margin: "sm"
-                        }
-                      ]
-                    },
-                    {
-                      type: "box",
-                      layout: "vertical",
-                      flex: 1,
-                      cornerRadius: "12px",
-                      paddingAll: "12px",
-                      backgroundColor: "#F6EFE4",
-                      contents: [
-                        {
-                          type: "text",
-                          text: "正答率",
-                          size: "xs",
-                          color: "#7A7165"
-                        },
-                        {
-                          type: "text",
-                          text: String(accuracyRate) + "%",
-                          size: "lg",
-                          weight: "bold",
-                          color: "#1C1B18",
-                          margin: "sm"
-                        }
-                      ]
-                    }
+                    buildStatBox_("演習数", String(totalQuestions) + "問"),
+                    buildStatBox_("正答率", String(accuracyRate) + "%")
                   ]
                 },
                 {
@@ -2569,24 +1546,13 @@
                   layout: "vertical",
                   backgroundColor: "#F6EFE4",
                   cornerRadius: "12px",
-                  paddingAll: "14px",
+                  paddingAll: "12px",
                   contents: [
-                    {
-                      type: "text",
-                      text: "提出コード",
-                      size: "xs",
-                      color: "#7A7165"
-                    },
-                    {
-                      type: "text",
-                      text: receiptCode,
-                      size: "xl",
-                      weight: "bold",
-                      color: "#1C1B18",
-                      margin: "sm"
-                    }
+                    { type: "text", text: "提出コード", size: "xs", color: "#7A7165" },
+                    { type: "text", text: receiptCode, size: "xl", weight: "bold", color: "#1C1B18", margin: "sm" }
                   ]
-                }
+                },
+                { type: "text", text: "くわしい結果は、提出コードで管理者が確かめます。", size: "xs", wrap: true, color: "#7A7165" }
               ]
             },
             footer: {
@@ -2596,38 +1562,44 @@
               contents: [
                 {
                   type: "button",
-                  style: "secondary",
-                  action: {
-                    type: "clipboard",
-                    label: "提出コードをコピー",
-                    clipboardText: receiptCode
-                  }
+                  style: "primary",
+                  color: "#17624A",
+                  action: { type: "uri", label: "📚 5問をやってみる", uri: buildLiffUrl_({ entry: "shared-result" }) }
                 },
                 {
                   type: "button",
-                  style: "primary",
-                  color: "#17624A",
-                  action: {
-                    type: "uri",
-                    label: "学習画面を開く",
-                    uri: appUrl
-                  }
+                  style: "secondary",
+                  action: { type: "clipboard", label: "提出コードをコピー", clipboardText: receiptCode }
                 }
               ]
             }
           };
         }
 
-        function buildShareLaunchUrl_() {
-          var params = new URLSearchParams();
-          params.set("entry", "shared-result");
+        function buildStatBox_(label, value) {
+          return {
+            type: "box",
+            layout: "vertical",
+            flex: 1,
+            cornerRadius: "12px",
+            paddingAll: "12px",
+            backgroundColor: "#F6EFE4",
+            contents: [
+              { type: "text", text: label, size: "xs", color: "#7A7165" },
+              { type: "text", text: value, size: "lg", weight: "bold", color: "#1C1B18", margin: "sm" }
+            ]
+          };
+        }
 
+        function buildLiffUrl_(params) {
+          var search = new URLSearchParams(params || {}).toString();
           if (config.liffId) {
-            return "https://liff.line.me/" + encodeURIComponent(config.liffId) + "?" + params.toString();
+            return "https://liff.line.me/" + encodeURIComponent(config.liffId) + (search ? "?" + search : "");
           }
-
           var url = new URL("./learn.html", window.location.href);
-          url.searchParams.set("entry", "shared-result");
+          Object.keys(params || {}).forEach(function (key) {
+            url.searchParams.set(key, params[key]);
+          });
           return url.toString();
         }
 
@@ -2637,172 +1609,140 @@
             return Promise.resolve(existing);
           }
 
-          if (!state.session || !state.session.sessionId) {
-            return Promise.reject(new Error("session_not_ready"));
-          }
-
+          var total = getQuestions_().length;
           return requestJson_("POST", config.createShareReceiptAction || "createShareReceipt", {
             action: config.createShareReceiptAction || "createShareReceipt",
             tenantId: config.tenantId,
             learningSessionId: state.session.sessionId,
-            totalQuestions: state.session.questions.length,
+            totalQuestions: total,
             correctCount: getCorrectCount_(),
-            accuracyRate: state.session.questions.length === 0 ? 0 : Math.round((getCorrectCount_() / state.session.questions.length) * 100),
+            accuracyRate: total === 0 ? 0 : Math.round((getCorrectCount_() / total) * 100),
             shareChannel: shareChannel || ""
           }).then(function (response) {
             var receipt = response && response.receipt ? response.receipt : null;
             if (!receipt || !receipt.receiptCode) {
               throw new Error("share_receipt_not_created");
             }
-
             state.shareReceiptCodes[state.session.sessionId] = receipt;
             return receipt;
           });
         }
 
+        function setSharing_(sharing) {
+          state.sharing = sharing;
+          if (isSessionCompleted_()) {
+            renderCompletionView_();
+          }
+        }
+
         function shareToCurrentChat_() {
-          if (!state.liff.ready || !state.liff.canSendMessages) {
+          if (!canShareCurrentChat_() || state.sharing) {
             return;
           }
 
-          state.isSharing = true;
-          renderQuestionView_();
-
+          setSharing_(true);
           ensureShareReceipt_("current_chat")
             .then(function () {
               return window.liff.sendMessages(buildShareMessages_());
             })
             .then(function () {
-              state.isSharing = false;
-              renderQuestionView_();
-              updateShareStatusText_("このトークに結果を報告しました。");
+              setSharing_(false);
+              UI.afterSent({ title: "このトークに送りました" });
             })
             .catch(function (error) {
-              state.isSharing = false;
-              renderQuestionView_();
-              updateShareStatusText_("このトークへの報告に失敗しました。");
-              renderError_({
-                shareCurrentChat: error && error.message ? error.message : String(error)
-              });
+              setSharing_(false);
+              renderError_({ shareCurrentChat: error && error.message ? error.message : String(error) });
+              UI.toast("送れませんでした", { actionLabel: "もう一度", onAction: shareToCurrentChat_ });
             });
         }
 
-        function shareViaTargetPicker_() {
-          if (!canUsePremiumShare_()) {
-            if (!state.liff.inClient) {
-              updateShareStatusText_("別トーク共有は、LINEアプリ内で開いたときのみ利用できます。");
-              return;
-            }
-
-            if (!state.liff.loggedIn) {
-              updateShareStatusText_("別トーク共有を使うには、LINEログイン済みの状態で開いてください。");
-              return;
-            }
-
-            if (!state.liff.canShareTargetPicker) {
-              updateShareStatusText_("この起動方法では別トーク共有を利用できません。LINEトークから開き直してください。");
-              return;
-            }
-
-            if (!hasEntitlement_(config.premiumShareEntitlementKey || "shareTargetPicker")) {
-              updateShareStatusText_("別トーク共有は有料プランで利用できます。");
-              return;
-            }
-
-            return;
+        // 送れたら true（afterSent の「続けて別のトークにも送る」からも呼ぶ）
+        function shareViaTargetPicker_(fromAfterSent) {
+          if (!canUsePremiumShare_() || state.sharing) {
+            return Promise.resolve(false);
           }
 
-          state.isSharing = true;
-          renderQuestionView_();
-
-          ensureShareReceipt_("share_target_picker")
+          setSharing_(true);
+          return ensureShareReceipt_("share_target_picker")
             .then(function () {
-              return window.liff.shareTargetPicker(buildShareMessages_(), {
-                isMultiple: false
-              });
+              return window.liff.shareTargetPicker(buildShareMessages_(), { isMultiple: false });
             })
             .then(function (result) {
-              state.isSharing = false;
-              renderQuestionView_();
-              updateShareStatusText_(result ? "別のトークへ共有しました。" : "共有先の選択をキャンセルしました。");
+              setSharing_(false);
+              if (result && !fromAfterSent) {
+                UI.afterSent({
+                  resend: function () {
+                    return shareViaTargetPicker_(true);
+                  }
+                });
+              }
+              return !!result;
             })
             .catch(function (error) {
-              state.isSharing = false;
-              renderQuestionView_();
-              updateShareStatusText_("別のトークへの共有に失敗しました。");
-              renderError_({
-                shareTargetPicker: error && error.message ? error.message : String(error)
+              setSharing_(false);
+              renderError_({ shareTargetPicker: error && error.message ? error.message : String(error) });
+              if (fromAfterSent) {
+                throw error;
+              }
+              UI.toast("送れませんでした", {
+                actionLabel: "もう一度",
+                onAction: function () {
+                  shareViaTargetPicker_();
+                }
               });
+              return false;
             });
         }
 
-        function updateShareStatusText_(text) {
-          var shareStatusTextEl = document.getElementById("shareStatusText");
-          if (shareStatusTextEl) {
-            shareStatusTextEl.textContent = text;
-          }
+        // ---- 小さな道具 ----
+
+        function getQuestions_() {
+          return state.session && state.session.questions ? state.session.questions : [];
         }
 
         function getAnsweredCount_() {
           return getSessionResultEntries_().length;
         }
 
-        function isLastQuestion_() {
-          return state.currentQuestionIndex === state.session.questions.length - 1;
-        }
-
         function isSessionCompleted_() {
-          return state.session && getAnsweredCount_() >= state.session.questions.length && state.currentQuestionIndex >= state.session.questions.length;
+          var questions = getQuestions_();
+          return questions.length > 0 && getAnsweredCount_() >= questions.length && state.currentQuestionIndex >= questions.length;
         }
 
         function getCorrectCount_() {
           return getSessionResultEntries_().filter(function (entry) {
-            return entry && entry.isCorrect;
+            return entry.isCorrect;
           }).length;
         }
 
         function getSessionResultEntries_() {
-          return getSessionQuestionIds_().map(function (questionId) {
-            return state.results[questionId] || null;
-          }).filter(function (entry) {
-            return !!entry;
-          });
-        }
-
-        function getSessionQuestionIds_() {
-          if (!state.session || !state.session.questions) {
-            return [];
-          }
-
-          return state.session.questions.map(function (question) {
-            return question.sessionQuestionId;
-          });
+          return getQuestions_().map(function (question) {
+            return state.results[question.sessionQuestionId] || null;
+          }).filter(Boolean);
         }
 
         function syncStateWithSession_() {
           var nextSessionId = state.session && state.session.sessionId ? state.session.sessionId : "";
           var allowedKeys = {};
-
-          getSessionQuestionIds_().forEach(function (key) {
-            allowedKeys[key] = true;
+          getQuestions_().forEach(function (question) {
+            allowedKeys[question.sessionQuestionId] = true;
           });
 
           if (nextSessionId !== activeSessionId) {
             activeSessionId = nextSessionId;
             state.answers = {};
             state.results = {};
-            state.saveStatus = {};
-            state.submittingAnswers = {};
-            return;
+            state.saveState = {};
+            return true;
           }
 
-          state.answers = filterStateMapByKeys_(state.answers, allowedKeys);
-          state.results = filterStateMapByKeys_(state.results, allowedKeys);
-          state.saveStatus = filterStateMapByKeys_(state.saveStatus, allowedKeys);
-          state.submittingAnswers = filterStateMapByKeys_(state.submittingAnswers, allowedKeys);
+          state.answers = filterByKeys_(state.answers, allowedKeys);
+          state.results = filterByKeys_(state.results, allowedKeys);
+          state.saveState = filterByKeys_(state.saveState, allowedKeys);
+          return false;
         }
 
-        function filterStateMapByKeys_(source, allowedKeys) {
+        function filterByKeys_(source, allowedKeys) {
           return Object.keys(source || {}).reduce(function (accumulator, key) {
             if (allowedKeys[key]) {
               accumulator[key] = source[key];
@@ -2814,35 +1754,74 @@
         function toQuestionTypeLabel_(questionType) {
           switch (questionType) {
             case "TEXT_EXACT":
-              return "記述";
+              return "✏️ 書いて答える";
             case "TRUE_FALSE":
-              return "正誤";
+              return "⭕ 正しいか、まちがいか";
             case "NUMBER":
-              return "数値";
+              return "🔢 数字で答える";
             default:
-              return questionType || "";
+              return "";
           }
         }
 
+        // シートの日付は "2026-10-23" か、日付に変わった "2026-10-22T15:00:00.000Z" で来る
+        function formatDate_(value) {
+          if (!value) {
+            return "";
+          }
+          var text = String(value);
+          var date = /^\d{4}-\d{2}-\d{2}$/.test(text) ? new Date(text + "T00:00:00+09:00") : new Date(text);
+          if (isNaN(date.getTime())) {
+            return "";
+          }
+          var jst = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+          return (jst.getUTCMonth() + 1) + "月" + jst.getUTCDate() + "日";
+        }
+
+        function bindClick_(id, handler) {
+          var element = document.getElementById(id);
+          if (element) {
+            element.addEventListener("click", handler);
+          }
+        }
+
+        function loadVersionInfo_() {
+          fetch("./version.json", { cache: "no-store" })
+            .then(function (response) {
+              return response.ok ? response.json() : null;
+            })
+            .then(function (payload) {
+              renderVersion_(payload && (payload.version || payload.commit) ? (payload.version || payload.commit) : config.appVersion);
+            })
+            .catch(function () {
+              renderVersion_(config.appVersion);
+            });
+        }
+
+        function renderVersion_(version) {
+          versionTextEl.textContent = version ? "ver " + version : "ver dev";
+        }
+
+        // くわしい中身は ?debug=1 のときだけ（ふつうの人には出さない）
         function renderResponse_(payload) {
-          responsePanelEl.textContent = JSON.stringify(payload, null, 2);
+          if (debugMode) {
+            responsePanelEl.textContent = JSON.stringify(payload, null, 2);
+          }
         }
 
         function renderError_(error) {
-          responsePanelEl.textContent = JSON.stringify(error, null, 2);
+          if (debugMode) {
+            responsePanelEl.textContent = JSON.stringify(error, null, 2);
+          }
         }
 
         function escapeHtml_(value) {
-          return String(value || "")
+          return String(value === undefined || value === null ? "" : value)
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#39;");
-        }
-
-        function escapeAttribute_(value) {
-          return escapeHtml_(value);
         }
       })();
     </script>

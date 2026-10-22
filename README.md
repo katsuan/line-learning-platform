@@ -39,6 +39,12 @@ LINEを入口にし、LIFF内で学習体験を完結させるマルチテナン
 - Spreadsheet はDB代替として使うが、責務分離は維持し、`doGet` `doPost` にロジックを集中させない
 - 将来的に RDB へ移行しやすいよう、GAS でも repository / gateway 境界を先に置く
 
+## 画面の決まり
+
+- 画面の部品と色は、共通の部品集（`https://katsuan.github.io/line-share/shared/ui.css`・`ui.js`）を使い、色は今の緑（`--ls-accent`）にしている
+- 名前・アイコン・ロゴ・OGP・紹介のボタン・カードの末尾の「Created by」は、名前が決まるまで付けない。検索には出さない（`noindex`）
+- `?debug=1` を付けたときだけ、開発用の接続確認とログを出す（ふつうの人には出さない）
+
 ## GitHub Pages 設定
 
 - `Source`: `Deploy from a branch`
