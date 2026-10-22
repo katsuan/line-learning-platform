@@ -43,13 +43,7 @@ var LineWebhookUsecase = (function () {
       event: event
     });
 
-    LineMessagingClient.replyMessage(event.replyToken, messages);
-
-    return {
-      handled: true,
-      eventType: event.type,
-      messageCount: messages.length
-    };
+    return replyWithFallback_(event, messages);
   }
 
   function handleFollowEvent_(event) {
@@ -65,13 +59,33 @@ var LineWebhookUsecase = (function () {
       event: event
     });
 
-    LineMessagingClient.replyMessage(event.replyToken, messages);
+    return replyWithFallback_(event, messages);
+  }
 
-    return {
-      handled: true,
-      eventType: event.type,
-      messageCount: messages.length
-    };
+  // カードが通らないときは黙らず、文字だけで返す。原因は管理者が見られるところ（LAST_LINE_ERRORS）に残す
+  function replyWithFallback_(event, messages) {
+    try {
+      LineMessagingClient.replyMessage(event.replyToken, LineMessageBuilder.toSendable(messages));
+      return {
+        handled: true,
+        eventType: event.type,
+        messageCount: messages.length
+      };
+    } catch (error) {
+      DebugLogger.recordLineError({
+        eventType: event.type,
+        code: error && error.code ? error.code : "",
+        message: error && error.message ? error.message : String(error)
+      });
+      var fallback = LineMessageBuilder.toTextFallback(messages);
+      LineMessagingClient.replyMessage(event.replyToken, fallback);
+      return {
+        handled: true,
+        eventType: event.type,
+        messageCount: fallback.length,
+        reason: "text_fallback"
+      };
+    }
   }
 
   return {

@@ -9,6 +9,30 @@ var DebugLogger = (function () {
     }
   }
 
+  // LINE が受けつけなかった返事の原因を、新しい順に5件まで Script Properties の LAST_LINE_ERRORS に残す
+  function recordLineError(entry) {
+    try {
+      var properties = PropertiesService.getScriptProperties();
+      var list = [];
+      try {
+        list = JSON.parse(properties.getProperty("LAST_LINE_ERRORS") || "[]");
+      } catch (parseError) {
+        list = [];
+      }
+      list.unshift({
+        at: new Date().toISOString(),
+        eventType: (entry && entry.eventType) || "",
+        code: (entry && entry.code) || "",
+        message: truncate_(entry && entry.message, 500)
+      });
+      properties.setProperty("LAST_LINE_ERRORS", JSON.stringify(list.slice(0, 5)));
+    } catch (error) {
+      consoleLog_("line_error_record_failed", {
+        message: error && error.message ? error.message : String(error)
+      });
+    }
+  }
+
   function logInfo(message, payload) {
     consoleLog_(message, payload);
   }
@@ -55,6 +79,7 @@ var DebugLogger = (function () {
 
   return {
     logRequest: logRequest,
+    recordLineError: recordLineError,
     logInfo: logInfo
   };
 })();

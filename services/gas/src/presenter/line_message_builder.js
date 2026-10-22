@@ -1,68 +1,97 @@
 var LineMessageBuilder = (function () {
+  var ACCENT = "#17624A";
+
+  // 返事は1通のカードにまとめ、最後のメッセージに次の操作（クイックリプライ）を付ける
   function buildReplyMessages(context) {
     var config = ScriptConfig.getLineMessagingConfig();
-    var userText = extractUserText_(context.event);
-    var mode = resolveMode_(config, userText);
-
-    return [
-      {
-        type: "flex",
-        altText: mode.altText,
-        contents: buildLaunchBubble_(mode.url, userText, mode)
-      },
-      {
-        type: "text",
-        text: mode.followUpText
-      }
-    ];
+    var event = context.event || {};
+    var isAdmin = isAdmin_(config, event);
+    var mode = resolveMode_(config, extractUserText_(event), isAdmin);
+    return [buildCardMessage_(mode, isAdmin)];
   }
 
-  function buildFollowMessages() {
+  function buildFollowMessages(context) {
     var config = ScriptConfig.getLineMessagingConfig();
-    var startMode = resolveMode_(config, "ヘルプ");
-
-    return [
-      {
-        type: "flex",
-        altText: "LearningPlatform へようこそ",
-        contents: buildLaunchBubble_(startMode.url, "学習を始める", startMode)
-      },
-      {
-        type: "text",
-        text: "友だち追加ありがとうございます。まずは使い方を確認して、5問体験から始められます。"
-      }
-    ];
+    var event = (context && context.event) || {};
+    var isAdmin = isAdmin_(config, event);
+    var mode = resolveMode_(config, "ヘルプ", isAdmin);
+    mode.altText = "友だち追加ありがとう！使い方の案内です";
+    mode.category = "ようこそ";
+    mode.title = "友だち追加ありがとう！";
+    return [buildCardMessage_(mode, isAdmin)];
   }
 
-  function buildLaunchBubble_(destinationUrl, userText, mode) {
+  // カードが通らなかったときの、文字だけの返事（同じ中身とクイックリプライ）
+  function toTextFallback(messages) {
+    return (messages || []).map(function (message) {
+      if (message.type !== "flex") {
+        return message;
+      }
+      var fallback = {
+        type: "text",
+        text: message.fallbackText || message.altText || "5問を開く"
+      };
+      if (message.quickReply) {
+        fallback.quickReply = message.quickReply;
+      }
+      return fallback;
+    }).map(stripFallbackText_);
+  }
+
+  // LINE に送る前に、手元だけで使う fallbackText を外す
+  function stripFallbackText_(message) {
+    if (!message || message.fallbackText === undefined) {
+      return message;
+    }
+    var copy = {};
+    Object.keys(message).forEach(function (key) {
+      if (key !== "fallbackText") {
+        copy[key] = message[key];
+      }
+    });
+    return copy;
+  }
+
+  function buildCardMessage_(mode, isAdmin) {
+    return {
+      type: "flex",
+      altText: mode.altText,
+      contents: buildBubble_(mode),
+      quickReply: buildQuickReply_(isAdmin),
+      fallbackText: mode.title + "\n" + mode.body + "\n\n" + mode.buttonLabel + "：" + mode.url
+    };
+  }
+
+  // 色の帯（小さく区分、太く見出し）→ 中身 → ボタン1つ
+  function buildBubble_(mode) {
     return {
       type: "bubble",
-      hero: {
+      header: {
         type: "box",
         layout: "vertical",
-        paddingAll: "20px",
-        backgroundColor: "#17624A",
+        paddingAll: "16px",
+        backgroundColor: ACCENT,
         contents: [
+          {
+            type: "text",
+            text: mode.category,
+            color: "#DDEFE7",
+            size: "xs"
+          },
           {
             type: "text",
             text: mode.title,
             color: "#F8F4ED",
             weight: "bold",
-            size: "xl"
-          },
-          {
-            type: "text",
-            text: mode.subtitle,
-            color: "#DDEFE7",
-            margin: "md",
-            size: "sm"
+            size: "lg",
+            margin: "sm",
+            wrap: true
           }
         ]
       },
       body: {
         type: "box",
         layout: "vertical",
-        spacing: "md",
         contents: [
           {
             type: "text",
@@ -70,46 +99,21 @@ var LineMessageBuilder = (function () {
             wrap: true,
             size: "sm",
             color: "#3E3A34"
-          },
-          {
-            type: "box",
-            layout: "vertical",
-            cornerRadius: "12px",
-            paddingAll: "12px",
-            backgroundColor: "#F6EFE4",
-            contents: [
-              {
-                type: "text",
-                text: "受信メッセージ",
-                size: "xs",
-                color: "#7A7165"
-              },
-              {
-                type: "text",
-                text: userText || "学習を始める",
-                wrap: true,
-                size: "sm",
-                weight: "bold",
-                color: "#1C1B18",
-                margin: "sm"
-              }
-            ]
           }
         ]
       },
       footer: {
         type: "box",
         layout: "vertical",
-        spacing: "sm",
         contents: [
           {
             type: "button",
             style: "primary",
-            color: "#17624A",
+            color: ACCENT,
             action: {
               type: "uri",
               label: mode.buttonLabel,
-              uri: destinationUrl
+              uri: mode.url
             }
           }
         ]
@@ -117,13 +121,52 @@ var LineMessageBuilder = (function () {
     };
   }
 
+  // 押したらそのまま返事が来る操作だけ（13個まで・ラベル20字まで）
+  function buildQuickReply_(isAdmin) {
+    var items = [
+      { label: "📚 5問を解く", text: "5問" },
+      { label: "📈 今日の記録", text: "記録" },
+      { label: "❓ 使い方", text: "ヘルプ" },
+      { label: "💬 導入の相談", text: "導入相談" }
+    ];
+    if (isAdmin) {
+      items.push({ label: "📊 学習者の一覧", text: "管理" });
+    }
+
+    return {
+      items: items.map(function (item) {
+        return {
+          type: "action",
+          action: {
+            type: "message",
+            label: item.label,
+            text: item.text
+          }
+        };
+      })
+    };
+  }
+
+  function isAdmin_(config, event) {
+    var userId = event && event.source && event.source.userId ? event.source.userId : "";
+    return !!(userId && config.systemAdminLineUserId && userId === config.systemAdminLineUserId);
+  }
+
   function buildLiffUrl_(config, params) {
     if (config.liffId) {
-      var baseUrl = "https://liff.line.me/" + config.liffId;
-      return appendParams_(baseUrl, params);
+      return appendParams_("https://liff.line.me/" + config.liffId, params);
     }
 
     return appendParams_(buildAppUrl_(config.appBaseUrl, "learn.html"), params);
+  }
+
+  // 管理の画面は LIFF ではなく公開ページ。APP_BASE_URL が見本のままなら、学習画面の入口にする
+  function buildAdminUrl_(config) {
+    var base = String(config.appBaseUrl || "");
+    if (!base || /example\.github\.io/.test(base)) {
+      return buildLiffUrl_(config, { entry: "admin" });
+    }
+    return buildAppUrl_(base, "admin.html");
   }
 
   function buildAppUrl_(baseUrl, path) {
@@ -157,70 +200,70 @@ var LineMessageBuilder = (function () {
     return event.message.text || "";
   }
 
-  function resolveMode_(config, userText) {
+  function resolveMode_(config, userText, isAdmin) {
     var normalized = String(userText || "").trim();
 
     if (/ヘルプ|使い方|はじめかた|初め方|案内/.test(normalized)) {
       return {
-        altText: "使い方を見る",
+        altText: "使い方の案内です",
+        category: "使い方",
         title: "はじめての方へ",
-        subtitle: "まずは流れを確認",
-        body: "まずは使い方を確認してから、個人で5問体験を始められます。導入相談の窓口もこちらから案内します。",
-        buttonLabel: "学習画面を開く",
-        url: buildLiffUrl_(config, { entry: "help" }),
-        followUpText: "LINEアプリ内の学習画面から、使い方を確認できます。"
+        body: "① 下のボタンで、今日の5問を開く\n② 答えると、すぐ答え合わせ\n③ 5問おわったら、結果を LINE で送れる",
+        buttonLabel: "📚 5問を解く",
+        url: buildLiffUrl_(config, { entry: "help" })
       };
     }
 
     if (/導入|有料|料金|契約|相談|法人|申し込み|申込/.test(normalized)) {
       return {
-        altText: "導入相談を見る",
-        title: "導入相談",
-        subtitle: "個人利用の先へ進みたい方へ",
-        body: "まずは個人で5問体験を試し、その後に有料プランや組織導入の相談へ進めます。",
-        buttonLabel: "学習画面を開く",
-        url: buildLiffUrl_(config, { entry: "plans" }),
-        followUpText: "LINEアプリ内の学習画面から、導入相談の入口を開けます。"
+        altText: "導入の相談の案内です",
+        category: "導入の相談",
+        title: "まずは5問を試してね",
+        body: "続けて使いたいときは、有料プランや学校・会社での導入を相談できます。",
+        buttonLabel: "📚 5問を試す",
+        url: buildLiffUrl_(config, { entry: "plans" })
       };
     }
 
-    if (/管理|一覧|学習者/.test(normalized)) {
+    // 管理者だけの案内。ふつうの人には出さない（下の「5問」の案内になる）
+    if (isAdmin && /管理|一覧|学習者/.test(normalized)) {
       return {
-        altText: "管理画面を開く",
-        title: "管理メニュー",
-        subtitle: "学習者の進み具合を確認",
-        body: "管理画面から学習者一覧や最近の進捗を確認できます。",
-        buttonLabel: "学習画面を開く",
-        url: buildLiffUrl_(config, { entry: "admin" }),
-        followUpText: "LINEアプリ内の学習画面から、学習者の進み具合を確認できます。"
+        altText: "学習者の進み具合を開く",
+        category: "管理者だけ",
+        title: "学習者の進み具合",
+        body: "だれが、どれだけ解いたかを見られます。",
+        buttonLabel: "📊 一覧を開く",
+        url: buildAdminUrl_(config)
       };
     }
 
     if (/履歴|記録|成績/.test(normalized)) {
       return {
-        altText: "学習を再開する",
-        title: "学習履歴",
-        subtitle: "前回までの学習を確認",
-        body: "学習履歴や正答率を確認できます。続きから学習したいときもここから開けます。",
-        buttonLabel: "学習を開く",
-        url: buildLiffUrl_(config, { entry: "history" }),
-        followUpText: "LINEアプリ内の学習画面から、学習履歴や続きの学習を開けます。"
+        altText: "今日の記録を開く",
+        category: "記録",
+        title: "今日の進み具合",
+        body: "今日の5問の、答えた数と答え合わせを見られます。続きからも解けます。",
+        buttonLabel: "📈 記録を見る",
+        url: buildLiffUrl_(config, { entry: "history" })
       };
     }
 
     return {
-      altText: "LearningPlatform を開く",
-      title: "5問体験",
-      subtitle: "まずは個人で試す",
-      body: "学習画面を開いて、まずは5問体験を始められます。今日の学習や履歴の確認もここから進められます。",
-      buttonLabel: "5問体験を始める",
-      url: buildLiffUrl_(config, { entry: "start" }),
-      followUpText: "LINEアプリ内で、個人の5問体験を始められます。"
+      altText: "今日の5問を開く",
+      category: "今日の5問",
+      title: "今日の5問を解こう",
+      body: "1問ずつ答えて、すぐ答え合わせ。5問で数分です。",
+      buttonLabel: "📚 5問を解く",
+      url: buildLiffUrl_(config, { entry: "start" })
     };
   }
 
   return {
     buildReplyMessages: buildReplyMessages,
-    buildFollowMessages: buildFollowMessages
+    buildFollowMessages: buildFollowMessages,
+    toTextFallback: toTextFallback,
+    toSendable: function (messages) {
+      return (messages || []).map(stripFallbackText_);
+    }
   };
 })();

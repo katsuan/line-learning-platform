@@ -98,3 +98,19 @@ LINE webhook の場合は `events` 配列を検出して自動で webhook 処理
 - `LINE_CHANNEL_ACCESS_TOKEN`
 - `LIFF_ID`
 - `APP_BASE_URL`
+
+返事は1通のカードにまとめ、次の操作をクイックリプライで出す（「5問」「記録」「ヘルプ」「導入相談」）。
+
+- `SYSTEM_ADMIN_LINE_USER_ID` の人にだけ、「管理」と送ったときに学習者の一覧（`APP_BASE_URL` の `admin.html`）への案内と、クイックリプライの「📊 学習者の一覧」を出す。ほかの人には出さない
+- カードを LINE が受けつけなかったときは、同じ中身を文字だけで返す。原因は Script Properties の `LAST_LINE_ERRORS`（新しい順に5件）に残る
+
+## テスト
+
+ボットの返事の形（1通のカード・クイックリプライの数と長さ・管理者だけの案内・文字だけの返事）を、GAS の外で確かめる。
+
+```bash
+node --test services/gas/test
+```
+
+`src` の中身を全部つなげて、偽物の `PropertiesService`・`UrlFetchApp` の上で動かす。画面（`docs`）と LINE アプリの中の動きは、手で確かめる。
+

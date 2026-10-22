@@ -1,10 +1,17 @@
 var ScriptConfig = (function () {
+  // 1回の呼び出しの中では、Script Properties をまとめて1回だけ読む
+  var memo_ = null;
+
   function get_(key) {
-    return PropertiesService.getScriptProperties().getProperty(key);
+    if (!memo_) {
+      memo_ = PropertiesService.getScriptProperties().getProperties() || {};
+    }
+    return memo_[key] === undefined ? null : memo_[key];
   }
 
   function setProperties(properties) {
     PropertiesService.getScriptProperties().setProperties(properties, false);
+    memo_ = null;
   }
 
   function getRequiredSetupConfig() {
