@@ -1,8 +1,8 @@
 var AdminLearnerListUsecase = (function () {
   function execute(request) {
-    var me = MeUsecase.execute(request);
+    var access = AdminAccess.requireAdmin(request);
     var memberships = SpreadsheetGateway.readObjects(DomainConstants.SHEETS.MEMBERSHIPS).filter(function (row) {
-      return row.tenant_id === me.tenant.tenant_id && row.status === DomainConstants.MEMBERSHIP_STATUS.ACTIVE;
+      return row.tenant_id === access.tenant.tenant_id && row.status === DomainConstants.MEMBERSHIP_STATUS.ACTIVE;
     });
 
     return {

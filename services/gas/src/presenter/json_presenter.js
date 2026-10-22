@@ -8,7 +8,9 @@ var JsonPresenter = (function () {
     var body = {
       error: {
         code: error && error.code ? error.code : "internal_error",
-        message: error && error.message ? error.message : "Unexpected error"
+        message: error && error.message ? error.message : "Unexpected error",
+        // GAS の Web アプリは HTTP の番号を変えられないので、本文に入れる
+        status: status
       }
     };
     return create_(status, body);

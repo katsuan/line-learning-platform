@@ -95,6 +95,11 @@
         font-size: 20px;
       }
 
+      /* 管理者でないときは、一覧ごと隠す（display: grid より強く） */
+      [hidden] {
+        display: none !important;
+      }
+
       @media (max-width: 360px) {
         .stats {
           grid-template-columns: 1fr;
@@ -110,13 +115,15 @@
       </header>
       <p class="ls-brand-copy">だれが、どれだけ解いたかを見られます</p>
 
-      <section class="stats" aria-label="まとめ">
+      <section id="gatePanel" class="ls-panel" hidden aria-live="polite"></section>
+
+      <section id="statsPanel" class="stats" aria-label="まとめ">
         <div class="stat"><span class="stat-label">学習者</span><span id="learnerCount" class="stat-value">—</span></div>
         <div class="stat"><span class="stat-label">答えた数</span><span id="totalAnswered" class="stat-value">—</span></div>
         <div class="stat"><span class="stat-label">平均の正答率</span><span id="averageAccuracy" class="stat-value">—</span></div>
       </section>
 
-      <div class="layout">
+      <div id="layoutPanel" class="layout">
         <section class="ls-panel" aria-labelledby="listTitle">
           <h2 id="listTitle" class="ls-panel-title">👥 学習者</h2>
           <div id="learnerList" class="ls-list"></div>
@@ -136,6 +143,7 @@
       </details>
     </main>
 
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="./config.js"></script>
     <script>
       (function () {
@@ -147,8 +155,15 @@
           selectedMembershipId: "",
           selectedLearner: null,
           loadingDetail: false,
-          detailFailed: false
+          detailFailed: false,
+          // 管理者かどうか："checking" → "ok" / "login" / "denied" / "liff_failed"
+          access: "checking",
+          idToken: ""
         };
+
+        var gatePanelEl = document.getElementById("gatePanel");
+        var statsPanelEl = document.getElementById("statsPanel");
+        var layoutPanelEl = document.getElementById("layoutPanel");
 
         var learnerCountEl = document.getElementById("learnerCount");
         var totalAnsweredEl = document.getElementById("totalAnswered");
@@ -165,7 +180,114 @@
         }
 
         refreshButtonEl.addEventListener("click", loadLearners_);
-        loadLearners_();
+        initializeLiff_().then(function (ready) {
+          if (ready) {
+            loadLearners_();
+          }
+        });
+
+        // ---- ログイン（管理の API は、LINE の ID トークンがないと断られる） ----
+
+        function initializeLiff_() {
+          var liffId = config.adminLiffId || config.liffId;
+          if (!liffId || !window.liff) {
+            setAccess_("liff_failed");
+            return Promise.resolve(false);
+          }
+
+          return window.liff.init({ liffId: liffId })
+            .then(function () {
+              state.idToken = window.liff.isLoggedIn() ? (window.liff.getIDToken() || "") : "";
+              if (!state.idToken) {
+                setAccess_("login");
+                return false;
+              }
+              return true;
+            })
+            .catch(function (error) {
+              setAccess_("liff_failed");
+              renderResponse_({ liff: error && error.message ? error.message : String(error) });
+              return false;
+            });
+        }
+
+        function login_() {
+          if (!window.liff || !window.liff.login) {
+            return;
+          }
+          // ちがうアカウントに替えるときは、いったんログアウトする（LINE アプリの中ではできない）
+          if (window.liff.isLoggedIn() && !window.liff.isInClient()) {
+            window.liff.logout();
+          }
+          window.liff.login({ redirectUri: window.location.href });
+        }
+
+        function setAccess_(access) {
+          state.access = access;
+          var open = access === "ok" || access === "checking";
+          gatePanelEl.hidden = open;
+          statsPanelEl.hidden = !open;
+          layoutPanelEl.hidden = !open;
+          refreshButtonEl.hidden = !open;
+          if (open) {
+            gatePanelEl.innerHTML = "";
+            return;
+          }
+
+          var gate = {
+            denied: {
+              icon: "🔒",
+              title: "管理者だけが見られます",
+              text: "この LINE のアカウントは、管理者として登録されていません。<br>ちがうアカウントなら、ログインし直してください。",
+              button: "🔑 ちがうアカウントでログイン",
+              primary: false
+            },
+            login: {
+              icon: "🔑",
+              title: "管理者だけが見られます",
+              text: "LINE でログインすると、管理者かどうかを確かめます。",
+              button: "LINE でログイン",
+              primary: true
+            },
+            liff_failed: {
+              icon: "📶",
+              title: "LINE のログインを始められませんでした",
+              text: "時間をおいて、もう一度開いてください。",
+              button: "🔄 もう一度",
+              primary: true
+            }
+          }[access];
+
+          gatePanelEl.innerHTML = [
+            '<div class="ls-empty">',
+            '  <span class="ls-empty-icon" aria-hidden="true">' + gate.icon + '</span>',
+            '  <strong>' + gate.title + '</strong>',
+            '  <span>' + gate.text + '</span>',
+            '  <button id="gateButton" class="ls-button' + (gate.primary ? ' is-primary' : '') + '" type="button">' + gate.button + '</button>',
+            '</div>'
+          ].join("");
+          document.getElementById("gateButton").addEventListener("click", function () {
+            if (access === "liff_failed") {
+              window.location.reload();
+            } else {
+              login_();
+            }
+          });
+        }
+
+        // 断られたときは、一覧ではなく案内を出す
+        function handleAccessError_(error) {
+          var code = error && error.error ? error.error.code : "";
+          if (code === "admin_only") {
+            setAccess_("denied");
+            return true;
+          }
+          if (code === "admin_login_required") {
+            setAccess_("login");
+            return true;
+          }
+          return false;
+        }
 
         function loadLearners_() {
           if (state.loadingList) {
@@ -182,6 +304,7 @@
           requestJson_(config.adminLearnersAction || "listAdminLearners")
             .then(function (payload) {
               state.loadingList = false;
+              setAccess_("ok");
               state.learners = payload.learners || [];
               var stillThere = state.learners.some(function (learner) {
                 return learner.membershipId === state.selectedMembershipId;
@@ -201,10 +324,13 @@
             })
             .catch(function (error) {
               state.loadingList = false;
+              renderResponse_(error);
+              if (handleAccessError_(error)) {
+                return;
+              }
               state.listFailed = true;
               renderLearnerList_();
               renderLearnerDetail_();
-              renderResponse_(error);
             })
             .then(function () {
               refreshButtonEl.disabled = false;
@@ -233,9 +359,12 @@
                 return;
               }
               state.loadingDetail = false;
+              renderResponse_(error);
+              if (handleAccessError_(error)) {
+                return;
+              }
               state.detailFailed = true;
               renderLearnerDetail_();
-              renderResponse_(error);
             });
         }
 
@@ -245,14 +374,17 @@
           if (config.tenantId) {
             url.searchParams.set("tenantId", config.tenantId);
           }
-          Object.keys(extraParams || {}).forEach(function (key) {
-            url.searchParams.set(key, extraParams[key]);
-          });
 
+          // ID トークンは URL に入れず、本文で送る（本文は text/plain なので、事前の確認なしで届く）
           return fetch(url.toString(), {
-            method: "GET",
+            method: "POST",
             mode: "cors",
-            headers: { "Accept": "application/json" }
+            headers: { "Accept": "application/json" },
+            body: JSON.stringify(Object.assign({}, extraParams || {}, {
+              action: action,
+              tenantId: config.tenantId,
+              lineIdToken: state.idToken
+            }))
           }).then(function (response) {
             return response.text().then(function (text) {
               var payload;

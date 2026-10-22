@@ -1,6 +1,6 @@
 var AdminLearnerDetailUsecase = (function () {
   function execute(request) {
-    var me = MeUsecase.execute(request);
+    var access = AdminAccess.requireAdmin(request);
     var membershipId = request.params.membershipId || (request.body && request.body.membershipId);
 
     if (!membershipId) {
@@ -8,7 +8,7 @@ var AdminLearnerDetailUsecase = (function () {
     }
 
     var membership = MembershipSheetRepository.findByMembershipId(membershipId);
-    if (!membership || membership.tenant_id !== me.tenant.tenant_id) {
+    if (!membership || membership.tenant_id !== access.tenant.tenant_id) {
       throw AppError.notFound("membership_not_found", "learner membership was not found");
     }
 
