@@ -19,6 +19,8 @@ var Q_SELF_CHECK = {
     debug_logs: ["log_id", "request_id"]
   },
   lineTokenProperty: "LINE_CHANNEL_ACCESS_TOKEN",
+  // debug_logs の古い行を消す仕事が、26 時間以内に動いたか
+  heartbeats: { cleanupOldDebugLogs: 1560 },
   // ボットの返事のカード（ふつうの人・管理者）が、LINE に受けつけられる形か
   cards: function () {
     var texts = ["5問", "記録", "ヘルプ", "導入相談"];

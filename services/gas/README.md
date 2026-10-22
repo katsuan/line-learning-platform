@@ -103,6 +103,14 @@ LearningPlatform MVP のバックエンド実装本体です。
 - 何も書きこまず、LINE にも送らない（カードは LINE の「確かめるだけ」の API に渡す）
 - `src/setup/selfcheck.js` は、q-oqrn の `tools/qtest/selfcheck.gs` を写したもの
 
+## debug_logs の古い行を消す
+
+`debug_logs` は、`DEBUG_LOG_KEEP_DAYS`（Script Properties。なければ 30）日より古い行を、毎日1回消す。どれもこのリポジトリの GAS（ライブラリのほう）のエディタで動かす。
+
+- `installDebugLogCleanupTrigger`：毎日 4 時ごろに `cleanupOldDebugLogs` が動くトリガーを作る。**最初に GAS エディタで一度動かす**（何度動かしても1つだけ）
+- `cleanupOldDebugLogs`：古い行を消す（トリガーで動く）。動いた時刻を残すので、`qCheckAll` で 26 時間以内に動いたかを見られる
+- `purgeLegacyDebugLogs`：LINE のユーザー ID や送られた文がそのまま入った、前の形の行を消す。一度だけ動かす。消した行の数が実行ログに出る
+
 ## LINE webhook
 
 `doPost` は次の 2 系統を受ける。
