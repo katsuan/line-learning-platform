@@ -14,8 +14,21 @@ var LineWebhookRouter = (function () {
 
   function handle(e) {
     var body = JSON.parse(e.postData.contents);
+    // 1つの知らせで失敗しても、同じ便のほかの知らせには返事する
     var results = (body.events || []).map(function (event) {
-      return LineWebhookUsecase.handleEvent(event);
+      try {
+        return LineWebhookUsecase.handleEvent(event);
+      } catch (error) {
+        DebugLogger.logInfo("line_event_failed", {
+          eventType: event && event.type ? event.type : "",
+          code: error && error.code ? error.code : "internal_error"
+        });
+        return {
+          handled: false,
+          eventType: event && event.type ? event.type : "",
+          reason: "error"
+        };
+      }
     });
 
     return {

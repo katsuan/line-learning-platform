@@ -78,6 +78,14 @@ var LineWebhookUsecase = (function () {
         code: error && error.code ? error.code : "",
         message: error && error.message ? error.message : String(error)
       });
+      // LINE の送りなおし（isRedelivery）は、前の回で返事が届いているかもしれないので、push で重ねない
+      if (isRedelivery_(event)) {
+        return {
+          handled: false,
+          eventType: event.type,
+          reason: "reply_failed_redelivery"
+        };
+      }
       var fallback = LineMessageBuilder.toTextFallback(messages);
       var to = pushTarget_(event);
       if (!to) {
@@ -95,6 +103,10 @@ var LineWebhookUsecase = (function () {
         reason: "text_fallback"
       };
     }
+  }
+
+  function isRedelivery_(event) {
+    return !!(event.deliveryContext && event.deliveryContext.isRedelivery);
   }
 
   function pushTarget_(event) {

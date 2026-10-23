@@ -125,14 +125,26 @@ var QuestionGradingConfigSheetRepository = (function () {
 })();
 
 var LearningSessionSheetRepository = (function () {
+  // business_date はシートで日付に変わるので、いつも yyyy-MM-dd にそろえて返す
+  function listAll_() {
+    return SpreadsheetGateway.readObjects(DomainConstants.SHEETS.LEARNING_SESSIONS).map(function (row) {
+      if (typeof row.business_date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(row.business_date)) {
+        return row;
+      }
+      var copy = Object.assign({}, row);
+      copy.business_date = DatePolicy.toBusinessDate(row.business_date);
+      return copy;
+    });
+  }
+
   function listByMembershipId(membershipId) {
-    return SpreadsheetGateway.readObjects(DomainConstants.SHEETS.LEARNING_SESSIONS).filter(function (row) {
+    return listAll_().filter(function (row) {
       return row.membership_id === membershipId;
     });
   }
 
   function findByLearningSessionId(learningSessionId) {
-    return SpreadsheetGateway.readObjects(DomainConstants.SHEETS.LEARNING_SESSIONS).find(function (row) {
+    return listAll_().find(function (row) {
       return row.learning_session_id === learningSessionId;
     }) || null;
   }
