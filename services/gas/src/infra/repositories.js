@@ -5,8 +5,24 @@ var TenantSheetRepository = (function () {
     }) || null;
   }
 
+  // 呼び出しの教室（URL の tenantId → body の tenantId → DEFAULT_TENANT_ID）。教室に入っているかは、呼ぶ側で確かめる
+  function requireForRequest(request) {
+    var body = request.body || {};
+    var params = request.params || {};
+    var tenantId = InputLimits.id(params.tenantId || body.tenantId || ScriptConfig.getPublicConfig().defaultTenantId);
+    if (!tenantId) {
+      throw AppError.validation("missing_tenant", "tenantId or DEFAULT_TENANT_ID is required");
+    }
+    var tenant = findByTenantId(tenantId);
+    if (!tenant) {
+      throw AppError.notFound("tenant_not_found", "tenant was not found");
+    }
+    return tenant;
+  }
+
   return {
-    findByTenantId: findByTenantId
+    findByTenantId: findByTenantId,
+    requireForRequest: requireForRequest
   };
 })();
 
@@ -36,12 +52,6 @@ var UserSheetRepository = (function () {
 })();
 
 var MembershipSheetRepository = (function () {
-  function findFirstActiveByTenantId(tenantId) {
-    return SpreadsheetGateway.readObjects(DomainConstants.SHEETS.MEMBERSHIPS).find(function (row) {
-      return row.tenant_id === tenantId && row.status === DomainConstants.MEMBERSHIP_STATUS.ACTIVE;
-    }) || null;
-  }
-
   function findByMembershipId(membershipId) {
     return SpreadsheetGateway.readObjects(DomainConstants.SHEETS.MEMBERSHIPS).find(function (row) {
       return row.membership_id === membershipId;
@@ -62,7 +72,6 @@ var MembershipSheetRepository = (function () {
   }
 
   return {
-    findFirstActiveByTenantId: findFirstActiveByTenantId,
     findByMembershipId: findByMembershipId,
     findFirstActiveByTenantIdAndUserId: findFirstActiveByTenantIdAndUserId,
     append: append
@@ -78,18 +87,6 @@ var FeatureEntitlementSheetRepository = (function () {
 
   return {
     listByTenantId: listByTenantId
-  };
-})();
-
-var CourseSheetRepository = (function () {
-  function listActiveByTenantId(tenantId) {
-    return SpreadsheetGateway.readObjects(DomainConstants.SHEETS.COURSES).filter(function (row) {
-      return row.tenant_id === tenantId && row.status === "ACTIVE";
-    });
-  }
-
-  return {
-    listActiveByTenantId: listActiveByTenantId
   };
 })();
 

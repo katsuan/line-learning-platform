@@ -1,5 +1,20 @@
 var LineMessageBuilder = (function () {
   var ACCENT = "#17624A";
+  // 返事をする言葉。どれにも当たらない言葉には返事しない（LineWebhookUsecase）
+  var KEYWORDS = {
+    help: /ヘルプ|使い方|はじめかた|初め方|案内/,
+    plans: /導入|有料|料金|契約|相談|法人|申し込み|申込/,
+    admin: /管理|一覧|学習者/,
+    history: /履歴|記録|成績/,
+    start: /学習|5問|メニュー/
+  };
+
+  function isReplyText(text) {
+    var normalized = String(text || "").trim();
+    return Object.keys(KEYWORDS).some(function (key) {
+      return KEYWORDS[key].test(normalized);
+    });
+  }
 
   // 返事は1通のカードにまとめ、最後のメッセージに次の操作（クイックリプライ）を付ける
   function buildReplyMessages(context) {
@@ -203,7 +218,7 @@ var LineMessageBuilder = (function () {
   function resolveMode_(config, userText, isAdmin) {
     var normalized = String(userText || "").trim();
 
-    if (/ヘルプ|使い方|はじめかた|初め方|案内/.test(normalized)) {
+    if (KEYWORDS.help.test(normalized)) {
       return {
         altText: "使い方の案内です",
         category: "使い方",
@@ -214,7 +229,7 @@ var LineMessageBuilder = (function () {
       };
     }
 
-    if (/導入|有料|料金|契約|相談|法人|申し込み|申込/.test(normalized)) {
+    if (KEYWORDS.plans.test(normalized)) {
       return {
         altText: "導入の相談の案内です",
         category: "導入の相談",
@@ -226,7 +241,7 @@ var LineMessageBuilder = (function () {
     }
 
     // 管理者だけの案内。ふつうの人には出さない（下の「5問」の案内になる）
-    if (isAdmin && /管理|一覧|学習者/.test(normalized)) {
+    if (isAdmin && KEYWORDS.admin.test(normalized)) {
       return {
         altText: "学習者の進み具合を開く",
         category: "管理者だけ",
@@ -237,7 +252,7 @@ var LineMessageBuilder = (function () {
       };
     }
 
-    if (/履歴|記録|成績/.test(normalized)) {
+    if (KEYWORDS.history.test(normalized)) {
       return {
         altText: "今日の記録を開く",
         category: "記録",
@@ -261,6 +276,7 @@ var LineMessageBuilder = (function () {
   return {
     buildReplyMessages: buildReplyMessages,
     buildFollowMessages: buildFollowMessages,
+    isReplyText: isReplyText,
     toTextFallback: toTextFallback,
     toSendable: function (messages) {
       return (messages || []).map(stripFallbackText_);

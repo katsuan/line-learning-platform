@@ -174,3 +174,15 @@ test("1回の返事で、設定は1回だけ読む（H9）", () => {
   gas.LineWebhookUsecase.handleEvent(textEvent("5問"));
   assert.equal(gas.propertyReads(), 1);
 });
+
+test("返事をする言葉と、しない言葉（言葉の一覧は1か所）", () => {
+  const replied = ["学習する", "5問", "メニュー", "ヘルプ", "はじめかた", "案内", "料金", "法人", "申込", "管理", "一覧", "学習者", "履歴", "記録", "成績"];
+  for (const text of replied) {
+    const gas = loadGas();
+    assert.equal(gas.LineWebhookUsecase.handleEvent(textEvent(text)).handled, true, text);
+  }
+  for (const text of ["こんにちは", "提出コード LPR-ABC234 学習", "  "]) {
+    const gas = loadGas();
+    assert.equal(gas.LineWebhookUsecase.handleEvent(textEvent(text)).handled, false, text);
+  }
+});

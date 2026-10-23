@@ -5,33 +5,9 @@ var AdminAccess = (function () {
   var ADMIN_ROLES = ["ADMIN", "OWNER"];
 
   function requireAdmin(request) {
-    var body = request.body || {};
-    var idToken = body.lineIdToken || "";
-    if (!idToken) {
-      throw AppError.forbidden("admin_login_required", "LINE login is required for admin actions");
-    }
-
-    var identity;
-    try {
-      identity = LineIdentityVerifier.verifyIdToken(idToken);
-    } catch (error) {
-      // 期限切れなど。画面ではログインし直してもらう
-      throw AppError.forbidden("admin_login_required", "LINE idToken could not be verified");
-    }
-    var lineUserId = identity && identity.sub ? String(identity.sub) : "";
-    if (!lineUserId) {
-      throw AppError.forbidden("admin_login_required", "LINE idToken has no user");
-    }
-
-    var config = ScriptConfig.getPublicConfig();
-    var tenantId = body.tenantId || request.params.tenantId || config.defaultTenantId;
-    if (!tenantId) {
-      throw AppError.validation("missing_tenant", "tenantId or DEFAULT_TENANT_ID is required");
-    }
-    var tenant = TenantSheetRepository.findByTenantId(tenantId);
-    if (!tenant) {
-      throw AppError.notFound("tenant_not_found", "tenant was not found");
-    }
+    var lineUserId = LineIdentityVerifier.requireIdentity(request.body, "admin_login_required").sub;
+    var tenant = TenantSheetRepository.requireForRequest(request);
+    var tenantId = tenant.tenant_id;
 
     var systemAdminId = ScriptConfig.getLineMessagingConfig().systemAdminLineUserId;
     if (systemAdminId && systemAdminId === lineUserId) {

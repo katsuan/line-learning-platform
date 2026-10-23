@@ -127,6 +127,6 @@ var LineWebhookUsecase = (function () {
       return true;
     }
 
-    return !/(学習|学習する|5問|ヘルプ|使い方|はじめかた|初め方|案内|導入|有料|料金|契約|相談|法人|申し込み|申込|管理|一覧|学習者|履歴|記録|成績|メニュー)/.test(messageText);
+    return !LineMessageBuilder.isReplyText(messageText);
   }
 })();

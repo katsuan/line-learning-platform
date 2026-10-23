@@ -61,12 +61,7 @@ var SpreadsheetGateway = (function () {
 
     var sheet = getSheet(sheetName);
     var headers = getHeaders_(sheetName);
-    var rows = records.map(function (record) {
-      return headers.map(function (header) {
-        // 外から来た文字が = + - @ で始まっても、式として動かないようにする
-        return record[header] !== undefined ? safeCell(record[header]) : "";
-      });
-    });
+    var rows = toRows_(headers, records);
 
     sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, headers.length).setValues(rows);
     invalidateSheetCache_(sheetName);
@@ -85,15 +80,19 @@ var SpreadsheetGateway = (function () {
       return;
     }
 
-    var rows = records.map(function (record) {
+    var rows = toRows_(headers, records);
+
+    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+    invalidateSheetCache_(sheetName);
+  }
+
+  function toRows_(headers, records) {
+    return records.map(function (record) {
       return headers.map(function (header) {
         // 外から来た文字が = + - @ で始まっても、式として動かないようにする
         return record[header] !== undefined ? safeCell(record[header]) : "";
       });
     });
-
-    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
-    invalidateSheetCache_(sheetName);
   }
 
   function hasAnyValue_(row) {

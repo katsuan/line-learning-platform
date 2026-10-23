@@ -36,6 +36,27 @@ var LineIdentityVerifier = (function () {
     return payload;
   }
 
+  // 呼び出しの body の lineIdToken を確かめて、LINE の本人（sub など）を返す。
+  // トークンがない・期限切れ・確かめられないときは、どれも errorCode で断る（画面ではログインし直してもらう）
+  function requireIdentity(body, errorCode) {
+    var idToken = (body && body.lineIdToken) || "";
+    if (!idToken) {
+      throw AppError.forbidden(errorCode, "LINE login is required");
+    }
+
+    var identity;
+    try {
+      identity = verifyIdToken(idToken);
+    } catch (error) {
+      throw AppError.forbidden(errorCode, "LINE idToken could not be verified");
+    }
+    if (!identity || !identity.sub) {
+      throw AppError.forbidden(errorCode, "LINE idToken has no user");
+    }
+    identity.sub = String(identity.sub);
+    return identity;
+  }
+
   function resolveClientId_(config) {
     if (config.lineLoginChannelId) {
       return config.lineLoginChannelId;
@@ -57,6 +78,7 @@ var LineIdentityVerifier = (function () {
   }
 
   return {
-    verifyIdToken: verifyIdToken
+    verifyIdToken: verifyIdToken,
+    requireIdentity: requireIdentity
   };
 })();

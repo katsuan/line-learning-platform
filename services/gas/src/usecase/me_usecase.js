@@ -4,19 +4,10 @@
 var MeUsecase = (function () {
   function execute(request) {
     var config = ScriptConfig.getPublicConfig();
-    var body = request.body || {};
-    var tenantId = InputLimits.id(request.params.tenantId || body.tenantId || config.defaultTenantId);
-    var verifiedIdentity = resolveVerifiedLineIdentity_(request);
-    var lineUserId = String(verifiedIdentity.sub);
-
-    if (!tenantId) {
-      throw AppError.validation("missing_tenant", "tenantId or DEFAULT_TENANT_ID is required");
-    }
-
-    var tenant = TenantSheetRepository.findByTenantId(tenantId);
-    if (!tenant) {
-      throw AppError.notFound("tenant_not_found", "tenant was not found");
-    }
+    var verifiedIdentity = LineIdentityVerifier.requireIdentity(request.body, "login_required");
+    var lineUserId = verifiedIdentity.sub;
+    var tenant = TenantSheetRepository.requireForRequest(request);
+    var tenantId = tenant.tenant_id;
 
     var resolved = resolveMembershipContext_(tenantId, lineUserId, request, config, verifiedIdentity);
     var entitlements = FeatureEntitlementSheetRepository.listByTenantId(tenantId);
@@ -61,26 +52,6 @@ var MeUsecase = (function () {
       user: user,
       membership: membership
     };
-  }
-
-  function resolveVerifiedLineIdentity_(request) {
-    var body = request.body || {};
-    var idToken = body.lineIdToken || "";
-    if (!idToken) {
-      throw AppError.forbidden("login_required", "LINE login is required");
-    }
-
-    var identity;
-    try {
-      identity = LineIdentityVerifier.verifyIdToken(idToken);
-    } catch (error) {
-      // 期限切れなど。画面ではログインし直してもらう
-      throw AppError.forbidden("login_required", "LINE idToken could not be verified");
-    }
-    if (!identity || !identity.sub) {
-      throw AppError.forbidden("login_required", "LINE idToken has no user");
-    }
-    return identity;
   }
 
   function provisionUserFromLine_(lineUserId, request, verifiedIdentity) {
