@@ -318,6 +318,26 @@
 
       .talk-card-code {
         grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .talk-card-code > span:first-child {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .talk-card-body .talk-card-pill {
+        flex: none;
+        padding: 4px 12px;
+        border: 1px solid #17624a;
+        border-radius: 999px;
+        background: #ffffff;
+        color: #17624a;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
       }
 
       .talk-card-actions {
@@ -1216,9 +1236,10 @@
             '    <div class="talk-card-body">',
             '      <div><small>演習数</small><b>' + total + '問</b></div>',
             '      <div><small>正答率</small><b>' + accuracy + '%</b></div>',
-            '      <div class="talk-card-code"><small>提出コード</small><b>' + escapeHtml_(receipt && receipt.receiptCode ? receipt.receiptCode : "送るときに作ります") + '</b></div>',
+            '      <div class="talk-card-code"><span><small>提出コード</small><b>' + escapeHtml_(receipt && receipt.receiptCode ? receipt.receiptCode : "送るときに作ります") + '</b></span>' +
+              (receipt && receipt.receiptCode ? '<span class="talk-card-pill">📋 コピー</span>' : '') + '</div>',
             '    </div>',
-            '    <div class="talk-card-actions"><span class="is-primary">📚 5問をやってみる</span><span>提出コードをコピー</span></div>',
+            '    <div class="talk-card-actions"><span class="is-primary">📚 5問をやってみる</span></div>',
             '  </div>',
             '</div>'
           ].join("");
@@ -1549,17 +1570,7 @@
                     buildStatBox_("正答率", String(accuracyRate) + "%")
                   ]
                 },
-                {
-                  type: "box",
-                  layout: "vertical",
-                  backgroundColor: "#F6EFE4",
-                  cornerRadius: "12px",
-                  paddingAll: "12px",
-                  contents: [
-                    { type: "text", text: "提出コード", size: "xs", color: "#7A7165" },
-                    { type: "text", text: receiptCode, size: "xl", weight: "bold", color: "#1C1B18", margin: "sm" }
-                  ]
-                },
+                buildReceiptCodeRow_(receiptCode, !!(receipt && receipt.receiptCode)),
                 { type: "text", text: "くわしい結果は、提出コードで管理者が確かめます。", size: "xs", wrap: true, color: "#7A7165" }
               ]
             },
@@ -1573,15 +1584,60 @@
                   style: "primary",
                   color: "#17624A",
                   action: { type: "uri", label: "📚 5問をやってみる", uri: buildLiffUrl_({ entry: "shared-result" }) }
-                },
-                {
-                  type: "button",
-                  style: "secondary",
-                  action: { type: "clipboard", label: "提出コードをコピー", clipboardText: receiptCode }
                 }
               ]
             }
           };
+        }
+
+        // 提出コードの行。コードがあるときだけ、行の右端に丸いコピーのボタン
+        function buildReceiptCodeRow_(receiptCode, canCopy) {
+          var row = {
+            type: "box",
+            layout: "horizontal",
+            backgroundColor: "#F6EFE4",
+            cornerRadius: "12px",
+            paddingAll: "12px",
+            spacing: "sm",
+            contents: [
+              {
+                type: "box",
+                layout: "vertical",
+                flex: 1,
+                contents: [
+                  { type: "text", text: "提出コード", size: "xs", color: "#7A7165" },
+                  { type: "text", text: receiptCode, size: "xl", weight: "bold", color: "#1C1B18", margin: "sm" }
+                ]
+              }
+            ]
+          };
+          if (canCopy) {
+            row.contents.push({
+              type: "box",
+              layout: "vertical",
+              flex: 0,
+              justifyContent: "center",
+              contents: [
+                {
+                  type: "box",
+                  layout: "vertical",
+                  cornerRadius: "xxl",
+                  borderWidth: "1px",
+                  borderColor: "#17624A",
+                  backgroundColor: "#FFFFFF",
+                  paddingTop: "6px",
+                  paddingBottom: "6px",
+                  paddingStart: "12px",
+                  paddingEnd: "12px",
+                  action: { type: "clipboard", label: "コピー", clipboardText: receiptCode },
+                  contents: [
+                    { type: "text", text: "📋 コピー", size: "xs", weight: "bold", color: "#17624A", align: "center" }
+                  ]
+                }
+              ]
+            });
+          }
+          return row;
         }
 
         function buildStatBox_(label, value) {
