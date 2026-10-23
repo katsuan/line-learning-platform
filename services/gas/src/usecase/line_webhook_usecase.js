@@ -62,7 +62,8 @@ var LineWebhookUsecase = (function () {
     return replyWithFallback_(event, messages);
   }
 
-  // カードが通らないときは黙らず、文字だけで返す。原因は管理者が見られるところ（LAST_LINE_ERRORS）に残す
+  // カードが通らないときは黙らず、文字だけで返す。原因は管理者が見られるところ（LAST_LINE_ERRORS）に残す。
+  // 返事の合図（reply token）は1回しか使えないので、返しなおしは push で送る（1回の操作につき1回だけ）
   function replyWithFallback_(event, messages) {
     try {
       LineMessagingClient.replyMessage(event.replyToken, LineMessageBuilder.toSendable(messages));
@@ -78,7 +79,15 @@ var LineWebhookUsecase = (function () {
         message: error && error.message ? error.message : String(error)
       });
       var fallback = LineMessageBuilder.toTextFallback(messages);
-      LineMessagingClient.replyMessage(event.replyToken, fallback);
+      var to = pushTarget_(event);
+      if (!to) {
+        return {
+          handled: false,
+          eventType: event.type,
+          reason: "reply_failed_no_push_target"
+        };
+      }
+      LineMessagingClient.pushMessage(to, fallback);
       return {
         handled: true,
         eventType: event.type,
@@ -86,6 +95,11 @@ var LineWebhookUsecase = (function () {
         reason: "text_fallback"
       };
     }
+  }
+
+  function pushTarget_(event) {
+    var source = event.source || {};
+    return source.groupId || source.roomId || source.userId || "";
   }
 
   return {

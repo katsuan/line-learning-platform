@@ -156,6 +156,10 @@ test("カードが通らないときは、文字だけで返して原因を残�
   const result = gas.LineWebhookUsecase.handleEvent(textEvent("5問"));
   assert.equal(result.reason, "text_fallback");
   assert.equal(gas.sent.length, 2);
+  // 返事の合図は1回しか使えないので、返しなおしは push
+  assert.match(gas.sent[0].url, /message\/reply$/);
+  assert.match(gas.sent[1].url, /message\/push$/);
+  assert.equal(gas.sent[1].payload.to, textEvent("5問").source.userId);
   const fallback = gas.sent[1].payload.messages[0];
   assert.equal(fallback.type, "text");
   assert.ok(fallback.text.includes("https://liff.line.me/"));

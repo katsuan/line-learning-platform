@@ -328,3 +328,46 @@ t("LINE が断ったときの中身は、呼んだ人に返さない（原因は
   assert.doesNotMatch(JSON.stringify(res), /Invalid reply token/);
   assert.match(gas.properties.LAST_LINE_ERRORS, /Invalid reply token/);
 });
+
+t("カードが断られたら、同じ返事の合図は使いまわさず push で文字だけを返す（H5）", () => {
+  let first = true;
+  const gas = createGas({
+    dir: path.join(__dirname, "../src"),
+    properties: { SPREADSHEET_ID: "SPREADSHEET_TEST", LINE_CHANNEL_ACCESS_TOKEN: "t", DEFAULT_TENANT_ID: TENANT_A, LIFF_ID: "2011071914-test" },
+    fetch: (url) => {
+      if (/message\/reply/.test(url) && first) {
+        first = false;
+        return response(400, { message: "A message (messages[0]) in the request body is invalid" });
+      }
+      return undefined;
+    }
+  });
+  gas.call("setupLearningPlatformSheets");
+  gas.lineEvent({ type: "message", replyToken: "r1", source: { type: "user", userId: "U1" }, message: { type: "text", text: "5問" } });
+  assert.deepEqual(gas.reusedReplyTokens(), []);
+  const sent = gas.replies();
+  assert.deepEqual(sent.map((r) => r.kind), ["reply", "push"]);
+  assert.equal(sent[1].to, "U1");
+  assert.equal(sent[1].messages[0].type, "text");
+});
+
+t("カードのボタンは画面を開くものだけ。古いクイックリプライを押されても黙らない（H2）", () => {
+  const gas = make();
+  const texts = ["5問", "記録", "ヘルプ", "導入相談", "管理"];
+  for (const text of texts) {
+    gas.lineEvent({ type: "message", replyToken: "r-" + text, source: { type: "user", userId: "Ulearner1" }, message: { type: "text", text } });
+  }
+  const sent = gas.replies();
+  assert.equal(sent.length, texts.length, "どの言葉にも返事する");
+  const actions = [];
+  const walk = (node) => {
+    if (!node || typeof node !== "object") return;
+    if (node.action) actions.push(node.action);
+    Object.values(node).forEach(walk);
+  };
+  sent.forEach((r) => r.messages.forEach((m) => walk(m.contents)));
+  assert.ok(actions.length > 0);
+  assert.deepEqual([...new Set(actions.map((a) => a.type))], ["uri"]);
+  assert.deepEqual(gas.reusedReplyTokens(), []);
+  assert.deepEqual(gas.flexProblems().filter((p) => p.level === "error"), []);
+});
