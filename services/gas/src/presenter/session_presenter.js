@@ -1,13 +1,17 @@
 var SessionPresenter = (function () {
   function toSummary(session) {
     var sessionQuestions = SessionQuestionSheetRepository.listByLearningSessionId(session.learning_session_id);
+    var answeredCount = AnswerStats.answeredQuestionCount(
+      session.learning_session_id,
+      AnswerEventSheetRepository.listByMembershipId(session.membership_id)
+    );
 
     return {
       sessionId: session.learning_session_id,
       sessionType: session.session_type,
-      status: session.status,
+      status: AnswerStats.sessionStatus(session, answeredCount),
       questionCount: toNumber_(session.question_count),
-      completedCount: 0,
+      completedCount: answeredCount,
       businessDate: session.business_date || "",
       courseId: session.course_id || "",
       questions: sessionQuestions.map(function (row) {

@@ -122,3 +122,22 @@ t("1つの知らせで失敗しても、同じ便のほかの知らせには返�
   assert.equal(res.results[1].handled, true);
   assert.equal(res.results[0].handled, false);
 });
+
+t("回の進み具合（まだ・とちゅう・おわり）は、答えた数から決める", () => {
+  const gas = make();
+  const me = call(gas, "getMe");
+  const session = call(gas, "bootstrapLearning").session;
+  const status = () => call(gas, "getAdminLearnerDetail", { lineIdToken: "token:Uadmin", membershipId: me.membership.membership_id }).learner.recentSessions[0].status;
+  assert.equal(status(), "CREATED");
+  const answer = (i, key) => call(gas, "createAnswerEvent", { learningSessionId: session.sessionId, sessionQuestionId: session.questions[i].sessionQuestionId, idempotencyKey: key, answerPayload: { value: "a" } });
+  answer(0, "k1");
+  answer(0, "k1-again"); // 同じ問題に2回答えても、1問と数える
+  assert.equal(status(), "IN_PROGRESS");
+  assert.equal(call(gas, "getHome").todaySession.completedCount, 1);
+  answer(1, "k2");
+  assert.equal(status(), "COMPLETED");
+  const home = call(gas, "getHome");
+  assert.equal(home.todaySession.status, "COMPLETED");
+  assert.equal(home.todaySession.completedCount, 2);
+  assert.equal(home.resumableSession, null, "おわった回は、続きからの対象にしない");
+});

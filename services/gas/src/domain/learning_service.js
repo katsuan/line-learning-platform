@@ -21,7 +21,7 @@ var LearningService = (function () {
           answerValue: answerPayload && answerPayload.value !== undefined && answerPayload.value !== null
             ? String(answerPayload.value)
             : "",
-          isCorrect: row.is_correct === true || row.is_correct === "true",
+          isCorrect: AnswerStats.isCorrect(row),
           score: Number(row.score || 0),
           answeredAt: row.answered_at || ""
         };
@@ -103,17 +103,7 @@ var LearningService = (function () {
   }
 
   function buildLearningSummary_(membershipId) {
-    var answerEvents = AnswerEventSheetRepository.listByMembershipId(membershipId);
-    var totalAnsweredCount = answerEvents.length;
-    var correctCount = answerEvents.filter(function (row) {
-      return row.is_correct === true || row.is_correct === "true";
-    }).length;
-
-    return {
-      totalAnsweredCount: totalAnsweredCount,
-      accuracyRate: totalAnsweredCount === 0 ? 0 : Number((correctCount / totalAnsweredCount).toFixed(2)),
-      lastLearnedAt: answerEvents.length ? answerEvents[answerEvents.length - 1].answered_at : null
-    };
+    return AnswerStats.summarize(AnswerEventSheetRepository.listByMembershipId(membershipId));
   }
 
   function findDailySessionRecord_(membershipId, businessDate) {
@@ -124,8 +114,8 @@ var LearningService = (function () {
   }
 
   function listAnswerEventsByLearningSessionId_(learningSessionId, membershipId) {
-    return SpreadsheetGateway.readObjects(DomainConstants.SHEETS.ANSWER_EVENTS).filter(function (row) {
-      return row.learning_session_id === learningSessionId && row.membership_id === membershipId;
+    return AnswerEventSheetRepository.listByMembershipId(membershipId).filter(function (row) {
+      return row.learning_session_id === learningSessionId;
     });
   }
 

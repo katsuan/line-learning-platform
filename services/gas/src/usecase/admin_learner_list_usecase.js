@@ -8,20 +8,16 @@ var AdminLearnerListUsecase = (function () {
     return {
       learners: memberships.map(function (membership) {
         var user = UserSheetRepository.findByUserId(membership.user_id);
-        var events = AnswerEventSheetRepository.listByMembershipId(membership.membership_id);
-        var correctCount = events.filter(function (row) {
-          return row.is_correct === true || row.is_correct === "true";
-        }).length;
-        var total = events.length;
+        var summary = AnswerStats.summarize(AnswerEventSheetRepository.listByMembershipId(membership.membership_id));
 
         return {
           membershipId: membership.membership_id,
           userId: membership.user_id,
           displayName: user ? user.display_name : "Unknown",
           role: membership.role,
-          totalAnsweredCount: total,
-          accuracyRate: total === 0 ? 0 : Number((correctCount / total).toFixed(2)),
-          lastLearnedAt: total === 0 ? null : events[events.length - 1].answered_at
+          totalAnsweredCount: summary.totalAnsweredCount,
+          accuracyRate: summary.accuracyRate,
+          lastLearnedAt: summary.lastLearnedAt
         };
       })
     };

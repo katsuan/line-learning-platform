@@ -15,10 +15,6 @@ var AdminLearnerDetailUsecase = (function () {
     var user = UserSheetRepository.findByUserId(membership.user_id);
     var events = AnswerEventSheetRepository.listByMembershipId(membership.membership_id);
     var sessions = LearningSessionSheetRepository.listByMembershipId(membership.membership_id);
-    var correctCount = events.filter(function (row) {
-      return row.is_correct === true || row.is_correct === "true";
-    }).length;
-    var total = events.length;
 
     return {
       learner: {
@@ -26,17 +22,14 @@ var AdminLearnerDetailUsecase = (function () {
         role: membership.role,
         // 管理の画面に出すのは名前と写真だけ（LINE のユーザー ID は返さない）
         user: user ? { user_id: user.user_id, display_name: user.display_name, photo_url: user.photo_url || "" } : null,
-        summary: {
-          totalAnsweredCount: total,
-          accuracyRate: total === 0 ? 0 : Number((correctCount / total).toFixed(2)),
-          lastLearnedAt: total === 0 ? null : events[events.length - 1].answered_at,
+        summary: Object.assign(AnswerStats.summarize(events), {
           totalSessionCount: sessions.length
-        },
+        }),
         recentSessions: sessions.slice(-10).reverse().map(function (session) {
           return {
             sessionId: session.learning_session_id,
             sessionType: session.session_type,
-            status: session.status,
+            status: AnswerStats.sessionStatus(session, AnswerStats.answeredQuestionCount(session.learning_session_id, events)),
             questionCount: Number(session.question_count || 0),
             businessDate: session.business_date || "",
             createdAt: session.created_at || ""

@@ -67,7 +67,7 @@ var CreateShareReceiptUsecase = (function () {
     });
     var total = Number(session.question_count || 0);
     var correct = Object.keys(latest).filter(function (key) {
-      return latest[key].is_correct === true || latest[key].is_correct === "true";
+      return AnswerStats.isCorrect(latest[key]);
     }).length;
     return {
       total: total,
