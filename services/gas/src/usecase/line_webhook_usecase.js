@@ -31,6 +31,10 @@ var LineWebhookUsecase = (function () {
     }
 
     var messageText = event.message && event.message.type === "text" ? String(event.message.text || "").trim() : "";
+    var testCommand = parseTestCommand_(messageText);
+    if (testCommand !== null && isAdminSender_(event)) {
+      return replyOnly_(event, buildTestDeskReply_(testCommand));
+    }
     if (shouldIgnoreMessageText_(messageText)) {
       return {
         handled: false,
@@ -106,6 +110,54 @@ var LineWebhookUsecase = (function () {
         messageCount: fallback.length,
         reason: "text_fallback"
       };
+    }
+  }
+
+  // 管理者のテストの窓口（ux.md H11）。「#テスト」「#test」（全角の ＃ も）と、そのあとの言葉
+  function parseTestCommand_(text) {
+    var match = /^[#＃]\s*(テスト|test)(?:\s+(.*))?$/i.exec(String(text || "").trim());
+    return match ? String(match[2] || "").trim() : null;
+  }
+
+  function isAdminSender_(event) {
+    var lineUserId = event.source && event.source.userId ? event.source.userId : "";
+    try {
+      return AdminAccess.isAdminLineUser(lineUserId, ScriptConfig.getPublicConfig().defaultTenantId);
+    } catch (error) {
+      // シートが読めないときは、システム管理者だけ
+      return !!lineUserId && lineUserId === ScriptConfig.getLineMessagingConfig().systemAdminLineUserId;
+    }
+  }
+
+  function buildTestDeskReply_(command) {
+    if (command === "見本") {
+      return LineMessageBuilder.buildSampleMessages();
+    }
+    if (command === "文") {
+      return LineMessageBuilder.buildTextFallbackSampleMessages();
+    }
+    if (command === "点検") {
+      try {
+        return LineMessageBuilder.buildSelfCheckMessages(qCheckAll());
+      } catch (error) {
+        return LineMessageBuilder.buildSelfCheckFailedMessages(error && error.code);
+      }
+    }
+    return LineMessageBuilder.buildTestDeskMessages();
+  }
+
+  // 窓口は reply だけで返す（push は使わない）。断られたら原因だけ残す
+  function replyOnly_(event, messages) {
+    try {
+      LineMessagingClient.replyMessage(event.replyToken, messages);
+      return { handled: true, eventType: event.type, messageCount: messages.length, reason: "test_desk" };
+    } catch (error) {
+      DebugLogger.recordLineError({
+        eventType: event.type,
+        code: error && error.code ? error.code : "",
+        message: error && error.message ? error.message : String(error)
+      });
+      return { handled: false, eventType: event.type, reason: "test_desk_reply_failed" };
     }
   }
 

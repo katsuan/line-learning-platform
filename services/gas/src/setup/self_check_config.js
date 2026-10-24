@@ -35,6 +35,9 @@ var Q_SELF_CHECK = {
         event: { type: "message", source: { type: "user", userId: admin }, message: { type: "text", text: "管理" } }
       }))[0]);
     }
+    // 管理者のテストの窓口（#テスト）と、返事の見本の横並びのカード
+    learner.push(LineMessageBuilder.buildTestDeskMessages()[0]);
+    learner.push(LineMessageBuilder.buildSampleMessages()[0]);
     return learner;
   }
 };

@@ -7,28 +7,38 @@ var AdminAccess = (function () {
   function requireAdmin(request) {
     var lineUserId = LineIdentityVerifier.requireIdentity(request.body, "admin_login_required").sub;
     var tenant = TenantSheetRepository.requireForRequest(request);
-    var tenantId = tenant.tenant_id;
 
-    var systemAdminId = ScriptConfig.getLineMessagingConfig().systemAdminLineUserId;
-    if (systemAdminId && systemAdminId === lineUserId) {
-      return { tenant: tenant, lineUserId: lineUserId };
-    }
-
-    var user = UserSheetRepository.findByLineUserId(lineUserId);
-    var isTenantAdmin = !!user && SpreadsheetGateway.readObjects(DomainConstants.SHEETS.MEMBERSHIPS).some(function (row) {
-      return row.tenant_id === tenantId &&
-        row.user_id === user.user_id &&
-        row.status === DomainConstants.MEMBERSHIP_STATUS.ACTIVE &&
-        ADMIN_ROLES.indexOf(String(row.role || "").toUpperCase()) !== -1;
-    });
-    if (!isTenantAdmin) {
+    if (!isAdminLineUser(lineUserId, tenant.tenant_id)) {
       throw AppError.forbidden("admin_only", "only admins can use this action");
     }
 
     return { tenant: tenant, lineUserId: lineUserId };
   }
 
+  // 管理の API と LINE のボット（#テスト）で同じ決め方をする
+  function isAdminLineUser(lineUserId, tenantId) {
+    if (!lineUserId) {
+      return false;
+    }
+    var systemAdminId = ScriptConfig.getLineMessagingConfig().systemAdminLineUserId;
+    if (systemAdminId && systemAdminId === lineUserId) {
+      return true;
+    }
+    if (!tenantId) {
+      return false;
+    }
+
+    var user = UserSheetRepository.findByLineUserId(lineUserId);
+    return !!user && SpreadsheetGateway.readObjects(DomainConstants.SHEETS.MEMBERSHIPS).some(function (row) {
+      return row.tenant_id === tenantId &&
+        row.user_id === user.user_id &&
+        row.status === DomainConstants.MEMBERSHIP_STATUS.ACTIVE &&
+        ADMIN_ROLES.indexOf(String(row.role || "").toUpperCase()) !== -1;
+    });
+  }
+
   return {
-    requireAdmin: requireAdmin
+    requireAdmin: requireAdmin,
+    isAdminLineUser: isAdminLineUser
   };
 })();

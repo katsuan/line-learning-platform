@@ -338,7 +338,129 @@ var LineMessageBuilder = (function () {
     };
   }
 
+  // ---- 管理者のテストの窓口（#テスト。ux.md H11）。見本はどれも 🧪 を付け、ためしのデータだけで作る ----
+
+  var TEST_PREFIX = "🧪 ";
+
+  function buildTestQuickReply_() {
+    return {
+      items: [
+        { label: "🧪 返事の見本", text: "#テスト 見本" },
+        { label: "🧪 自己点検", text: "#テスト 点検" },
+        { label: "🧪 文の返事", text: "#テスト 文" },
+        { label: "🧪 窓口", text: "#テスト" }
+      ].map(function (item) {
+        return { type: "action", action: { type: "message", label: item.label, text: item.text } };
+      })
+    };
+  }
+
+  function buildTestCard_(mode) {
+    return {
+      type: "flex",
+      altText: mode.altText,
+      contents: buildBubble_(mode),
+      quickReply: buildTestQuickReply_()
+    };
+  }
+
+  function buildTestDeskMessages() {
+    var config = ScriptConfig.getLineMessagingConfig();
+    return [buildTestCard_({
+      altText: "🧪 テストの窓口（管理者だけ）",
+      category: "🧪 管理者だけ",
+      title: "テストの窓口",
+      body: "下のクイックリプライで試せます。\n・返事の見本：全部の返事を、ためしの数字で\n・自己点検：設定・シート・トリガーのようす\n・文の返事：カードが断られたときの返事\n\n本物の記録には書きません。見本にはどれも 🧪 が付きます。あとで見るときは「#テスト」と送ると、この窓口がまた出ます。",
+      buttonLabel: "📊 管理の画面を開く",
+      url: buildAdminUrl_(config)
+    })];
+  }
+
+  // 全部の返事を、ためしのデータで1つの横並びのカードに（大きさはどれも同じ mega）
+  function buildSampleMessages() {
+    var config = ScriptConfig.getLineMessagingConfig();
+    var today = Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy-MM-dd");
+    var follow = resolveMode_(config, "ヘルプ", false);
+    follow.category = "ようこそ";
+    follow.title = "友だち追加ありがとう！";
+    var modes = [
+      resolveMode_(config, "5問", false),
+      buildProgressMode_(config, { businessDate: today, total: 5, answered: 0, correct: 0, overallAccuracyRate: null }),
+      buildProgressMode_(config, { businessDate: today, total: 5, answered: 3, correct: 2, overallAccuracyRate: 80 }),
+      buildProgressMode_(config, { businessDate: today, total: 5, answered: 5, correct: 4, overallAccuracyRate: 85 }),
+      resolveMode_(config, "ヘルプ", false),
+      resolveMode_(config, "導入相談", false),
+      follow,
+      resolveMode_(config, "管理", true)
+    ];
+    return [{
+      type: "flex",
+      altText: "🧪 返事の見本（" + modes.length + "枚）",
+      contents: {
+        type: "carousel",
+        contents: modes.map(function (mode) {
+          var copy = Object.assign({}, mode, { category: TEST_PREFIX + "見本・" + mode.category });
+          return buildBubble_(copy);
+        })
+      },
+      quickReply: buildTestQuickReply_()
+    }];
+  }
+
+  // カードが断られたときに返す文（H5）を、reply で見せる
+  function buildTextFallbackSampleMessages() {
+    var config = ScriptConfig.getLineMessagingConfig();
+    var sample = toTextFallback([buildCardMessage_(resolveMode_(config, "5問", false), false)])[0];
+    return [{
+      type: "text",
+      text: TEST_PREFIX + "見本：カードが断られたときは、この文で返します（push で）。\n\n" + sample.text,
+      quickReply: buildTestQuickReply_()
+    }];
+  }
+
+  // 自己点検（qCheckAll）の結果。直すもの・見てほしいものを先に
+  function buildSelfCheckMessages(result) {
+    var config = ScriptConfig.getLineMessagingConfig();
+    var rows = (result && result.results) || [];
+    var order = { "❌": 0, "⚠️": 1, "✅": 2 };
+    var count = { "❌": 0, "⚠️": 0, "✅": 0 };
+    rows.forEach(function (row) {
+      count[row.level] = (count[row.level] || 0) + 1;
+    });
+    var sorted = rows.slice().sort(function (a, b) {
+      return (order[a.level] === undefined ? 3 : order[a.level]) - (order[b.level] === undefined ? 3 : order[b.level]);
+    });
+    var lines = sorted.slice(0, 25).map(function (row) {
+      return row.level + " " + row.area + "：" + row.text;
+    });
+    if (sorted.length > 25) {
+      lines.push("ほか " + (sorted.length - 25) + " 件（GAS の実行ログに全部出ます）");
+    }
+    var summary = "❌ " + count["❌"] + "・⚠️ " + count["⚠️"] + "・✅ " + count["✅"];
+    return [buildTestCard_({
+      altText: TEST_PREFIX + "自己点検：" + summary,
+      category: TEST_PREFIX + "自己点検",
+      title: summary,
+      body: (lines.join("\n") || "確かめる項目がありませんでした。").slice(0, 1800),
+      buttonLabel: "📊 管理の画面を開く",
+      url: buildAdminUrl_(config)
+    })];
+  }
+
+  function buildSelfCheckFailedMessages(code) {
+    return [{
+      type: "text",
+      text: TEST_PREFIX + "自己点検を動かせませんでした（" + (code || "internal_error") + "）。GAS エディタで qCheckAll を実行して、実行ログを見てください。",
+      quickReply: buildTestQuickReply_()
+    }];
+  }
+
   return {
+    buildTestDeskMessages: buildTestDeskMessages,
+    buildSampleMessages: buildSampleMessages,
+    buildTextFallbackSampleMessages: buildTextFallbackSampleMessages,
+    buildSelfCheckMessages: buildSelfCheckMessages,
+    buildSelfCheckFailedMessages: buildSelfCheckFailedMessages,
     buildReplyMessages: buildReplyMessages,
     buildFollowMessages: buildFollowMessages,
     isReplyText: isReplyText,
