@@ -40,7 +40,11 @@ var LineWebhookUsecase = (function () {
     }
 
     var messages = LineMessageBuilder.buildReplyMessages({
-      event: event
+      event: event,
+      // 「記録」には、今日の数字をカードで返す（ux.md H10）
+      progress: LineMessageBuilder.isProgressText(messageText)
+        ? LineProgressUsecase.forLineUser(event.source && event.source.userId)
+        : null
     });
 
     return replyWithFallback_(event, messages);

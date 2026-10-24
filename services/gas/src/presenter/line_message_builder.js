@@ -9,6 +9,10 @@ var LineMessageBuilder = (function () {
     start: /学習|5問|メニュー/
   };
 
+  function isProgressText(text) {
+    return KEYWORDS.history.test(String(text || "").trim());
+  }
+
   function isReplyText(text) {
     var normalized = String(text || "").trim();
     return Object.keys(KEYWORDS).some(function (key) {
@@ -21,7 +25,7 @@ var LineMessageBuilder = (function () {
     var config = ScriptConfig.getLineMessagingConfig();
     var event = context.event || {};
     var isAdmin = isAdmin_(config, event);
-    var mode = resolveMode_(config, extractUserText_(event), isAdmin);
+    var mode = resolveMode_(config, extractUserText_(event), isAdmin, context.progress);
     return [buildCardMessage_(mode, isAdmin)];
   }
 
@@ -73,8 +77,14 @@ var LineMessageBuilder = (function () {
       altText: mode.altText,
       contents: buildBubble_(mode),
       quickReply: buildQuickReply_(isAdmin),
-      fallbackText: mode.title + "\n" + mode.body + "\n\n" + mode.buttonLabel + "：" + mode.url
+      fallbackText: mode.title + "\n" + (mode.stats ? statsText_(mode.stats) + "\n" : "") + mode.body + "\n\n" + mode.buttonLabel + "：" + mode.url
     };
+  }
+
+  function statsText_(stats) {
+    return stats.map(function (stat) {
+      return stat.label + "：" + stat.value;
+    }).join("\n");
   }
 
   // 色の帯（小さく区分、太く見出し）→ 中身 → ボタン1つ
@@ -107,7 +117,8 @@ var LineMessageBuilder = (function () {
       body: {
         type: "box",
         layout: "vertical",
-        contents: [
+        spacing: "md",
+        contents: (mode.stats ? [buildStatsRow_(mode.stats)] : []).concat([
           {
             type: "text",
             text: mode.body,
@@ -115,7 +126,7 @@ var LineMessageBuilder = (function () {
             size: "sm",
             color: "#3E3A34"
           }
-        ]
+        ])
       },
       footer: {
         type: "box",
@@ -133,6 +144,29 @@ var LineMessageBuilder = (function () {
           }
         ]
       }
+    };
+  }
+
+  // 大事な数字を先に、横に並べる（小さく項目名・太く数字）
+  function buildStatsRow_(stats) {
+    return {
+      type: "box",
+      layout: "horizontal",
+      spacing: "sm",
+      contents: stats.map(function (stat) {
+        return {
+          type: "box",
+          layout: "vertical",
+          flex: 1,
+          paddingAll: "8px",
+          cornerRadius: "8px",
+          backgroundColor: "#F3EFE7",
+          contents: [
+            { type: "text", text: stat.label, size: "xxs", color: "#6B655C", wrap: true },
+            { type: "text", text: stat.value, size: "lg", weight: "bold", color: ACCENT, margin: "xs", wrap: true }
+          ]
+        };
+      })
     };
   }
 
@@ -215,7 +249,34 @@ var LineMessageBuilder = (function () {
     return event.message.text || "";
   }
 
-  function resolveMode_(config, userText, isAdmin) {
+  // 「記録」：今日の数字のカード。カードはトークに残るので、見出しに日付を入れる
+  function buildProgressMode_(config, progress) {
+    var dateLabel = toMonthDay_(progress.businessDate);
+    var done = progress.total > 0 && progress.answered >= progress.total;
+    var started = progress.answered > 0;
+    return {
+      altText: dateLabel + "の記録：" + progress.answered + "/" + progress.total + "問・正解" + progress.correct + "問",
+      category: dateLabel + "の記録",
+      title: done ? "今日の5問、おわり！" : (started ? "今日の5問、とちゅう" : "今日の5問は、まだ"),
+      stats: [
+        { label: "答えた", value: progress.answered + " / " + progress.total + "問" },
+        { label: "正解", value: progress.correct + "問" },
+        { label: "これまでの正答率", value: progress.overallAccuracyRate === null ? "—" : progress.overallAccuracyRate + "%" }
+      ],
+      body: done
+        ? "答え合わせと、まちがえた問題は画面で見なおせます。"
+        : (started ? "続きから解けます。" : "1問ずつ答えて、すぐ答え合わせ。5問で数分です。"),
+      buttonLabel: done ? "📈 記録を見る" : (started ? "📚 続きを解く" : "📚 5問を解く"),
+      url: buildLiffUrl_(config, { entry: done ? "history" : "start" })
+    };
+  }
+
+  function toMonthDay_(businessDate) {
+    var match = /^\d{4}-(\d{2})-(\d{2})$/.exec(String(businessDate || ""));
+    return match ? Number(match[1]) + "月" + Number(match[2]) + "日" : "今日";
+  }
+
+  function resolveMode_(config, userText, isAdmin, progress) {
     var normalized = String(userText || "").trim();
 
     if (KEYWORDS.help.test(normalized)) {
@@ -252,6 +313,10 @@ var LineMessageBuilder = (function () {
       };
     }
 
+    if (KEYWORDS.history.test(normalized) && progress) {
+      return buildProgressMode_(config, progress);
+    }
+
     if (KEYWORDS.history.test(normalized)) {
       return {
         altText: "今日の記録を開く",
@@ -277,6 +342,7 @@ var LineMessageBuilder = (function () {
     buildReplyMessages: buildReplyMessages,
     buildFollowMessages: buildFollowMessages,
     isReplyText: isReplyText,
+    isProgressText: isProgressText,
     toTextFallback: toTextFallback,
     toSendable: function (messages) {
       return (messages || []).map(stripFallbackText_);

@@ -141,3 +141,63 @@ t("回の進み具合（まだ・とちゅう・おわり）は、答えた数�
   assert.equal(home.todaySession.completedCount, 2);
   assert.equal(home.resumableSession, null, "おわった回は、続きからの対象にしない");
 });
+
+// ---- LINE の「記録」は、今日の数字をカードで返す（ux.md H10） ----
+
+function cardOf(gas) {
+  const messages = gas.lastMessages();
+  assert.equal(messages.length, 1);
+  assert.equal(messages[0].type, "flex");
+  return messages[0];
+}
+
+const uriOnly = (message) => {
+  const actions = [];
+  const walk = (node) => {
+    if (!node || typeof node !== "object") return;
+    if (node.action) actions.push(node.action.type);
+    Object.values(node).forEach(walk);
+  };
+  walk(message.contents);
+  return [...new Set(actions)];
+};
+
+t("「記録」：今日答えた数・正解の数・これまでの正答率をカードに出す", () => {
+  const gas = make();
+  const session = call(gas, "bootstrapLearning").session;
+  call(gas, "createAnswerEvent", { learningSessionId: session.sessionId, sessionQuestionId: session.questions[0].sessionQuestionId, idempotencyKey: "k1", answerPayload: { value: "a" } });
+  gas.reset();
+  gas.lineEvent({ type: "message", replyToken: "r", source: { type: "user", userId: "Ulearner" }, message: { type: "text", text: "記録" } });
+  const card = cardOf(gas);
+  const text = JSON.stringify(card.contents);
+  assert.match(text, /1 \/ 2問/, "答えた数");
+  assert.match(text, /"1問"/, "正解の数");
+  assert.match(text, /100%/, "これまでの正答率");
+  assert.match(card.altText, /1\/2問/, "通知にも数字");
+  assert.deepEqual(uriOnly(card), ["uri"], "カードのボタンは画面を開くものだけ（H2）");
+  assert.ok(card.quickReply.items.length > 0, "次の操作（H3）");
+  assert.deepEqual(gas.flexProblems().filter((p) => p.level === "error"), []);
+});
+
+t("「記録」：まだ解いていない人・初めての人にも、数字のカードで返す（だれの記録も混ざらない）", () => {
+  const gas = make();
+  const session = call(gas, "bootstrapLearning").session;
+  call(gas, "createAnswerEvent", { learningSessionId: session.sessionId, sessionQuestionId: session.questions[0].sessionQuestionId, idempotencyKey: "k1", answerPayload: { value: "a" } });
+  gas.reset();
+  gas.lineEvent({ type: "message", replyToken: "r", source: { type: "user", userId: "Ustranger" }, message: { type: "text", text: "成績" } });
+  const card = cardOf(gas);
+  const text = JSON.stringify(card.contents);
+  assert.match(text, /0 \/ 2問/, "今日の問題の数（この教室は2問）");
+  assert.doesNotMatch(text, /100%/, "ほかの人の数字は出ない");
+  assert.match(text, /5問を解く/, "まだなら、解く画面を開くボタン");
+  assert.deepEqual(gas.flexProblems().filter((p) => p.level === "error"), []);
+});
+
+t("「記録」：シートが読めなくても、黙らずにふつうの記録のカードを返す", () => {
+  const gas = make();
+  gas.sheet("users").setName("users_renamed"); // users のシートがない
+  gas.lineEvent({ type: "message", replyToken: "r", source: { type: "user", userId: "Ulearner" }, message: { type: "text", text: "記録" } });
+  const card = cardOf(gas);
+  assert.match(card.altText, /記録/);
+  assert.deepEqual(uriOnly(card), ["uri"]);
+});
