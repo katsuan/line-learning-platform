@@ -1,0 +1,96 @@
+/* 管理の画面（admin.html）の見た目。共通の部品は line-share の ui.css（先に読む）。 */
+:root {
+  --ls-accent: #165c47;
+  --ls-accent-strong: #0f4836;
+  --ls-accent-soft: #e2efe8;
+  --ls-accent-ink: #0f4836;
+  --ls-bg: #f4efe6;
+  --ls-surface-sub: #faf6ef;
+}
+
+/* 管理の画面はパソコンでも見るので、広いときは2列に */
+.admin-page {
+  width: min(100%, 1100px);
+}
+
+.layout {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 900px) {
+  .layout {
+    grid-template-columns: 360px minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.stat {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 12px;
+  border-radius: var(--ls-radius-md);
+  background: var(--ls-surface-sub);
+}
+
+.stat-label {
+  color: var(--ls-subtext);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.learner-item {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+}
+
+.learner-item[aria-current="true"] {
+  border-color: var(--ls-accent);
+  background: var(--ls-accent-soft);
+}
+
+.session-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--ls-radius-sm);
+  background: var(--ls-surface-sub);
+  font-size: 14px;
+}
+
+.session-row span:last-child {
+  color: var(--ls-subtext);
+  text-align: right;
+}
+
+.detail-name {
+  margin: 0;
+  font-size: 20px;
+}
+
+/* 管理者でないときは、一覧ごと隠す（display: grid より強く） */
+[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 360px) {
+  .stats {
+    grid-template-columns: 1fr;
+  }
+}

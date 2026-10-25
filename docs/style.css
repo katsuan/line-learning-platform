@@ -1,0 +1,92 @@
+/* トップ（index.html）の見た目。共通の部品は line-share の ui.css（先に読む）。 */
+:root {
+  --ls-accent: #17624a;
+  --ls-accent-strong: #0f4d39;
+  --ls-accent-soft: #e2efe8;
+  --ls-accent-ink: #0f4d39;
+  --ls-bg: #f4efe6;
+  --ls-surface-sub: #faf6ef;
+}
+
+.steps {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.step-num {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--ls-accent-soft);
+  color: var(--ls-accent-ink);
+  font-weight: 800;
+}
+
+.step h2 {
+  margin: 6px 0 4px;
+  font-size: 17px;
+}
+
+.step p {
+  margin: 0;
+  color: var(--ls-subtext);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.step .ls-button {
+  margin-top: 10px;
+}
+
+/* ここから下は ?debug=1 のときだけ（開発用の接続確認） */
+.dev-status {
+  font-weight: 800;
+}
+
+.dev-status.is-ok {
+  color: var(--ls-success);
+}
+
+.dev-status.is-error {
+  color: var(--ls-danger);
+}
+
+.dev-list {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 6px 12px;
+  margin: 0;
+  font-size: 13px;
+}
+
+.dev-list dt {
+  color: var(--ls-subtext);
+}
+
+.dev-list dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.dev-log {
+  max-height: 260px;
+  margin: 0;
+  padding: 12px;
+  overflow: auto;
+  border-radius: var(--ls-radius-md);
+  background: #1e1b18;
+  color: #f6f2ea;
+  font-size: 12px;
+}

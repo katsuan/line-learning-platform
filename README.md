@@ -13,7 +13,7 @@ LINEを入口にし、LIFF内で学習体験を完結させるマルチテナン
 ## ディレクトリ構成
 
 - `docs`
-  GitHub Pages の公開先。最小の疎通確認ページを配置
+  GitHub Pages の公開先（下の「画面のファイル」）
 - `apps/liff`
   学習者向けLIFFフロントエンド
 - `apps/admin`
@@ -38,6 +38,19 @@ LINEを入口にし、LIFF内で学習体験を完結させるマルチテナン
 - LIFFフロントは公開面、GASは秘密情報と学習ロジックを持つ private 面として分離する
 - Spreadsheet はDB代替として使うが、責務分離は維持し、`doGet` `doPost` にロジックを集中させない
 - 将来的に RDB へ移行しやすいよう、GAS でも repository / gateway 境界を先に置く
+
+## 画面のファイル（`docs`）
+
+| ファイル | 役わり |
+|---|---|
+| `learn.html`・`learn.js`・`learn.css` | 今日の5問の画面（LIFF の入口。答える・結果を LINE に送る） |
+| `admin.html`・`admin.js`・`admin.css` | 管理の画面（学習者の一覧とくわしい記録。管理者だけ） |
+| `index.html`・`app.js`・`style.css` | トップ（`?debug=1` のときだけ GAS との接続の確かめ） |
+| `config.js` | 画面の設定（GAS の URL・action の名前・LIFF ID・教室） |
+| `sw.js` | 電波がなくても開けるようにする（中身は line-share の共通の `sw-core.js`） |
+| `version.json` | 版（GitHub Actions が push のたびに書きかえる） |
+
+公開している URL（`learn.html`・`admin.html`・`index.html`）の名前は変えない。`js`・`css` を変えたら、HTML の `?v=` をそろえて上げる。
 
 ## 画面の決まり
 

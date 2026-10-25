@@ -15,22 +15,25 @@ LearningPlatform MVP のバックエンド実装本体です。
 - 自動採点
 - Spreadsheet 保存
 
-## ディレクトリ
+## ファイルの一覧（`src`）
 
-- `src/entry`
-  GAS公開入口
-- `src/router`
-  action 振り分け
-- `src/usecase`
-  ユースケース
-- `src/domain`
-  enum、判定ポリシー
-- `src/infra`
-  Spreadsheet、Properties、LockService
-- `src/presenter`
-  JSON応答
-- `src/setup`
-  シート初期化
+GAS のエディタでは名前の順に並ぶので、人が実行するもの・入口を上にしている（決まりは q-oqrn の `docs/structure.md`）。
+
+| ファイル | 役わり |
+|---|---|
+| `00_run/00_run.js` | 人が GAS エディタから実行する関数（自己点検・はじめの準備・トリガー作り・LINE の確かめ）。いちばん上に、どの順に何を実行するか |
+| `00_run/01_selfcheck_config.js` | 自己点検で何を確かめるか（`Q_SELF_CHECK`） |
+| `00_run/selfcheck.js` | 自己点検の本体（`qCheckAll`・`qHeartbeat`・`safeCell`）。q-oqrn の `tools/qtest/selfcheck.gs` の写し（中身を変えない） |
+| `01_entry/01_entry.web.js` | Web アプリの入口（`doGet`・`doPost`）。画面の API と LINE の Webhook をふり分け、ログを残す |
+| `01_entry/01_entry.trigger.js` | 時間のトリガーの入口（`cleanupOldDebugLogs`） |
+| `02_router/02_router.request.js` | 画面の API を action ごとにふり分ける |
+| `02_router/02_router.line_webhook.js` | LINE の知らせを1つずつ受ける |
+| `03_usecase/03_usecase.*.js` | 1つの操作ごとの処理（本人・ホーム・今日の回・答え・提出コード・管理・LINE の返事と記録・管理者の判定） |
+| `04_domain/04_domain.*.js` | 決まり（答え合わせ・答えの数え方・日付・今日の回の作り方・エラーの形・名前） |
+| `05_presenter/05_presenter.*.js` | 返す形を作る（JSON・回・LINE のカード） |
+| `06_infra/06_infra.*.js` | シート・設定・LINE・鍵・ログ・古いログを消す部品 |
+| `09_setup/09_setup.sheets.js` | はじめの準備の中身（シートと見出しの一覧・見本の教室と問題・見本の設定） |
+| `09_setup/09_setup.line_check.js` | LINE のつながりの確かめの中身 |
 
 ## 運用前提
 
@@ -56,7 +59,7 @@ LearningPlatform MVP のバックエンド実装本体です。
 
 ## 初回セットアップ
 
-初回は次の順で進めると、`health` と `getMe` までの動作を確認しやすい。
+初回は次の順で進めると、`health` と `getMe` までの動作を確認しやすい。関数はどれも `src/00_run/00_run.js` にある（ファイルの先頭に、どの順に何を実行するかを書いている）。
 
 1. `Script Properties` に `script-properties.example.json` 相当の値を設定する
 2. `setupLearningPlatformSheets()` を実行してシートを作る
@@ -72,7 +75,7 @@ LearningPlatform MVP のバックエンド実装本体です。
 - `setupLearningPlatformSheets()`
   MVPで使う主要シートを作る
 - `seedLearningPlatformMvp()`
-  `tenants` `users` `memberships` `feature_entitlements` に最小 seed を投入する
+  `tenants` `users` `memberships` `feature_entitlements` に最小 seed を投入する。⚠️ 学習の記録（回・答え・提出コード）を全部消すので、本番では実行しない
 - `initializeLearningPlatformMvp()`
   シート作成と seed 投入をまとめて行う
 
@@ -93,15 +96,15 @@ LearningPlatform MVP のバックエンド実装本体です。
 - 管理者：`listAdminLearners`・`getAdminLearnerDetail`。`SYSTEM_ADMIN_LINE_USER_ID` の人か、その教室で役割が ADMIN / OWNER の人
 - LINE の Webhook：Script Properties に `WEBHOOK_KEY` を入れ、LINE Developers の Webhook の URL の終わりに `?key=<同じ値>` を付けると、合言葉が合わない知らせには何もしない
 
-シートに書く文字は、すべて `safeCell()`（`src/setup/selfcheck.js`）を通す。`debug_logs` の LINE のユーザー ID は、SHA-256 の頭だけを残す。
+シートに書く文字は、すべて `safeCell()`（`src/00_run/selfcheck.js`）を通す。`debug_logs` の LINE のユーザー ID は、SHA-256 の頭だけを残す。
 
 ## 使う前の確かめ
 
-`clasp push` のあとや、Script Properties・シートを変えたあとは、GAS エディタで `qCheckAll` を実行し、実行ログを見る（✅ だいじょうぶ／⚠️ 見てほしい／❌ 直す）。
+`clasp push` のあとや、Script Properties・シートを変えたあとは、GAS エディタで `checkAll`（`00_run.js`。中は `qCheckAll`）を実行し、実行ログを見る（✅ だいじょうぶ／⚠️ 見てほしい／❌ 直す）。
 
-- 確かめること（`src/setup/self_check_config.js` の `Q_SELF_CHECK`）：要る Script Properties があるか・鍵がコードに書かれていないか・シートと見出し・シートに外につながる式がないか・LINE の鍵と Webhook・ボットの返事のカードが LINE に受けつけられる形か
+- 確かめること（`src/00_run/01_selfcheck_config.js` の `Q_SELF_CHECK`）：要る Script Properties があるか・鍵がコードに書かれていないか・シートと見出し・シートに外につながる式がないか・LINE の鍵と Webhook・ボットの返事のカードが LINE に受けつけられる形か
 - 何も書きこまず、LINE にも送らない（カードは LINE の「確かめるだけ」の API に渡す）
-- `src/setup/selfcheck.js` は、q-oqrn の `tools/qtest/selfcheck.gs` を写したもの
+- `src/00_run/selfcheck.js` は、q-oqrn の `tools/qtest/selfcheck.gs` を写したもの（同じ中身かをテストで確かめる）
 
 ## debug_logs の古い行を消す
 
@@ -128,6 +131,8 @@ LINE webhook の場合は `events` 配列を検出して自動で webhook 処理
 
 返事は1通のカードにまとめ、次の操作をクイックリプライで出す（「5問」「記録」「ヘルプ」「導入相談」）。
 
+- 「記録」「履歴」「成績」には、今日の数字（答えた数・正解・これまでの正答率）のカードで返す
+- 管理者（`SYSTEM_ADMIN_LINE_USER_ID` の人か、ふだんの教室の ADMIN・OWNER）が「#テスト」（`#test` も）と送ると、🧪 テストの窓口が返る。クイックリプライから、返事の見本（全部のカード）・自己点検・カードが断られたときの文の返事を試せる。本物の記録には書かず、reply だけで返す。ふつうの人には返事しない
 - `SYSTEM_ADMIN_LINE_USER_ID` の人にだけ、「管理」と送ったときに学習者の一覧（`APP_BASE_URL` の `admin.html`）への案内と、クイックリプライの「📊 学習者の一覧」を出す。ほかの人には出さない
 - カードを LINE が受けつけなかったときは、同じ中身を文字だけで送りなおす（返事の合図は1回しか使えないので push で。1回の操作につき1回だけ）。原因は Script Properties の `LAST_LINE_ERRORS`（新しい順に5件）に残る
 - カードのボタンは、画面（LIFF・管理の画面）を開くものだけ。次の操作はクイックリプライ（押すと言葉が送られ、いつ押されても同じ返事になる）
@@ -142,6 +147,10 @@ node --test services/gas/test
 
 - `line_webhook.test.js`：ボットの返事の形（1通のカード・クイックリプライの数と長さ・管理者だけの案内・文字だけの返事）
 - `admin_access.test.js`：管理の API は、LINE でログインした管理者だけ
+- `daily_session.test.js`：今日の回（シートで日付に変わっても作りなおさない・日付またぎ・進み具合）・LINE の送りなおし・「記録」のカード
+- `admin_test_desk.test.js`：管理者のテストの窓口（#テスト）。管理者だけ・本物に書かない・reply だけ
+- `debug_log_cleanup.test.js`：debug_logs の古い行を消す
+- `structure.test.js`：ファイルの並べ方の決まり（番号＋役わり・先頭と関数の前のコメント・自己点検の写しが元と同じ・人が実行する関数の名前が残っている）
 - `security.test.js`：すべての action について、本人確認なし・ほかの人・ほかの教室・管理者でない人が断られること（表で確かめる）。外の文字が式のままシートに入らないこと。ボットの返事が LINE に受けつけられる形であること。q-oqrn の `tools/qtest/fake-gas.js`（GAS の偽物）を使うので、q-oqrn をとなりのフォルダに置く（ないときは飛ばす）
 
 危ない書き方は `node ../q-oqrn/tools/qtest/check-code.mjs .` でも探す（リポジトリの一番上で）。

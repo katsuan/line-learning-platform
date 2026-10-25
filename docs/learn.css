@@ -1,0 +1,392 @@
+/* 今日の5問の画面（learn.html）の見た目。共通の部品は line-share の ui.css（先に読む）。 */
+:root {
+  --ls-accent: #126347;
+  --ls-accent-strong: #0c4e37;
+  --ls-accent-soft: #e2efe8;
+  --ls-accent-ink: #0c4e37;
+  --ls-bg: #f4efe6;
+  --ls-surface-sub: #faf6ef;
+  --ls-tabs-bg: #ebe3d6;
+  --warm: #b8671a;
+  --warm-soft: #fbeedd;
+}
+
+/* iPhone：入力欄の見た目を OS にまかせない（C1） */
+.ls-input {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.sound-button {
+  display: inline-grid;
+  place-items: center;
+}
+
+.sound-button svg {
+  width: 22px;
+  height: 22px;
+}
+
+.sound-button .speaker-fill {
+  fill: currentColor;
+}
+
+.sound-button .speaker-wave,
+.sound-button .speaker-slash {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+}
+
+.sound-button[aria-pressed="true"] {
+  color: var(--ls-accent);
+}
+
+.sound-button[aria-pressed="true"] .speaker-slash,
+.sound-button[aria-pressed="false"] .speaker-wave {
+  display: none;
+}
+
+/* 進み具合 */
+.progress-panel {
+  gap: 10px;
+}
+
+.progress-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  font-weight: 800;
+}
+
+.progress-count {
+  color: var(--ls-subtext);
+  font-size: 14px;
+}
+
+.progress-bar {
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--ls-accent-soft);
+}
+
+.progress-fill {
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ls-accent);
+  transition: width 180ms ease;
+}
+
+.qmap .ls-chip {
+  min-width: 56px;
+  min-height: var(--ls-tap);
+}
+
+.qmap .ls-chip[aria-current="step"] {
+  border-color: var(--ls-accent);
+  border-width: 2px;
+}
+
+.qmap .mark-ok {
+  color: var(--ls-accent-ink);
+}
+
+.qmap .mark-ng {
+  color: var(--warm);
+}
+
+/* 問題 */
+.question-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--ls-subtext);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.question-type {
+  color: var(--ls-accent-ink);
+}
+
+.question-text {
+  margin: 0;
+  font-size: clamp(22px, 7vw, 28px);
+  font-weight: 800;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.answer-zone {
+  display: grid;
+  gap: 10px;
+}
+
+.tf-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.tf-choices .ls-chip {
+  min-height: 52px;
+  font-size: 16px;
+}
+
+.big-button {
+  min-height: 52px;
+  font-size: 16px;
+}
+
+.question-nav {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+/* 答え合わせ */
+.result {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: var(--ls-radius-md);
+  border: 1px solid var(--ls-line);
+}
+
+.result.is-correct {
+  border-color: color-mix(in srgb, var(--ls-accent) 30%, transparent);
+  background: var(--ls-accent-soft);
+}
+
+.result.is-incorrect {
+  border-color: color-mix(in srgb, var(--warm) 30%, transparent);
+  background: var(--warm-soft);
+}
+
+.result-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.result-mark {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: var(--ls-surface);
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.is-correct .result-mark {
+  color: var(--ls-accent-ink);
+}
+
+.is-incorrect .result-mark {
+  color: var(--warm);
+}
+
+.result-title {
+  margin: 0;
+  font-size: 20px;
+}
+
+.result-body {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.save-line {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 32px;
+  color: var(--ls-subtext);
+  font-size: 13px;
+}
+
+.save-line.is-error {
+  color: var(--ls-danger);
+  font-weight: 700;
+}
+
+.save-line .ls-button {
+  min-height: 36px;
+}
+
+/* 5問おわり */
+.completion-title {
+  margin: 0;
+  font-size: 26px;
+}
+
+.stat {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border-radius: var(--ls-radius-md);
+  background: var(--ls-surface-sub);
+}
+
+.stat-label {
+  color: var(--ls-subtext);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 800;
+}
+
+/* 送る前の見本（LINE のトークの見た目なので、暗い表示でも明るいまま） */
+.talk-preview {
+  padding: 14px;
+  border-radius: var(--ls-radius-md);
+  background: var(--ls-talk-bg);
+}
+
+.talk-card {
+  width: min(100%, 280px);
+  overflow: hidden;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #1c1b18;
+  font-size: 13px;
+}
+
+.talk-card-band {
+  display: grid;
+  gap: 2px;
+  padding: 14px 16px;
+  background: #17624a;
+  color: #f8f4ed;
+}
+
+.talk-card-band small {
+  color: #ddefe7;
+  font-size: 11px;
+}
+
+.talk-card-band strong {
+  font-size: 17px;
+}
+
+.talk-card-body {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 12px 16px;
+}
+
+.talk-card-body div {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #f6efe4;
+}
+
+.talk-card-body small {
+  display: block;
+  color: #7a7165;
+  font-size: 11px;
+}
+
+.talk-card-body b {
+  font-size: 16px;
+}
+
+.talk-card-code {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.talk-card-code > span:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.talk-card-body .talk-card-pill {
+  flex: none;
+  padding: 4px 12px;
+  border: 1px solid #17624a;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #17624a;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.talk-card-actions {
+  display: grid;
+  gap: 6px;
+  padding: 0 16px 14px;
+}
+
+.talk-card-actions span {
+  padding: 9px;
+  border-radius: 8px;
+  background: #eeeeee;
+  color: #1c1b18;
+  font-weight: 700;
+  text-align: center;
+}
+
+.talk-card-actions .is-primary {
+  background: #17624a;
+  color: #ffffff;
+}
+
+.version {
+  margin: 8px 0 0;
+  color: var(--ls-faint);
+  font-size: 11px;
+  text-align: center;
+}
+
+.debug-log {
+  max-height: 220px;
+  margin: 0;
+  padding: 12px;
+  overflow: auto;
+  border-radius: var(--ls-radius-md);
+  background: #201d1a;
+  color: #f6f1e8;
+  font-size: 12px;
+}
+
+.skeleton-card .ls-skeleton.is-short {
+  min-height: 20px;
+  width: 40%;
+}
+
+.skeleton-card .ls-skeleton.is-text {
+  min-height: 72px;
+}
+
+.wait-text {
+  margin: 0;
+  color: var(--ls-subtext);
+  font-size: 13px;
+  text-align: center;
+  white-space: pre-line;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-ls-dark="auto"] {
+    --warm: #f0a35e;
+    --warm-soft: color-mix(in srgb, #f0a35e 16%, #1c1b21);
+  }
+}
