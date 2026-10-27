@@ -445,8 +445,12 @@ var LineMessageBuilder = (function () {
     rows.forEach(function (row) {
       count[row.level] = (count[row.level] || 0) + 1;
     });
+    // 今月の送信数は、いつも先頭に（✅ でも行が多くて切れないように）
+    var rank = function (row) {
+      return row.area === "送信数" ? -1 : order[row.level] === undefined ? 3 : order[row.level];
+    };
     var sorted = rows.slice().sort(function (a, b) {
-      return (order[a.level] === undefined ? 3 : order[a.level]) - (order[b.level] === undefined ? 3 : order[b.level]);
+      return rank(a) - rank(b);
     });
     var lines = sorted.slice(0, 25).map(function (row) {
       return row.level + " " + row.area + "：" + row.text;

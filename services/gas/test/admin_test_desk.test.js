@@ -117,6 +117,18 @@ t("自己点検：結果を 🧪 のカードで返す", () => {
   assert.deepEqual(gas.flexProblems().filter((p) => p.level === "error"), []);
 });
 
+t("自己点検：今月の LINE の送信数が、いちばん上に出る（共通の selfcheck.js。読むだけ）", () => {
+  const gas = make({
+    fetch(url) {
+      if (/\/v2\/bot\/message\/quota\/consumption$/.test(url)) return response(200, { totalUsage: 10 });
+      if (/\/v2\/bot\/message\/quota$/.test(url)) return response(200, { type: "limited", value: 200 });
+      return undefined;
+    }
+  });
+  say(gas, SYSTEM_ADMIN, "#テスト 点検");
+  assert.match(JSON.stringify(gas.replies()[0].messages[0].contents), /✅ 送信数：今月 10 通 ／ 上限 200 通（のこり 190）/);
+});
+
 t("窓口のどれを押しても、本物のシートに書かない・push しない", () => {
   const gas = make();
   const before = snapshot(gas);
