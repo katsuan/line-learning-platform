@@ -109,7 +109,11 @@
         renderAll_();
         renderError_(error);
         if (state.session) {
-          UI.toast("つながらないので、前に開いた内容を出しています", { actionLabel: "もう一度", onAction: bootstrap_ });
+          // つながらないとき以外（ログイン・教室・問題）は、その原因を知らせる
+          var reason = LOAD_ERROR_REASONS[state.loadErrorCode];
+          UI.toast(reason && state.loadErrorCode !== "busy"
+            ? "前に開いた内容を出しています。" + reason.text
+            : "つながらないので、前に開いた内容を出しています", { actionLabel: "もう一度", onAction: bootstrap_ });
         }
       });
   }
@@ -635,21 +639,25 @@
     }
   }
 
+  // 読めなかったときの案内（GAS が返したエラーの番号ごと。ない番号は電波の案内）
+  var LOAD_ERROR_REASONS = {
+    login_required: { icon: "🔑", text: "だれの記録かを確かめられませんでした。LINE から開きなおしてね。" },
+    not_member: { icon: "🏫", text: "この教室の学習者として登録されていません。先生に聞いてね。" },
+    questions_not_found: { icon: "📭", text: "まだ問題が用意されていません。先生に聞いてね。" },
+    busy: { icon: "⏳", text: "いま混みあっています。少し待ってから、もう一度ためしてね。" },
+    network: { icon: "📶", text: "電波のよいところで、もう一度ためしてね。" }
+  };
+
   // 読めなかったときの案内と「もう一度」を出す
   function renderLoadError_() {
     var canOpenInLine = !!config.liffId && !state.liff.inClient;
-    var needLogin = state.loadErrorCode === "login_required";
-    var notMember = state.loadErrorCode === "not_member";
+    var reason = LOAD_ERROR_REASONS[state.loadErrorCode] || LOAD_ERROR_REASONS.network;
     questionShellEl.innerHTML = [
       '<section class="ls-panel">',
       '  <div class="ls-empty">',
-      '    <span class="ls-empty-icon" aria-hidden="true">' + (needLogin ? '🔑' : notMember ? '🏫' : '📶') + '</span>',
+      '    <span class="ls-empty-icon" aria-hidden="true">' + reason.icon + '</span>',
       '    <strong>今日の5問を読みこめませんでした</strong>',
-      '    <span>' + (needLogin
-        ? 'だれの記録かを確かめられませんでした。LINE から開きなおしてね。'
-        : notMember
-          ? 'この教室の学習者として登録されていません。先生に聞いてね。'
-          : '電波のよいところで、もう一度ためしてね。') + '</span>',
+      '    <span>' + reason.text + '</span>',
       '    <div class="ls-actions">',
       '      <button id="retryLoadButton" class="ls-button is-primary" type="button">🔄 もう一度</button>',
       canOpenInLine ? '      <a class="ls-button" href="' + escapeHtml_(buildLiffUrl_()) + '">💬 LINEで開きなおす</a>' : '',
