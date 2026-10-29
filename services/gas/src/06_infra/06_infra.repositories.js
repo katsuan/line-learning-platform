@@ -192,10 +192,12 @@ var LearningSessionSheetRepository = (function () {
 })();
 
 var SessionQuestionSheetRepository = (function () {
-  // 回の問題の一覧
+  // 回の問題の一覧（出す順 display_order の順。シートの行の並びには頼らない）
   function listByLearningSessionId(learningSessionId) {
     return SpreadsheetGateway.readObjects(DomainConstants.SHEETS.SESSION_QUESTIONS).filter(function (row) {
       return row.learning_session_id === learningSessionId;
+    }).sort(function (left, right) {
+      return Number(left.display_order || 0) - Number(right.display_order || 0);
     });
   }
 
