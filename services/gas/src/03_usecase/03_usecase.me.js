@@ -34,12 +34,16 @@ var MeUsecase = (function () {
       return found;
     }
 
-    if (tenantId !== config.defaultTenantId) {
+    // 自動で入れるのは、ふだんの教室の、まだ一度も入ったことのない人だけ（外された人は入れなおさない）
+    if (tenantId !== config.defaultTenantId || wasRemoved_(tenantId, found.user)) {
       throw AppError.forbidden("not_member", "you are not a member of this tenant");
     }
 
     return ScriptLock.run(function () {
       var again = findMembership_(tenantId, lineUserId);
+      if (!again.membership && wasRemoved_(tenantId, again.user)) {
+        throw AppError.forbidden("not_member", "you are not a member of this tenant");
+      }
       var user = again.user || provisionUserFromLine_(lineUserId, request, verifiedIdentity);
       var membership = again.membership || provisionMembership_(tenantId, user.user_id, config);
       return {
@@ -47,6 +51,11 @@ var MeUsecase = (function () {
         membership: membership
       };
     });
+  }
+
+  // その教室に、ACTIVE でない立場（外された・やめた）があるか
+  function wasRemoved_(tenantId, user) {
+    return !!user && MembershipSheetRepository.listByTenantIdAndUserId(tenantId, user.user_id).length > 0;
   }
 
   // LINE のユーザー ID の人と、その教室の立場をさがす

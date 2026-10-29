@@ -371,3 +371,16 @@ t("カードのボタンは画面を開くものだけ。古いクイックリ�
   assert.deepEqual(gas.reusedReplyTokens(), []);
   assert.deepEqual(gas.flexProblems().filter((p) => p.level === "error"), []);
 });
+
+t("教室から外した（ACTIVE でない）人は、開きなおしても自動でまた入らない", () => {
+  const gas = make();
+  add(gas, "users", { user_id: "user_gone", line_user_id: "Ugone", display_name: "外した人", status: "ACTIVE" });
+  add(gas, "memberships", { membership_id: "m_gone", tenant_id: TENANT_A, user_id: "user_gone", role: "LEARNER", status: "INACTIVE" });
+  gas.reset();
+  const before = gas.rows("memberships").length;
+  for (const action of LEARNER_ACTIONS) {
+    const res = call(gas, action, { lineIdToken: "token:Ugone", learningSessionId: "x", sessionQuestionId: "y", idempotencyKey: "z" });
+    assert.equal(code(res), "not_member", action);
+  }
+  assert.equal(gas.rows("memberships").length, before, "立場は増えない");
+});

@@ -75,6 +75,13 @@ var MembershipSheetRepository = (function () {
     }) || null;
   }
 
+  // その教室の、その人の立場の一覧（ACTIVE でないものも）
+  function listByTenantIdAndUserId(tenantId, userId) {
+    return SpreadsheetGateway.readObjects(DomainConstants.SHEETS.MEMBERSHIPS).filter(function (row) {
+      return row.tenant_id === tenantId && row.user_id === userId;
+    });
+  }
+
   // 立場を足す
   function append(record) {
     SpreadsheetGateway.appendObject(DomainConstants.SHEETS.MEMBERSHIPS, record);
@@ -84,6 +91,7 @@ var MembershipSheetRepository = (function () {
   return {
     findByMembershipId: findByMembershipId,
     findFirstActiveByTenantIdAndUserId: findFirstActiveByTenantIdAndUserId,
+    listByTenantIdAndUserId: listByTenantIdAndUserId,
     append: append
   };
 })();

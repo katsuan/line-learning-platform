@@ -4,7 +4,7 @@
 var AnswerGrader = (function () {
   // 問題の種類と正解の設定から、答えの正誤と点数を返す
   function grade(questionType, gradingConfig, value) {
-    var correct = parseJson_(gradingConfig && gradingConfig.correct_answer_payload) || {};
+    var correct = JsonText.parse(gradingConfig && gradingConfig.correct_answer_payload, {});
     var maxScore = Number(gradingConfig && gradingConfig.max_score) || 1;
     var isCorrect = false;
 
@@ -16,7 +16,8 @@ var AnswerGrader = (function () {
       var tolerance = gradingConfig && gradingConfig.tolerance !== "" && gradingConfig.tolerance !== undefined && gradingConfig.tolerance !== null
         ? Number(gradingConfig.tolerance)
         : 0;
-      isCorrect = isFinite(Number(value)) && Math.abs(Number(value) - Number(correct.exact)) <= tolerance;
+      var number = toNumber_(value);
+      isCorrect = number !== null && Math.abs(number - Number(correct.exact)) <= tolerance;
     } else {
       isCorrect = String(value).trim().toLowerCase() === String(correct.exact === undefined ? "" : correct.exact).trim().toLowerCase();
     }
@@ -27,19 +28,15 @@ var AnswerGrader = (function () {
     };
   }
 
-  // JSON の文字を読む（物ならそのまま、読めなければ null）
-  function parseJson_(value) {
-    if (!value) {
-      return null;
+  // 数か、数の文字（前後の空白はよい。10 進だけ）を数にする。ほか（true・空白だけ・0x10 など）は null
+  function toNumber_(value) {
+    if (typeof value === "number") {
+      return isFinite(value) ? value : null;
     }
-    if (typeof value === "object") {
-      return value;
+    if (typeof value === "string" && /^[+-]?(\d+\.?\d*|\.\d+)$/.test(value.trim())) {
+      return Number(value.trim());
     }
-    try {
-      return JSON.parse(value);
-    } catch (error) {
-      return null;
-    }
+    return null;
   }
 
   return {

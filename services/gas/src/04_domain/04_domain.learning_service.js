@@ -18,7 +18,7 @@ var LearningService = (function () {
         : null,
       learningSummary: learningSummary,
       todayAnswerEvents: todayAnswerEvents.map(function (row) {
-        var answerPayload = parseJsonSafely_(row.answer_payload);
+        var answerPayload = JsonText.parse(row.answer_payload);
         return {
           sessionQuestionId: row.session_question_id,
           questionId: row.question_id,
@@ -128,18 +128,6 @@ var LearningService = (function () {
     });
   }
 
-  // JSON の文字を読む（読めなければ null）
-  function parseJsonSafely_(value) {
-    if (!value) {
-      return null;
-    }
-
-    try {
-      return JSON.parse(value);
-    } catch (error) {
-      return null;
-    }
-  }
 
   return {
     buildHomePayload: buildHomePayload,

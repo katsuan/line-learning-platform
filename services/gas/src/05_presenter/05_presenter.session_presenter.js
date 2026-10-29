@@ -42,25 +42,13 @@ var SessionPresenter = (function () {
     }
 
     return {
-      answerSchema: parseJson_(gradingConfig.answer_schema),
-      correctAnswerPayload: parseJson_(gradingConfig.correct_answer_payload),
+      answerSchema: JsonText.parse(gradingConfig.answer_schema),
+      correctAnswerPayload: JsonText.parse(gradingConfig.correct_answer_payload),
       tolerance: gradingConfig.tolerance === "" ? null : Number(gradingConfig.tolerance || 0),
       maxScore: toNumber_(gradingConfig.max_score)
     };
   }
 
-  // JSON の文字を読む（読めなければ null）
-  function parseJson_(value) {
-    if (!value) {
-      return null;
-    }
-
-    try {
-      return JSON.parse(value);
-    } catch (error) {
-      return null;
-    }
-  }
 
   // 数にする（空なら 0）
   function toNumber_(value) {

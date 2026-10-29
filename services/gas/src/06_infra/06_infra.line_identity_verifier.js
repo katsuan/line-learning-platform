@@ -28,7 +28,7 @@ var LineIdentityVerifier = (function () {
     });
 
     var statusCode = response.getResponseCode();
-    var payload = parseJson_(response.getContentText());
+    var payload = JsonText.parse(response.getContentText(), {});
 
     if (statusCode < 200 || statusCode >= 300) {
       throw AppError.upstream(
@@ -74,17 +74,8 @@ var LineIdentityVerifier = (function () {
     return "";
   }
 
-  // JSON の文字を読む（読めなければ {}）
-  function parseJson_(text) {
-    try {
-      return JSON.parse(text || "{}");
-    } catch (error) {
-      return {};
-    }
-  }
 
   return {
-    verifyIdToken: verifyIdToken,
     requireIdentity: requireIdentity
   };
 })();

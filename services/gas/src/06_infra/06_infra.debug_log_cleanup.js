@@ -103,9 +103,6 @@ var DebugLogCleanup = (function () {
   return {
     installTrigger: installTrigger,
     deleteOld: deleteOld,
-    deleteLegacy: deleteLegacy,
-    isLegacyRow: isLegacyRow,
-    toTime: toTime,
-    deleteWhere: deleteWhere
+    deleteLegacy: deleteLegacy
   };
 })();
