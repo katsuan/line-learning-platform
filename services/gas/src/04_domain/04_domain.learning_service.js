@@ -66,10 +66,20 @@ var LearningService = (function () {
       );
     }
 
-    var now = new Date().toISOString();
-    var sessionId = "session_" + Utilities.getUuid();
-    var sessionRecord = {
-      learning_session_id: sessionId,
+    var sessionRecord = buildSessionRecord_(me, businessDate, questions);
+    LearningSessionSheetRepository.append(sessionRecord);
+    SessionQuestionSheetRepository.appendMany(buildSessionQuestions_(sessionRecord, questions));
+
+    return {
+      session: SessionPresenter.toSummary(sessionRecord),
+      reused: false
+    };
+  }
+
+  // learning_sessions の1行（今日の回）
+  function buildSessionRecord_(me, businessDate, questions) {
+    return {
+      learning_session_id: "session_" + Utilities.getUuid(),
       tenant_id: me.tenant.tenant_id,
       user_id: me.user.user_id,
       membership_id: me.membership.membership_id,
@@ -82,15 +92,17 @@ var LearningService = (function () {
       completed_at: "",
       expires_at: "",
       business_date: businessDate,
-      created_at: now
+      created_at: new Date().toISOString()
     };
+  }
 
-    LearningSessionSheetRepository.append(sessionRecord);
-    SessionQuestionSheetRepository.appendMany(questions.map(function (question, index) {
+  // session_questions の行（出す順と、そのときの問題の写し）
+  function buildSessionQuestions_(sessionRecord, questions) {
+    return questions.map(function (question, index) {
       return {
         session_question_id: "session_question_" + Utilities.getUuid(),
-        tenant_id: me.tenant.tenant_id,
-        learning_session_id: sessionId,
+        tenant_id: sessionRecord.tenant_id,
+        learning_session_id: sessionRecord.learning_session_id,
         question_id: question.question_id,
         display_order: index + 1,
         question_snapshot_payload: JSON.stringify({
@@ -98,14 +110,9 @@ var LearningService = (function () {
           questionType: question.question_type,
           gradingType: question.grading_type
         }),
-        created_at: now
+        created_at: sessionRecord.created_at
       };
-    }));
-
-    return {
-      session: SessionPresenter.toSummary(sessionRecord),
-      reused: false
-    };
+    });
   }
 
   // これまでの成績（答えた数・正答率・さいごの時刻）
