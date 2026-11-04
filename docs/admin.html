@@ -15,7 +15,7 @@
     <main class="ls-page admin-page ls-stack">
       <header class="ls-brand">
         <h1 class="ls-brand-name">📊 学習者の進み具合</h1>
-        <button id="refreshButton" class="ls-icon-button" type="button" aria-label="最新にする">🔄</button>
+        <button id="refreshButton" class="ls-icon-button" type="button" aria-label="最新にする"><span class="ls-icon" data-icon="refresh" aria-hidden="true"></span></button>
       </header>
       <p class="ls-brand-copy">だれが、どれだけ解いたかを見られます</p>
 
@@ -29,12 +29,12 @@
 
       <div id="layoutPanel" class="layout">
         <section class="ls-panel" aria-labelledby="listTitle">
-          <h2 id="listTitle" class="ls-panel-title">👥 学習者</h2>
+          <h2 id="listTitle" class="ls-panel-title">学習者</h2>
           <div id="learnerList" class="ls-list"></div>
         </section>
 
         <section id="detailPanel" class="ls-panel" aria-labelledby="detailTitle">
-          <h2 id="detailTitle" class="ls-panel-title">📝 くわしく</h2>
+          <h2 id="detailTitle" class="ls-panel-title">くわしく</h2>
           <div id="learnerDetail" class="ls-stack"></div>
         </section>
       </div>

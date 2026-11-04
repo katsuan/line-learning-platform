@@ -15,7 +15,7 @@
 
 .layout {
   display: grid;
-  gap: 12px;
+  gap: var(--ls-space-m);
 }
 
 @media (min-width: 900px) {
@@ -33,9 +33,9 @@
 
 .stat {
   display: grid;
-  gap: 4px;
+  gap: var(--ls-space-xs);
   min-width: 0;
-  padding: 12px;
+  padding: var(--ls-space-m);
   border-radius: var(--ls-radius-md);
   background: var(--ls-surface-sub);
 }
@@ -48,7 +48,7 @@
 
 .stat-value {
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 700;
   overflow-wrap: anywhere;
 }
 
@@ -59,16 +59,16 @@
   text-align: left;
 }
 
+/* 選んでいる学習者は、濃い字の色のふち（ux.md L5） */
 .learner-item[aria-current="true"] {
-  border-color: var(--ls-accent);
-  background: var(--ls-accent-soft);
+  border-color: var(--ls-text);
 }
 
 .session-row {
   display: flex;
   justify-content: space-between;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: var(--ls-space-s);
+  padding: var(--ls-space-s) var(--ls-space-m);
   border-radius: var(--ls-radius-sm);
   background: var(--ls-surface-sub);
   font-size: 14px;

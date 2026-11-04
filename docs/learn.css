@@ -39,10 +39,6 @@
   stroke-linecap: round;
 }
 
-.sound-button[aria-pressed="true"] {
-  color: var(--ls-accent);
-}
-
 .sound-button[aria-pressed="true"] .speaker-slash,
 .sound-button[aria-pressed="false"] .speaker-wave {
   display: none;
@@ -50,15 +46,15 @@
 
 /* 進み具合 */
 .progress-panel {
-  gap: 10px;
+  gap: var(--ls-space-s);
 }
 
 .progress-head {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 10px;
-  font-weight: 800;
+  gap: var(--ls-space-s);
+  font-weight: 700;
 }
 
 .progress-count {
@@ -70,14 +66,15 @@
   height: 8px;
   border-radius: 999px;
   overflow: hidden;
-  background: var(--ls-accent-soft);
+  background: var(--ls-line);
 }
 
+/* 進み具合は濃い字の色で（ツールの色は「答える」ボタンだけ。ux.md L5） */
 .progress-fill {
   width: 0%;
   height: 100%;
   border-radius: inherit;
-  background: var(--ls-accent);
+  background: var(--ls-text);
   transition: width 180ms ease;
 }
 
@@ -86,8 +83,9 @@
   min-height: var(--ls-tap);
 }
 
+/* いまの問題は、濃い字の色のふち（ux.md L5） */
 .qmap .ls-chip[aria-current="step"] {
-  border-color: var(--ls-accent);
+  border-color: var(--ls-text);
   border-width: 2px;
 }
 
@@ -103,27 +101,23 @@
 .question-meta {
   display: flex;
   justify-content: space-between;
-  gap: 10px;
+  gap: var(--ls-space-s);
   color: var(--ls-subtext);
   font-size: 13px;
   font-weight: 700;
 }
 
-.question-type {
-  color: var(--ls-accent-ink);
-}
-
 .question-text {
   margin: 0;
   font-size: clamp(22px, 7vw, 28px);
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
 
 .answer-zone {
   display: grid;
-  gap: 10px;
+  gap: var(--ls-space-s);
 }
 
 .tf-choices {
@@ -151,8 +145,8 @@
 /* 答え合わせ */
 .result {
   display: grid;
-  gap: 10px;
-  padding: 14px;
+  gap: var(--ls-space-s);
+  padding: var(--ls-space-m);
   border-radius: var(--ls-radius-md);
   border: 1px solid var(--ls-line);
 }
@@ -170,7 +164,7 @@
 .result-head {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--ls-space-m);
 }
 
 .result-mark {
@@ -182,7 +176,7 @@
   border-radius: 16px;
   background: var(--ls-surface);
   font-size: 28px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .is-correct .result-mark {
@@ -232,8 +226,8 @@
 
 .stat {
   display: grid;
-  gap: 4px;
-  padding: 12px;
+  gap: var(--ls-space-xs);
+  padding: var(--ls-space-m);
   border-radius: var(--ls-radius-md);
   background: var(--ls-surface-sub);
 }
@@ -246,12 +240,12 @@
 
 .stat-value {
   font-size: 24px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 /* 送る前の見本（LINE のトークの見た目なので、暗い表示でも明るいまま） */
 .talk-preview {
-  padding: 14px;
+  padding: var(--ls-space-m);
   border-radius: var(--ls-radius-md);
   background: var(--ls-talk-bg);
 }
@@ -353,13 +347,12 @@
   margin: 8px 0 0;
   color: var(--ls-faint);
   font-size: 11px;
-  text-align: center;
 }
 
 .debug-log {
   max-height: 220px;
   margin: 0;
-  padding: 12px;
+  padding: var(--ls-space-m);
   overflow: auto;
   border-radius: var(--ls-radius-md);
   background: #201d1a;
@@ -380,7 +373,6 @@
   margin: 0;
   color: var(--ls-subtext);
   font-size: 13px;
-  text-align: center;
   white-space: pre-line;
 }
 

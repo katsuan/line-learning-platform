@@ -10,7 +10,7 @@
 
 .steps {
   display: grid;
-  gap: 14px;
+  gap: var(--ls-space-m);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -19,7 +19,7 @@
 .step {
   display: grid;
   grid-template-columns: 36px minmax(0, 1fr);
-  gap: 12px;
+  gap: var(--ls-space-m);
   align-items: start;
 }
 
@@ -29,13 +29,14 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: var(--ls-accent-soft);
-  color: var(--ls-accent-ink);
-  font-weight: 800;
+  background: var(--ls-surface-sub);
+  border: 1px solid var(--ls-line);
+  color: var(--ls-text);
+  font-weight: 700;
 }
 
 .step h2 {
-  margin: 6px 0 4px;
+  margin: var(--ls-space-s) 0 var(--ls-space-xs);
   font-size: 17px;
 }
 
@@ -47,12 +48,12 @@
 }
 
 .step .ls-button {
-  margin-top: 10px;
+  margin-top: var(--ls-space-s);
 }
 
 /* ここから下は ?debug=1 のときだけ（開発用の接続確認） */
 .dev-status {
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .dev-status.is-ok {
@@ -66,7 +67,7 @@
 .dev-list {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
-  gap: 6px 12px;
+  gap: var(--ls-space-s) var(--ls-space-m);
   margin: 0;
   font-size: 13px;
 }
@@ -83,7 +84,7 @@
 .dev-log {
   max-height: 260px;
   margin: 0;
-  padding: 12px;
+  padding: var(--ls-space-m);
   overflow: auto;
   border-radius: var(--ls-radius-md);
   background: #1e1b18;

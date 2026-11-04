@@ -97,31 +97,31 @@
 
     var gate = {
       denied: {
-        icon: "🔒",
+        icon: "lock",
         title: "管理者だけが見られます",
         text: "この LINE のアカウントは、管理者として登録されていません。<br>ちがうアカウントなら、ログインし直してください。",
-        button: "🔑 ちがうアカウントでログイン",
+        button: icon_("login") + "ちがうアカウントでログイン",
         primary: false
       },
       login: {
-        icon: "🔑",
+        icon: "login",
         title: "管理者だけが見られます",
         text: "LINE でログインすると、管理者かどうかを確かめます。",
-        button: "LINE でログイン",
+        button: icon_("login") + "LINE でログイン",
         primary: true
       },
       liff_failed: {
-        icon: "📶",
+        icon: "offline",
         title: "LINE のログインを始められませんでした",
         text: "時間をおいて、もう一度開いてください。",
-        button: "🔄 もう一度",
+        button: icon_("refresh") + "もう一度",
         primary: true
       }
     }[access];
 
     gatePanelEl.innerHTML = [
       '<div class="ls-empty">',
-      '  <span class="ls-empty-icon" aria-hidden="true">' + gate.icon + '</span>',
+      '  ' + emptyIcon_(gate.icon),
       '  <strong>' + gate.title + '</strong>',
       '  <span>' + gate.text + '</span>',
       '  <button id="gateButton" class="ls-button' + (gate.primary ? ' is-primary' : '') + '" type="button">' + gate.button + '</button>',
@@ -275,9 +275,9 @@
     if (state.listFailed) {
       learnerListEl.innerHTML = [
         '<div class="ls-empty">',
-        '  <span class="ls-empty-icon" aria-hidden="true">📶</span>',
+        '  ' + emptyIcon_("offline"),
         '  <span>学習者を読みこめませんでした。</span>',
-        '  <button id="retryListButton" class="ls-button is-primary" type="button">🔄 もう一度</button>',
+        '  <button id="retryListButton" class="ls-button is-primary" type="button">' + icon_("refresh") + 'もう一度</button>',
         '</div>'
       ].join("");
       document.getElementById("retryListButton").addEventListener("click", loadLearners_);
@@ -285,7 +285,7 @@
     }
 
     if (state.learners.length === 0) {
-      learnerListEl.innerHTML = '<div class="ls-empty"><span class="ls-empty-icon" aria-hidden="true">🌱</span><span>まだ学習者がいません。<br>LINE で5問を解いた人が、ここに出ます。</span></div>';
+      learnerListEl.innerHTML = '<div class="ls-empty">' + emptyIcon_("sprout") + '<span>まだ学習者がいません。<br>LINE で5問を解いた人が、ここに出ます。</span></div>';
       return;
     }
 
@@ -324,9 +324,9 @@
     if (state.detailFailed) {
       learnerDetailEl.innerHTML = [
         '<div class="ls-empty">',
-        '  <span class="ls-empty-icon" aria-hidden="true">📶</span>',
+        '  ' + emptyIcon_("offline"),
         '  <span>くわしい記録を読みこめませんでした。</span>',
-        '  <button id="retryDetailButton" class="ls-button is-primary" type="button">🔄 もう一度</button>',
+        '  <button id="retryDetailButton" class="ls-button is-primary" type="button">' + icon_("refresh") + 'もう一度</button>',
         '</div>'
       ].join("");
       document.getElementById("retryDetailButton").addEventListener("click", function () {
@@ -351,7 +351,7 @@
       '  <div class="stat"><span class="stat-label">正答率</span><span class="stat-value">' + Math.round((summary.accuracyRate || 0) * 100) + '%</span></div>',
       '  <div class="stat"><span class="stat-label">さいごに解いた日</span><span class="stat-value" style="font-size: 16px;">' + escapeHtml_(summary.lastLearnedAt ? formatDateTime_(summary.lastLearnedAt) : "まだ") + '</span></div>',
       '</div>',
-      '<h3 class="ls-panel-title">🗓 最近の5問</h3>',
+      '<h3 class="ls-panel-title">最近の5問</h3>',
       renderRecentSessions_(recentSessions)
     ].join("");
   }
@@ -362,7 +362,7 @@
       return '<p class="ls-hint">まだ記録がありません。</p>';
     }
 
-    return '<div class="ls-stack" style="gap: 6px;">' + recentSessions.map(function (session) {
+    return '<div class="ls-stack" style="gap: var(--ls-space-s);">' + recentSessions.map(function (session) {
       return '<div class="session-row"><span>' + escapeHtml_(formatDate_(session.businessDate || session.createdAt) || "日付なし") + '・' + escapeHtml_(toSessionTypeLabel_(session.sessionType)) + '</span>' +
         '<span>' + Number(session.questionCount || 0) + '問・' + escapeHtml_(toStatusLabel_(session.status)) + '</span></div>';
     }).join("") + '</div>';
@@ -385,6 +385,16 @@
       default:
         return "—";
     }
+  }
+
+  // Q キットの線アイコンの HTML（ui.css の .ls-icon）
+  function icon_(name) {
+    return '<span class="ls-icon" data-icon="' + name + '" aria-hidden="true"></span>';
+  }
+
+  // 空のとき・断られたときの案内の、大きな線アイコンの HTML
+  function emptyIcon_(name) {
+    return '<span class="ls-empty-icon ls-icon" data-icon="' + name + '" aria-hidden="true"></span>';
   }
 
   // くわしい中身は ?debug=1 のときだけ

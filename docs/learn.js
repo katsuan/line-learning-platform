@@ -469,7 +469,7 @@
       var resultButton = document.createElement("button");
       resultButton.type = "button";
       resultButton.className = "ls-chip";
-      resultButton.textContent = "🏁 結果";
+      resultButton.innerHTML = icon_("chart") + "結果";
       if (state.currentQuestionIndex >= questions.length) {
         resultButton.setAttribute("aria-current", "step");
         resultButton.classList.add("is-active");
@@ -512,7 +512,7 @@
     questionShellEl.innerHTML = [
       '<article class="ls-panel question-card" aria-labelledby="questionText">',
       '  <div class="question-meta">',
-      '    <span class="question-type">' + escapeHtml_(toQuestionTypeLabel_(question.questionType)) + '</span>',
+      '    <span class="question-type">' + renderQuestionTypeLabel_(question.questionType) + '</span>',
       '    <span>第' + (state.currentQuestionIndex + 1) + '問</span>',
       '  </div>',
       '  <p id="questionText" class="question-text">' + escapeHtml_(question.questionText) + '</p>',
@@ -530,10 +530,10 @@
 
   // 「答える」ボタンの HTML
   function renderSubmitButton_() {
-    var label = "✏️ 答える";
+    var label = icon_("edit") + "答える";
     var hint = "";
     if (!state.ready) {
-      label = state.loadFailed ? "✏️ 答える" : "読みこみ中…";
+      label = state.loadFailed ? icon_("edit") + "答える" : "読みこみ中…";
       if (state.loadFailed) {
         hint = '<p class="ls-hint">つながると、答えを送れます。</p>';
       }
@@ -630,11 +630,11 @@
 
   // 読めなかったときの案内（GAS が返したエラーの番号ごと。ない番号は電波の案内）
   var LOAD_ERROR_REASONS = {
-    login_required: { icon: "🔑", text: "だれの記録かを確かめられませんでした。LINE から開きなおしてね。" },
-    not_member: { icon: "🏫", text: "この教室の学習者として登録されていません。先生に聞いてね。" },
-    questions_not_found: { icon: "📭", text: "まだ問題が用意されていません。先生に聞いてね。" },
-    busy: { icon: "⏳", text: "いま混みあっています。少し待ってから、もう一度ためしてね。" },
-    network: { icon: "📶", text: "電波のよいところで、もう一度ためしてね。" }
+    login_required: { icon: "login", text: "だれの記録かを確かめられませんでした。LINE から開きなおしてね。" },
+    not_member: { icon: "team", text: "この教室の学習者として登録されていません。先生に聞いてね。" },
+    questions_not_found: { icon: "inbox", text: "まだ問題が用意されていません。先生に聞いてね。" },
+    busy: { icon: "wait", text: "いま混みあっています。少し待ってから、もう一度ためしてね。" },
+    network: { icon: "offline", text: "電波のよいところで、もう一度ためしてね。" }
   };
 
   // 読めなかったときの案内と「もう一度」を出す
@@ -644,12 +644,12 @@
     questionShellEl.innerHTML = [
       '<section class="ls-panel">',
       '  <div class="ls-empty">',
-      '    <span class="ls-empty-icon" aria-hidden="true">' + reason.icon + '</span>',
+      '    ' + emptyIcon_(reason.icon),
       '    <strong>今日の5問を読みこめませんでした</strong>',
       '    <span>' + reason.text + '</span>',
       '    <div class="ls-actions">',
-      '      <button id="retryLoadButton" class="ls-button is-primary" type="button">🔄 もう一度</button>',
-      canOpenInLine ? '      <a class="ls-button" href="' + escapeHtml_(buildLiffUrl_()) + '">💬 LINEで開きなおす</a>' : '',
+      '      <button id="retryLoadButton" class="ls-button is-primary" type="button">' + icon_("refresh") + 'もう一度</button>',
+      canOpenInLine ? '      <a class="ls-button" href="' + escapeHtml_(buildLiffUrl_()) + '">' + icon_("message-circle") + 'LINEで開きなおす</a>' : '',
       '    </div>',
       '  </div>',
       '</section>'
@@ -662,9 +662,9 @@
     questionShellEl.innerHTML = [
       '<section class="ls-panel">',
       '  <div class="ls-empty">',
-      '    <span class="ls-empty-icon" aria-hidden="true">📚</span>',
+      '    ' + emptyIcon_("notebook"),
       '    <strong>今日の5問を始めよう</strong>',
-      '    <button id="startDailyButton" class="ls-button is-primary" type="button">▶ 今日の5問を始める</button>',
+      '    <button id="startDailyButton" class="ls-button is-primary" type="button">' + icon_("play") + '今日の5問を始める</button>',
       '  </div>',
       '</section>'
     ].join("");
@@ -716,7 +716,7 @@
       renderSaveLine_(key),
       '</div>',
       (isLast || allAnswered)
-        ? '<button id="finishSessionButton" class="ls-button is-primary is-block big-button" type="button">🏁 結果を見る</button>'
+        ? '<button id="finishSessionButton" class="ls-button is-primary is-block big-button" type="button">' + icon_("chart") + '結果を見る</button>'
         : '<button id="nextQuestionButton" class="ls-button is-primary is-block big-button" type="button">次の問題へ →</button>'
     ].join("");
   }
@@ -728,10 +728,10 @@
       return '<p class="save-line">保存しています…</p>';
     }
     if (saveState === "failed") {
-      return '<p class="save-line is-error"><span>まだ保存できていません</span><button id="retrySaveButton" class="ls-button" type="button">🔄 もう一度</button></p>';
+      return '<p class="save-line is-error"><span>まだ保存できていません</span><button id="retrySaveButton" class="ls-button" type="button">' + icon_("refresh") + 'もう一度</button></p>';
     }
     if (saveState === "saved") {
-      return '<p class="save-line">✓ 保存しました</p>';
+      return '<p class="save-line"><span>' + icon_("check", "is-text") + '保存しました</span></p>';
     }
     return '';
   }
@@ -745,14 +745,14 @@
 
     questionShellEl.innerHTML = [
       '<section class="ls-panel" aria-labelledby="completionTitle">',
-      '  <h2 id="completionTitle" class="completion-title">🎉 ' + total + '問おわり！</h2>',
+      '  <h2 id="completionTitle" class="completion-title">' + total + '問おわり！</h2>',
       '  <div class="ls-grid-2">',
       '    <div class="stat"><span class="stat-label">正解</span><span class="stat-value">' + correctCount + ' / ' + total + '</span></div>',
       '    <div class="stat"><span class="stat-label">正答率</span><span class="stat-value">' + accuracy + '%</span></div>',
       '  </div>',
       incorrectCount > 0
-        ? '  <button id="reviewIncorrectButton" class="ls-button is-block" type="button">🔍 まちがえた問題を見なおす</button>'
-        : '  <button id="reviewFirstButton" class="ls-button is-block" type="button">🔁 1問目から見なおす</button>',
+        ? '  <button id="reviewIncorrectButton" class="ls-button is-block" type="button">' + icon_("search") + 'まちがえた問題を見なおす</button>'
+        : '  <button id="reviewFirstButton" class="ls-button is-block" type="button">' + icon_("undo") + '1問目から見なおす</button>',
       '</section>',
       renderShareSection_(total, accuracy)
     ].join("");
@@ -778,10 +778,10 @@
     var notes = [];
 
     if (canPicker) {
-      buttons.push('<button id="shareTargetPickerButton" class="ls-send" type="button"' + (state.sharing ? ' disabled' : '') + '>' + (state.sharing ? '送っています…' : '💬 LINEで送る') + '</button>');
+      buttons.push('<button id="shareTargetPickerButton" class="ls-send" type="button"' + (state.sharing ? ' disabled' : '') + '>' + (state.sharing ? '送っています…' : icon_("send") + 'LINEで送る') + '</button>');
     }
     if (canCurrent) {
-      buttons.push('<button id="shareCurrentChatButton" class="' + (canPicker ? 'ls-button is-block' : 'ls-send') + '" type="button"' + (state.sharing ? ' disabled' : '') + '>' + (state.sharing && !canPicker ? '送っています…' : '💬 このトークに送る') + '</button>');
+      buttons.push('<button id="shareCurrentChatButton" class="' + (canPicker ? 'ls-button is-block' : 'ls-send') + '" type="button"' + (state.sharing ? ' disabled' : '') + '>' + (state.sharing && !canPicker ? '送っています…' : icon_("send") + 'このトークに送る') + '</button>');
     }
 
     var outside = "";
@@ -790,7 +790,7 @@
         '<div class="ls-outside">',
         '  <p class="ls-outside-text">LINE の外で開いています。LINEで開くと送れます：</p>',
         '  <div class="ls-outside-actions">',
-        '    <a class="ls-outside-button is-app" href="' + escapeHtml_(buildLiffUrl_()) + '">💬 LINEで開く</a>',
+        '    <a class="ls-outside-button is-app" href="' + escapeHtml_(buildLiffUrl_()) + '">' + icon_("message-circle") + 'LINEで開く</a>',
         '  </div>',
         '</div>'
       ].join("");
@@ -804,8 +804,7 @@
     }
 
     return [
-      '<section class="ls-panel" aria-labelledby="shareTitle">',
-      '  <h2 id="shareTitle" class="ls-panel-title">💬 結果を送る</h2>',
+      '<section class="ls-panel" aria-label="結果を送る">',
       renderTalkPreview_(total, accuracy),
       outside,
       buttons.join(""),
@@ -919,6 +918,16 @@
     if (question && question.sessionQuestionId === answerKey && !isSessionCompleted_()) {
       renderQuestionView_();
     }
+  }
+
+  // Q キットの線アイコンの HTML（ui.css の .ls-icon）。is-text は文の頭に置くとき（字との間 4）
+  function icon_(name, className) {
+    return '<span class="ls-icon' + (className ? " " + className : "") + '" data-icon="' + name + '" aria-hidden="true"></span>';
+  }
+
+  // 空のとき・読めなかったときの案内の、大きな線アイコンの HTML
+  function emptyIcon_(name) {
+    return '<span class="ls-empty-icon ls-icon" data-icon="' + name + '" aria-hidden="true"></span>';
   }
 
   // ---- 移動 ----
@@ -1376,18 +1385,14 @@
     }, {});
   }
 
-  // 問題の種類の名前
-  function toQuestionTypeLabel_(questionType) {
-    switch (questionType) {
-      case "TEXT_EXACT":
-        return "✏️ 書いて答える";
-      case "TRUE_FALSE":
-        return "⭕ 正しいか、まちがいか";
-      case "NUMBER":
-        return "🔢 数字で答える";
-      default:
-        return "";
-    }
+  // 問題の種類の名前の HTML（線アイコン＋名前）
+  function renderQuestionTypeLabel_(questionType) {
+    var label = {
+      TEXT_EXACT: ["edit", "書いて答える"],
+      TRUE_FALSE: ["check", "正しいか、まちがいか"],
+      NUMBER: ["hash", "数字で答える"]
+    }[questionType];
+    return label ? icon_(label[0], "is-text") + escapeHtml_(label[1]) : "";
   }
 
   // ID の要素があれば、押したときの動きを付ける
