@@ -13,6 +13,7 @@
     // ui.js が読めないときの代わり：待っているあいだの文をそのまま出す
     progress: function (label, show) { show(label + "…"); return function () {}; }
   };
+  var Grade = window.LearnGrade;
   var CACHE_KEY = "learningPlatform:lastBootstrap:v1";
   var AUDIO_KEY = "learningPlatformAudioSettings";
 
@@ -295,7 +296,7 @@
         score: Number(entry.score || 0),
         explanation: question.explanation || "",
         normalizedAnswer: entry.answerValue || "",
-        correctAnswerText: toCorrectAnswerText_(question, (question.gradingConfig && question.gradingConfig.correctAnswerPayload) || {})
+        correctAnswerText: Grade.correctAnswerText(question, (question.gradingConfig && question.gradingConfig.correctAnswerPayload) || {})
       };
       state.saveState[entry.sessionQuestionId] = "saved";
     });
@@ -864,15 +865,15 @@
       }
       return;
     }
-    if (question.questionType === "NUMBER" && !isFinite(Number(toHalfWidth_(currentAnswer)))) {
+    if (question.questionType === "NUMBER" && !Grade.isNumberText(currentAnswer)) {
       state.answerError = "数字で入れてね";
       renderQuestionView_();
       return;
     }
 
     state.answerError = "";
-    state.answers[answerKey] = question.questionType === "NUMBER" ? toHalfWidth_(currentAnswer) : currentAnswer;
-    var gradingResult = gradeAnswer_(question, state.answers[answerKey]);
+    state.answers[answerKey] = question.questionType === "NUMBER" ? Grade.toHalfWidth(currentAnswer).trim() : currentAnswer;
+    var gradingResult = Grade.grade(question, state.answers[answerKey]);
     state.results[answerKey] = gradingResult;
     playResultSound_(gradingResult.isCorrect);
     if (document.activeElement && document.activeElement.blur) {
@@ -930,65 +931,6 @@
     if (question && question.sessionQuestionId === answerKey && !isSessionCompleted_()) {
       renderQuestionView_();
     }
-  }
-
-  // 答え合わせをする（GAS の 04_domain.answer_grader.js と同じ決まり）
-  function gradeAnswer_(question, rawAnswer) {
-    var gradingConfig = question.gradingConfig || {};
-    var answerPayload = gradingConfig.correctAnswerPayload || {};
-    var normalizedAnswer = normalizeAnswer_(question, rawAnswer);
-    var isCorrect = false;
-
-    switch (question.questionType) {
-      case "TRUE_FALSE":
-        isCorrect = String(normalizedAnswer) === String(answerPayload.exact);
-        break;
-      case "NUMBER":
-        var tolerance = gradingConfig.tolerance === null || gradingConfig.tolerance === undefined ? 0 : Number(gradingConfig.tolerance);
-        isCorrect = Math.abs(Number(normalizedAnswer) - Number(answerPayload.exact)) <= tolerance;
-        break;
-      case "TEXT_EXACT":
-      default:
-        isCorrect = String(normalizedAnswer).trim().toLowerCase() === String(answerPayload.exact || "").trim().toLowerCase();
-        break;
-    }
-
-    return {
-      isCorrect: isCorrect,
-      score: isCorrect ? (gradingConfig.maxScore || 1) : 0,
-      explanation: question.explanation || "",
-      normalizedAnswer: normalizedAnswer,
-      correctAnswerText: toCorrectAnswerText_(question, answerPayload)
-    };
-  }
-
-  // 答えをそろえる（数字は数に、文字は前後の空白を取る）
-  function normalizeAnswer_(question, rawAnswer) {
-    if (question.questionType === "NUMBER") {
-      return rawAnswer === "" ? "" : Number(rawAnswer);
-    }
-    if (question.questionType === "TRUE_FALSE") {
-      return rawAnswer;
-    }
-    return String(rawAnswer || "").trim();
-  }
-
-  // 全角の数字・点・マイナスを半角にする
-  function toHalfWidth_(value) {
-    return String(value || "").replace(/[０-９．－]/g, function (ch) {
-      return String.fromCharCode(ch.charCodeAt(0) - 0xFEE0);
-    }).replace(/ー/g, "-");
-  }
-
-  // 正解を、画面に出す文にする
-  function toCorrectAnswerText_(question, answerPayload) {
-    if (!answerPayload || answerPayload.exact === undefined || answerPayload.exact === null) {
-      return "";
-    }
-    if (question.questionType === "TRUE_FALSE") {
-      return String(answerPayload.exact) === "true" ? "正しい" : "まちがい";
-    }
-    return String(answerPayload.exact);
   }
 
   // ---- 移動 ----
