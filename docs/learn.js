@@ -1,6 +1,6 @@
 // 今日の5問の画面（learn.html）の動き。
 // 中身：LIFF の準備 → GAS から今日の5問を読む → 1問ずつ答えて保存 → 結果を LINE に送る。
-// 読むところ：learn.html（ui.js・LIFF の SDK・config.js のあと）。設定は config.js の APP_CONFIG。
+// 読むところ：learn.html（ui.js・LIFF の SDK・config.js・common.js・learn.grade.js のあと）。設定は config.js の APP_CONFIG。
 (function () {
   var config = window.APP_CONFIG || {};
   var UI = window.LineShareUI || {
@@ -14,6 +14,9 @@
     progress: function (label, show) { show(label + "…"); return function () {}; }
   };
   var Grade = window.LearnGrade;
+  var Common = window.LearningCommon;
+  var escapeHtml_ = Common.escapeHtml;
+  var formatDate_ = Common.formatDate;
   var CACHE_KEY = "learningPlatform:lastBootstrap:v1";
   var AUDIO_KEY = "learningPlatformAudioSettings";
 
@@ -393,22 +396,7 @@
       }));
     }
 
-    return fetch(url.toString(), options).then(function (response) {
-      return response.text().then(function (text) {
-        var payload;
-        try {
-          payload = JSON.parse(text);
-        } catch (error) {
-          payload = { raw: text };
-        }
-
-        if (!response.ok || (payload && payload.error)) {
-          throw payload;
-        }
-
-        return payload;
-      });
-    });
+    return fetch(url.toString(), options).then(Common.readJsonResponse);
   }
 
   // GAS に送る本人の印（LINE の ID トークン・名前・写真）
@@ -1402,20 +1390,6 @@
     }
   }
 
-  // シートの日付は "2026-10-23" か、日付に変わった "2026-10-22T15:00:00.000Z" で来る
-  function formatDate_(value) {
-    if (!value) {
-      return "";
-    }
-    var text = String(value);
-    var date = /^\d{4}-\d{2}-\d{2}$/.test(text) ? new Date(text + "T00:00:00+09:00") : new Date(text);
-    if (isNaN(date.getTime())) {
-      return "";
-    }
-    var jst = new Date(date.getTime() + 9 * 60 * 60 * 1000);
-    return (jst.getUTCMonth() + 1) + "月" + jst.getUTCDate() + "日";
-  }
-
   // ID の要素があれば、押したときの動きを付ける
   function bindClick_(id, handler) {
     var element = document.getElementById(id);
@@ -1460,15 +1434,5 @@
     if (debugMode) {
       responsePanelEl.textContent = JSON.stringify(error, null, 2);
     }
-  }
-
-  // HTML に入れる文字の < > & " ' をそのまま出す形にする
-  function escapeHtml_(value) {
-    return String(value === undefined || value === null ? "" : value)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
   }
 })();

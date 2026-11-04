@@ -1,8 +1,12 @@
 // 管理の画面（admin.html）の動き。
 // 中身：LINE でログイン → 学習者の一覧とくわしい記録を GAS から読んで出す（管理者だけ）。
-// 読むところ：admin.html（LIFF の SDK・config.js のあと）。設定は config.js の APP_CONFIG。
+// 読むところ：admin.html（LIFF の SDK・config.js・common.js のあと）。設定は config.js の APP_CONFIG。
 (function () {
   var config = window.APP_CONFIG || {};
+  var Common = window.LearningCommon;
+  var escapeHtml_ = Common.escapeHtml;
+  var formatDate_ = Common.formatDate;
+  var formatDateTime_ = Common.formatDateTime;
   var state = {
     learners: [],
     loadingList: false,
@@ -245,20 +249,7 @@
         tenantId: config.tenantId,
         lineIdToken: state.idToken
       }))
-    }).then(function (response) {
-      return response.text().then(function (text) {
-        var payload;
-        try {
-          payload = JSON.parse(text);
-        } catch (error) {
-          payload = { raw: text };
-        }
-        if (!response.ok || payload.error) {
-          throw payload;
-        }
-        return payload;
-      });
-    });
+    }).then(Common.readJsonResponse);
   }
 
   // 上の数字（学習者の数・答えた数・平均の正答率）を出す
@@ -396,43 +387,10 @@
     }
   }
 
-  // シートの日付は "2026-10-23" か ISO の日時で来る。日本の日付で出す
-  function toJstDate_(value) {
-    var text = String(value || "");
-    var date = /^\d{4}-\d{2}-\d{2}$/.test(text) ? new Date(text + "T00:00:00+09:00") : new Date(text);
-    return isNaN(date.getTime()) ? null : new Date(date.getTime() + 9 * 60 * 60 * 1000);
-  }
-
-  // 日付を「M月d日」にする
-  function formatDate_(value) {
-    var jst = toJstDate_(value);
-    return jst ? (jst.getUTCMonth() + 1) + "月" + jst.getUTCDate() + "日" : "";
-  }
-
-  // 日時を「M月d日 H:mm」にする
-  function formatDateTime_(value) {
-    var jst = toJstDate_(value);
-    if (!jst) {
-      return "";
-    }
-    var minutes = String(jst.getUTCMinutes()).padStart(2, "0");
-    return (jst.getUTCMonth() + 1) + "月" + jst.getUTCDate() + "日 " + jst.getUTCHours() + ":" + minutes;
-  }
-
   // くわしい中身は ?debug=1 のときだけ
   function renderResponse_(payload) {
     if (debugMode) {
       responsePanelEl.textContent = JSON.stringify(payload, null, 2);
     }
-  }
-
-  // HTML に入れる文字の < > & " ' をそのまま出す形にする
-  function escapeHtml_(value) {
-    return String(value === undefined || value === null ? "" : value)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
   }
 })();
