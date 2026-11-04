@@ -44,6 +44,8 @@ LINEを入口にし、LIFF内で学習体験を完結させるマルチテナン
 | ファイル | 役わり |
 |---|---|
 | `learn.html`・`learn.js`・`learn.css` | 今日の5問の画面（LIFF の入口。答える・結果を LINE に送る） |
+| `learn.grade.js` | 今日の5問の答え合わせ（GAS の `04_domain.answer_grader.js` と同じ決まり。同じ正誤になるかをテストでくらべる） |
+| `common.js` | 今日の5問と管理の画面で使う小さな道具（HTML の文字の直し・日付の形・GAS の返事の読み方） |
 | `admin.html`・`admin.js`・`admin.css` | 管理の画面（学習者の一覧とくわしい記録。管理者だけ） |
 | `index.html`・`app.js`・`style.css` | トップ（`?debug=1` のときだけ GAS との接続の確かめ） |
 | `config.js` | 画面の設定（GAS の URL・action の名前・LIFF ID・教室） |
@@ -55,6 +57,8 @@ LINEを入口にし、LIFF内で学習体験を完結させるマルチテナン
 ## 画面の決まり
 
 - 画面の部品と色は、共通の部品集（`https://katsuan.github.io/line-share/shared/ui.css`・`ui.js`）を使い、色は今の緑（`--ls-accent`）にしている
+- 見た目は q-oqrn の `docs/ux.md` の「L. 見た目」に合わせる：ボタンの印は Q キットの線アイコン（`<span class="ls-icon" data-icon="…">`）、余白は `--ls-space-*`（8 の倍数）、字の太さは 700 まで、ツールの色は「答える」「送る」ボタンだけ。正解・まちがいの色と、送るカードの見本（LINE と同じ見た目）はそのまま
+- 見た目の点検は `node ../q-oqrn/tools/qtest/look.mjs docs`
 - 名前・アイコン・ロゴ・OGP・紹介のボタン・カードの末尾の「Created by」は、名前が決まるまで付けない。検索には出さない（`noindex`）
 - `?debug=1` を付けたときだけ、開発用の接続確認とログを出す（ふつうの人には出さない）
 

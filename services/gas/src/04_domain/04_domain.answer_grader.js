@@ -1,6 +1,6 @@
 // 答え合わせの決まり。中身：AnswerGrader（正誤と点数）。
 // 答えの正誤と点数は、サーバーでも画面と同じ決まりで決める（画面から送られた正誤は使わない）。
-// 呼ぶところ：03_usecase.create_answer_event.js。画面（docs/learn.js の gradeAnswer_）も同じ決まりで答え合わせする。
+// 呼ぶところ：03_usecase.create_answer_event.js。画面（docs/learn.grade.js）も同じ決まりで答え合わせする（同じ正誤になるかは test/front_grade.test.js でくらべる）。
 var AnswerGrader = (function () {
   // 問題の種類と正解の設定から、答えの正誤と点数を返す
   function grade(questionType, gradingConfig, value) {

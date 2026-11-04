@@ -30,9 +30,10 @@ GAS のエディタでは名前の順に並ぶので、人が実行するもの�
 | `02_router/02_router.line_webhook.js` | LINE の知らせを1つずつ受ける |
 | `03_usecase/03_usecase.*.js` | 1つの操作ごとの処理（本人・ホーム・今日の回・答え・提出コード・管理・LINE の返事と記録・管理者の判定） |
 | `04_domain/04_domain.*.js` | 決まり（答え合わせ・答えの数え方・日付・今日の回の作り方・エラーの形・名前） |
-| `05_presenter/05_presenter.*.js` | 返す形を作る（JSON・回・LINE のカード） |
+| `05_presenter/05_presenter.*.js` | 返す形を作る（JSON・回・LINE のカード）。管理者の #テスト の窓口の返事は `05_presenter.test_desk_builder.js` |
 | `06_infra/06_infra.*.js` | シート・設定・LINE・鍵・ログ・古いログを消す部品 |
-| `09_setup/09_setup.sheets.js` | はじめの準備の中身（シートと見出しの一覧・見本の教室と問題・見本の設定） |
+| `09_setup/09_setup.sheets.js` | はじめの準備の中身（シートと見出しの一覧・見本の教室と問題の入れ方・見本の設定） |
+| `09_setup/09_setup.trial_questions.js` | 見本の問題 30 問のデータ（小学1年生の漢字の読み） |
 | `09_setup/09_setup.line_check.js` | LINE のつながりの確かめの中身 |
 
 ## 運用前提
@@ -71,11 +72,11 @@ GAS のエディタでは名前の順に並ぶので、人が実行するもの�
 補助関数:
 
 - `setupLearningPlatformScriptProperties()`
-  開発用の初期プロパティをまとめて入れる
+  開発用の初期プロパティを入れる。まだない（空の）設定だけ入れ、入っている値は変えない（本物の値に直したあとで実行しても消えない）
 - `setupLearningPlatformSheets()`
   MVPで使う主要シートを作る
 - `seedLearningPlatformMvp()`
-  `tenants` `users` `memberships` `feature_entitlements` に最小 seed を投入する。⚠️ 学習の記録（回・答え・提出コード）を全部消すので、本番では実行しない
+  `tenants` `users` `memberships` `feature_entitlements` と見本の問題 30 問を入れる。⚠️ 学習の記録（回・答え・提出コード）を全部消すので、本番では実行しない
 - `initializeLearningPlatformMvp()`
   シート作成と seed 投入をまとめて行う
 
@@ -151,6 +152,12 @@ node --test services/gas/test
 - `admin_test_desk.test.js`：管理者のテストの窓口（#テスト）。管理者だけ・本物に書かない・reply だけ
 - `debug_log_cleanup.test.js`：debug_logs の古い行を消す
 - `structure.test.js`：ファイルの並べ方の決まり（番号＋役わり・先頭と関数の前のコメント・自己点検の写しが元と同じ・人が実行する関数の名前が残っている）
+- `flows.test.js`：大事な流れ（答えの二重送信・今日の回の問題・2つの教室・成績の数え方・提出コード・管理 API の端の場合）
+- `answer_grader.test.js`：答え合わせの決まり（数の問題で true・空白・16 進を正解にしない）
+- `front_grade.test.js`：画面の答え合わせ（`docs/learn.grade.js`）と GAS の答え合わせが、同じ答えで同じ正誤・点数になる
+- `front_common.test.js`：画面の共通の道具（`docs/common.js`。日付・HTML の文字・GAS の返事）
+- `setup.test.js`：はじめの準備（見本の設定は上書きしない・見本の学習者が5問を解ける・入れなおすと記録が消える）
+- `load_order.test.js`：GAS がファイルを並び順に1つずつ読んでも、読みこみ時に止まらない
 - `security.test.js`：すべての action について、本人確認なし・ほかの人・ほかの教室・管理者でない人が断られること（表で確かめる）。外の文字が式のままシートに入らないこと。ボットの返事が LINE に受けつけられる形であること。q-oqrn の `tools/qtest/fake-gas.js`（GAS の偽物）を使うので、q-oqrn をとなりのフォルダに置く（ないときは飛ばす）
 
 危ない書き方は `node ../q-oqrn/tools/qtest/check-code.mjs .` でも探す（リポジトリの一番上で）。
