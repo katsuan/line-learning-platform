@@ -8,7 +8,7 @@
  *     1. checkAll … 自己点検。設定・シート・LINE・カード・トリガーのようすを ✅⚠️❌ で出す（何も書かない）
  *        トークでは、管理者が「#テスト」と送ると、同じ点検と返事の見本を試せる
  *   はじめて使うとき（一度だけ）
- *     1. setupLearningPlatformScriptProperties … 見本の設定を Script Properties に入れる（あとで本物の値に直す）
+ *     1. setupLearningPlatformScriptProperties … 見本の設定を Script Properties に入れる（まだない設定だけ。あとで本物の値に直す）
  *     2. initializeLearningPlatformMvp … シートを作り、見本の教室・問題を入れる（＝ 3 と 4 をまとめて）
  *     3. setupLearningPlatformSheets … シートがなければ作る（シートを手で消したときにも）
  *     4. seedLearningPlatformMvp … 見本の教室・問題を入れる。⚠️ 学習の記録（回・答え・提出コード）を全部消すので、本番では実行しない
@@ -28,7 +28,7 @@ function checkAll() {
   return qCheckAll();
 }
 
-// はじめに一度：見本の設定を Script Properties に入れる。入れたあと、本物の値（URL・LIFF ID・管理者など）に直す
+// はじめに一度：見本の設定を Script Properties に入れる（まだない設定だけ。入っている値は変えない）。入れたあと、本物の値（URL・LIFF ID・管理者など）に直す
 function setupLearningPlatformScriptProperties() {
   return setDefaultScriptProperties_();
 }
