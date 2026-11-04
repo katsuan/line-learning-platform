@@ -139,19 +139,19 @@ var LineWebhookUsecase = (function () {
   // #テスト のあとの言葉（見本・文・点検）に合う返事を作る。ほかは窓口のカード
   function buildTestDeskReply_(command) {
     if (command === "見本") {
-      return LineMessageBuilder.buildSampleMessages();
+      return TestDeskBuilder.buildSampleMessages();
     }
     if (command === "文") {
-      return LineMessageBuilder.buildTextFallbackSampleMessages();
+      return TestDeskBuilder.buildTextFallbackSampleMessages();
     }
     if (command === "点検") {
       try {
-        return LineMessageBuilder.buildSelfCheckMessages(qCheckAll());
+        return TestDeskBuilder.buildSelfCheckMessages(qCheckAll());
       } catch (error) {
-        return LineMessageBuilder.buildSelfCheckFailedMessages(error && error.code);
+        return TestDeskBuilder.buildSelfCheckFailedMessages(error && error.code);
       }
     }
-    return LineMessageBuilder.buildTestDeskMessages();
+    return TestDeskBuilder.buildTestDeskMessages();
   }
 
   // 窓口は reply だけで返す（push は使わない）。断られたら原因だけ残す

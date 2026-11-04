@@ -39,8 +39,8 @@ var Q_SELF_CHECK = {
       }))[0]);
     }
     // 管理者のテストの窓口（#テスト）と、返事の見本の横並びのカード
-    learner.push(LineMessageBuilder.buildTestDeskMessages()[0]);
-    learner.push(LineMessageBuilder.buildSampleMessages()[0]);
+    learner.push(TestDeskBuilder.buildTestDeskMessages()[0]);
+    learner.push(TestDeskBuilder.buildSampleMessages()[0]);
     return learner;
   }
 };
