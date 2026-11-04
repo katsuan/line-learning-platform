@@ -259,10 +259,7 @@
     totalAnsweredEl.textContent = learners.reduce(function (sum, learner) {
       return sum + Number(learner.totalAnsweredCount || 0);
     }, 0) + "問";
-    var average = learners.length === 0 ? 0 : learners.reduce(function (sum, learner) {
-      return sum + Number(learner.accuracyRate || 0);
-    }, 0) / learners.length;
-    averageAccuracyEl.textContent = Math.round(average * 100) + "%";
+    averageAccuracyEl.textContent = Math.round(Common.averageAccuracyRate(learners) * 100) + "%";
   }
 
   // 学習者の一覧を出す（押すと、くわしい記録）

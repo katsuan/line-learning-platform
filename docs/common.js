@@ -1,5 +1,5 @@
 // 今日の5問の画面（learn.js）と管理の画面（admin.js）の両方で使う小さな道具（window.LearningCommon）。
-// 中身：HTML に入れる文字の直し・日本の日付の形・GAS の返事の読み方。
+// 中身：HTML に入れる文字の直し・日本の日付の形・GAS の返事の読み方・管理の一覧の平均の正答率。
 // 読むところ：learn.html・admin.html（それぞれの画面の JS の前）。
 (function (root) {
   // HTML に入れる文字の < > & " ' をそのまま出す形にする
@@ -51,12 +51,26 @@
     });
   }
 
+  // 学習者の一覧の「平均の正答率」（0〜1）。1問も解いていない人は入れない（入れると、解いた人の正答率が低く見える）
+  function averageAccuracyRate(learners) {
+    var answered = (learners || []).filter(function (learner) {
+      return Number(learner.totalAnsweredCount || 0) > 0;
+    });
+    if (answered.length === 0) {
+      return 0;
+    }
+    return answered.reduce(function (sum, learner) {
+      return sum + Number(learner.accuracyRate || 0);
+    }, 0) / answered.length;
+  }
+
   var api = {
     escapeHtml: escapeHtml,
     toJstDate: toJstDate,
     formatDate: formatDate,
     formatDateTime: formatDateTime,
-    readJsonResponse: readJsonResponse
+    readJsonResponse: readJsonResponse,
+    averageAccuracyRate: averageAccuracyRate
   };
   root.LearningCommon = api;
   if (typeof module !== "undefined" && module.exports) {

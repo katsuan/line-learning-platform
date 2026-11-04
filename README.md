@@ -45,7 +45,7 @@ LINEを入口にし、LIFF内で学習体験を完結させるマルチテナン
 |---|---|
 | `learn.html`・`learn.js`・`learn.css` | 今日の5問の画面（LIFF の入口。答える・結果を LINE に送る） |
 | `learn.grade.js` | 今日の5問の答え合わせ（GAS の `04_domain.answer_grader.js` と同じ決まり。同じ正誤になるかをテストでくらべる） |
-| `common.js` | 今日の5問と管理の画面で使う小さな道具（HTML の文字の直し・日付の形・GAS の返事の読み方） |
+| `common.js` | 今日の5問と管理の画面で使う小さな道具（HTML の文字の直し・日付の形・GAS の返事の読み方・管理の一覧の平均の正答率） |
 | `admin.html`・`admin.js`・`admin.css` | 管理の画面（学習者の一覧とくわしい記録。管理者だけ） |
 | `index.html`・`app.js`・`style.css` | トップ（`?debug=1` のときだけ GAS との接続の確かめ） |
 | `config.js` | 画面の設定（GAS の URL・action の名前・LIFF ID・教室） |

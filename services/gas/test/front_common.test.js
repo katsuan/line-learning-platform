@@ -1,4 +1,4 @@
-// 画面の共通の道具（docs/common.js）。日付は日本の日にちで出す・HTML に入れる文字を直す・GAS の失敗の返事は失敗にする。
+// 画面の共通の道具（docs/common.js）。日付は日本の日にちで出す・HTML に入れる文字を直す・GAS の失敗の返事は失敗にする・平均の正答率。
 // 動かし方：node --test services/gas/test
 const test = require("node:test");
 const assert = require("node:assert/strict");
@@ -28,4 +28,11 @@ test("GAS の返事：ok は中身を返し、error 入り・HTTP の失敗・JS
   await assert.rejects(Common.readJsonResponse(reply(200, '{"error":{"code":"login_required"}}')), (e) => e.error.code === "login_required");
   await assert.rejects(Common.readJsonResponse(reply(500, "oops")), (e) => e.raw === "oops");
   assert.equal(await Common.readJsonResponse(reply(200, "null")), null, "null でも落ちない");
+});
+
+test("管理の一覧の平均の正答率：1問も解いていない人は入れない", () => {
+  const rows = [{ totalAnsweredCount: 5, accuracyRate: 0.8 }, { totalAnsweredCount: 0, accuracyRate: 0 }, { totalAnsweredCount: 3, accuracyRate: 1 / 3 }];
+  assert.equal(Math.round(Common.averageAccuracyRate(rows) * 100), 57, "80% と 33% の平均（0問の人を入れると 38%）");
+  assert.equal(Common.averageAccuracyRate([]), 0);
+  assert.equal(Common.averageAccuracyRate([{ totalAnsweredCount: 0, accuracyRate: 0 }]), 0);
 });
