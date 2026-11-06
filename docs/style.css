@@ -1,4 +1,4 @@
-/* トップ（index.html）の見た目。共通の部品は line-share の ui.css（先に読む）。 */
+/* トップ（index.html）の見た目。共通の部品は oqrn の ui.css（先に読む）。 */
 :root {
   --ls-accent: #17624a;
   --ls-accent-strong: #0f4d39;

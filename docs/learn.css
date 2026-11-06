@@ -1,4 +1,4 @@
-/* 今日の5問の画面（learn.html）の見た目。共通の部品は line-share の ui.css（先に読む）。 */
+/* 今日の5問の画面（learn.html）の見た目。共通の部品は oqrn の ui.css（先に読む）。 */
 :root {
   --ls-accent: #126347;
   --ls-accent-strong: #0c4e37;
